@@ -1,10 +1,10 @@
 """Domain data structures shared across the service layer."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
 
 
 class ObjectSortOrder(str, Enum):
@@ -16,7 +16,7 @@ class ObjectSortOrder(str, Enum):
     size_desc = "size_desc"
 
     @classmethod
-    def from_query(cls, sort: Optional[str], direction: Optional[str]) -> "ObjectSortOrder":
+    def from_query(cls, sort: str | None, direction: str | None) -> ObjectSortOrder:
         if not sort:
             return cls.modified_desc
         key = sort.lower()
@@ -38,7 +38,7 @@ class BucketStats:
     stored_bytes: int
     savings_pct: float
     pending: bool = False
-    computed_at: Optional[datetime] = None
+    computed_at: datetime | None = None
 
 
 @dataclass(slots=True)
@@ -61,9 +61,9 @@ class ObjectItem:
 
 @dataclass(slots=True)
 class ObjectList:
-    objects: List[ObjectItem]
-    common_prefixes: List[str]
-    cursor: Optional[str] = None
+    objects: list[ObjectItem]
+    common_prefixes: list[str]
+    cursor: str | None = None
 
     def to_dict(self) -> dict:
         data = {
@@ -117,8 +117,8 @@ class UploadSummary:
     stored_bytes: int
     compressed: bool
     operation: str
-    physical_key: Optional[str] = None
-    relative_path: Optional[str] = None
+    physical_key: str | None = None
+    relative_path: str | None = None
 
     @property
     def savings_bytes(self) -> int:

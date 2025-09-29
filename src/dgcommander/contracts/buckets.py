@@ -1,8 +1,8 @@
 """Bucket-related API contracts."""
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -11,13 +11,14 @@ from .base import BaseContract
 
 class BucketStats(BaseContract):
     """Bucket statistics and metadata."""
+
     name: str
     object_count: int = Field(ge=0)
     original_bytes: int = Field(ge=0)
     stored_bytes: int = Field(ge=0)
     savings_pct: float = Field(ge=0, le=100)
     pending: bool = False
-    computed_at: Optional[datetime] = None
+    computed_at: datetime | None = None
 
     @property
     def total_savings_bytes(self) -> int:
@@ -34,7 +35,8 @@ class BucketStats(BaseContract):
 
 class BucketListResponse(BaseContract):
     """Response for bucket listing."""
-    buckets: List[BucketStats]
+
+    buckets: list[BucketStats]
     total_buckets: int = 0
     total_objects: int = 0
     total_original_bytes: int = 0
@@ -54,17 +56,17 @@ class BucketListResponse(BaseContract):
         """Calculate overall savings percentage."""
         if self.total_original_bytes == 0:
             return 0.0
-        return ((self.total_original_bytes - self.total_stored_bytes) /
-                self.total_original_bytes) * 100.0
+        return ((self.total_original_bytes - self.total_stored_bytes) / self.total_original_bytes) * 100.0
 
 
 class CreateBucketRequest(BaseModel):
     """Request to create a new bucket."""
+
     name: str
-    region: Optional[str] = "us-east-1"
+    region: str | None = "us-east-1"
     tags: dict = Field(default_factory=dict)
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """Validate bucket name according to S3 rules."""
@@ -96,10 +98,11 @@ class CreateBucketRequest(BaseModel):
 
 class DeleteBucketRequest(BaseModel):
     """Request to delete a bucket."""
+
     name: str
     force: bool = False  # Force delete even if not empty
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """Validate bucket name."""
@@ -110,6 +113,7 @@ class DeleteBucketRequest(BaseModel):
 
 class ComputeSavingsRequest(BaseModel):
     """Request to compute savings for a bucket."""
+
     bucket: str
     force_recompute: bool = False
     include_metadata: bool = True

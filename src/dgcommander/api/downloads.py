@@ -1,15 +1,15 @@
 """Download endpoints."""
+
 from __future__ import annotations
 
 import os
-from typing import Generator
+from collections.abc import Generator
 
 from flask import Blueprint, Response, request, stream_with_context
 
 from ..util.errors import APIError
 from ..util.json import json_response
 from . import get_container
-
 
 bp = Blueprint("downloads", __name__, url_prefix="/api/download")
 
@@ -43,8 +43,7 @@ def download(token: str):
 
     response = Response(stream_with_context(iterator()), mimetype="application/octet-stream")
     filename = os.path.basename(key) or "download"
-    response.headers["Content-Disposition"] = f"attachment; filename=\"{filename}\""
+    response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     response.headers["X-DG-Logical-ETag"] = token
     response.headers["Accept-Ranges"] = "none"
     return response
-

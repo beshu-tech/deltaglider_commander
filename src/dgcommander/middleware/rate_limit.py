@@ -1,9 +1,9 @@
 """Simple per-IP rate limiting middleware."""
+
 from __future__ import annotations
 
 import time
 from collections import defaultdict, deque
-from typing import Deque, Dict
 
 from flask import Request
 
@@ -14,7 +14,7 @@ class FixedWindowRateLimiter:
     def __init__(self, limit: int, window_seconds: float) -> None:
         self.limit = limit
         self.window_seconds = window_seconds
-        self._hits: Dict[str, Deque[float]] = defaultdict(deque)
+        self._hits: dict[str, deque[float]] = defaultdict(deque)
 
     def check(self, key: str) -> None:
         now = time.time()
@@ -34,4 +34,3 @@ class RateLimiterMiddleware:
     def enforce(self, request: Request) -> None:
         peer = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown")
         self._limiter.check(peer)
-

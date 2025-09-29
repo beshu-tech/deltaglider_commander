@@ -1,7 +1,8 @@
 """Base models with DRY patterns."""
+
 from __future__ import annotations
 
-from typing import Any, ClassVar, Dict, Optional
+from typing import Any, ClassVar
 
 from ..common.mixins import (
     AutoSerializableMixin,
@@ -12,12 +13,7 @@ from ..common.mixins import (
 )
 
 
-class DomainEntity(
-    AutoSerializableMixin,
-    ValidatableMixin,
-    ComparableMixin,
-    TimestampMixin
-):
+class DomainEntity(AutoSerializableMixin, ValidatableMixin, ComparableMixin, TimestampMixin):
     """Base class for all domain entities."""
 
     # Class-level configuration
@@ -56,11 +52,7 @@ class ValueObject(AutoSerializableMixin, ValidatableMixin, ComparableMixin):
 
     def _comparison_key(self):
         """Compare all attributes for value objects."""
-        return tuple(
-            getattr(self, k)
-            for k in sorted(self.__dict__.keys())
-            if not k.startswith('_')
-        )
+        return tuple(getattr(self, k) for k in sorted(self.__dict__.keys()) if not k.startswith("_"))
 
 
 class CachableEntity(DomainEntity, CacheableMixin):
@@ -79,9 +71,9 @@ class Repository:
 
     def __init__(self, entity_class: type):
         self.entity_class = entity_class
-        self._storage: Dict[Any, Any] = {}
+        self._storage: dict[Any, Any] = {}
 
-    async def find_by_id(self, id: Any) -> Optional[Any]:
+    async def find_by_id(self, id: Any) -> Any | None:
         """Find entity by ID."""
         return self._storage.get(id)
 
@@ -126,19 +118,19 @@ class ApiEndpoint:
         entity = await self.repository.find_by_id(id)
         if entity is None:
             raise ValueError(f"Entity with ID {id} not found")
-        return entity.to_dict() if hasattr(entity, 'to_dict') else entity
+        return entity.to_dict() if hasattr(entity, "to_dict") else entity
 
     async def list_all(self, filter_params: dict = None) -> list:
         """List all entities with optional filtering."""
         filter_func = self._build_filter(filter_params) if filter_params else None
         entities = await self.repository.find_many(filter_func)
-        return [e.to_dict() if hasattr(e, 'to_dict') else e for e in entities]
+        return [e.to_dict() if hasattr(e, "to_dict") else e for e in entities]
 
     async def create(self, data: dict) -> dict:
         """Create new entity."""
         entity = self.repository.entity_class(**data)
         saved = await self.repository.save(entity)
-        return saved.to_dict() if hasattr(saved, 'to_dict') else saved
+        return saved.to_dict() if hasattr(saved, "to_dict") else saved
 
     async def update(self, id: Any, data: dict) -> dict:
         """Update existing entity."""
@@ -150,7 +142,7 @@ class ApiEndpoint:
             setattr(entity, key, value)
 
         saved = await self.repository.save(entity)
-        return saved.to_dict() if hasattr(saved, 'to_dict') else saved
+        return saved.to_dict() if hasattr(saved, "to_dict") else saved
 
     async def delete(self, id: Any) -> bool:
         """Delete entity."""
@@ -158,6 +150,7 @@ class ApiEndpoint:
 
     def _build_filter(self, params: dict):
         """Build filter function from parameters."""
+
         def filter_func(entity):
             for key, value in params.items():
                 if not hasattr(entity, key):
@@ -165,4 +158,5 @@ class ApiEndpoint:
                 if getattr(entity, key) != value:
                     return False
             return True
+
         return filter_func

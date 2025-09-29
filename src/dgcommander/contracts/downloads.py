@@ -1,7 +1,6 @@
 """Download-related API contracts."""
-from __future__ import annotations
 
-from typing import Optional
+from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
@@ -10,15 +9,17 @@ from .base import BaseContract
 
 class DownloadPreparation(BaseContract):
     """Download preparation response."""
+
     download_token: str
     estimated_bytes: int = Field(ge=0)
-    expires_at: Optional[str] = None
-    content_type: Optional[str] = None
-    file_name: Optional[str] = None
+    expires_at: str | None = None
+    content_type: str | None = None
+    file_name: str | None = None
 
 
 class PrepareDownloadRequest(BaseModel):
     """Request to prepare a download."""
+
     bucket: str
     key: str
     expires_in_seconds: int = Field(default=300, ge=60, le=3600)
@@ -32,11 +33,12 @@ class PrepareDownloadRequest(BaseModel):
 
 class StreamingDownloadRequest(BaseModel):
     """Request for streaming download."""
+
     bucket: str
     key: str
     chunk_size: int = Field(default=8192, ge=1024, le=1048576)  # 1KB to 1MB
-    range_start: Optional[int] = None
-    range_end: Optional[int] = None
+    range_start: int | None = None
+    range_end: int | None = None
 
     @property
     def has_range(self) -> bool:
@@ -46,6 +48,7 @@ class StreamingDownloadRequest(BaseModel):
 
 class DownloadMetrics(BaseContract):
     """Download operation metrics."""
+
     bytes_transferred: int = Field(ge=0)
     duration_seconds: float = Field(ge=0)
     transfer_rate_mbps: float = Field(ge=0)

@@ -1,9 +1,9 @@
 """Download pipeline helpers."""
+
 from __future__ import annotations
 
 import io
-from datetime import datetime, timedelta, timezone
-from typing import Tuple
+from datetime import UTC, datetime, timedelta
 
 from itsdangerous import BadSignature, URLSafeTimedSerializer
 
@@ -23,11 +23,11 @@ class DownloadService:
             estimated = self._sdk.estimated_object_size(bucket, key)
         except FileNotFoundError as exc:
             raise NotFoundError("object", "key_not_found") from exc
-        issued_at = datetime.now(timezone.utc).isoformat()
+        issued_at = datetime.now(UTC).isoformat()
         token = self._serializer.dumps({"bucket": bucket, "key": key, "issued_at": issued_at})
         return DownloadPreparation(bucket=bucket, key=key, download_token=token, estimated_bytes=estimated)
 
-    def resolve_token(self, token: str) -> Tuple[str, str, io.BufferedReader]:
+    def resolve_token(self, token: str) -> tuple[str, str, io.BufferedReader]:
         try:
             payload = self._serializer.loads(token)
         except BadSignature as exc:
@@ -42,8 +42,8 @@ class DownloadService:
         except ValueError as exc:
             raise APIError(code="invalid_token", message="Invalid download token", http_status=400) from exc
         if issued_at.tzinfo is None:
-            issued_at = issued_at.replace(tzinfo=timezone.utc)
-        age = datetime.now(timezone.utc) - issued_at
+            issued_at = issued_at.replace(tzinfo=UTC)
+        age = datetime.now(UTC) - issued_at
         if age > timedelta(seconds=self._ttl_seconds):
             raise APIError(code="token_expired", message="Download token expired", http_status=400)
         try:
@@ -51,4 +51,3 @@ class DownloadService:
         except FileNotFoundError as exc:
             raise NotFoundError("object", "key_not_found") from exc
         return bucket, key, stream
-

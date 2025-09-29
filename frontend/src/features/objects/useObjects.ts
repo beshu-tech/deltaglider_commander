@@ -6,6 +6,7 @@ import { ObjectList } from "./types";
 export interface UseObjectsOptions {
   bucket: string;
   prefix?: string;
+  search?: string;
   cursor?: string;
   sort: string;
   order: "asc" | "desc";
@@ -13,13 +14,14 @@ export interface UseObjectsOptions {
   compressed?: "true" | "false" | "any";
 }
 
-export function useObjects({ bucket, prefix = "", cursor, sort, order, limit, compressed }: UseObjectsOptions) {
+export function useObjects({ bucket, prefix = "", search, cursor, sort, order, limit, compressed }: UseObjectsOptions) {
   return useQuery<ObjectList>({
-    queryKey: qk.objects(bucket, prefix, sort, order, limit, compressed ?? "any", cursor),
+    queryKey: qk.objects(bucket, prefix, sort, order, limit, compressed ?? "any", cursor, search),
     queryFn: () =>
       fetchObjects({
         bucket,
         prefix,
+        search,
         cursor,
         sort,
         order,

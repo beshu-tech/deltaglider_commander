@@ -1,10 +1,10 @@
 """Clean objects API using single implementation pattern."""
+
 from __future__ import annotations
 
 from flask import Blueprint
 
 from ..application.use_cases.list_objects import ListObjectsUseCase
-from ..application.use_cases.upload_objects import UploadObjectsUseCase
 from ..common.decorators import api_endpoint, cached, with_timing
 from ..contracts.objects import (
     DeleteObjectRequest,

@@ -1,9 +1,10 @@
 """Catalog service backed by the DeltaGlider SDK and in-memory caches."""
+
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import BinaryIO, Iterable, List, Optional, Tuple
+from typing import BinaryIO
 
 from botocore.exceptions import ClientError
 
@@ -21,7 +22,7 @@ from ..util.types import (
 from .deltaglider import BucketSnapshot, DeltaGliderSDK, LogicalObject
 
 
-def _sort_objects(objects: Iterable[LogicalObject], sort_order: ObjectSortOrder) -> List[LogicalObject]:
+def _sort_objects(objects: Iterable[LogicalObject], sort_order: ObjectSortOrder) -> list[LogicalObject]:
     reverse = sort_order in {ObjectSortOrder.modified_desc, ObjectSortOrder.name_desc, ObjectSortOrder.size_desc}
     if sort_order in {ObjectSortOrder.name_asc, ObjectSortOrder.name_desc}:
         return sorted(objects, key=lambda obj: obj.key, reverse=reverse)
@@ -35,8 +36,8 @@ class CatalogService:
     sdk: DeltaGliderSDK
     caches: CacheRegistry
 
-    def list_buckets(self) -> List[BucketStats]:
-        stats: List[BucketStats] = []
+    def list_buckets(self) -> list[BucketStats]:
+        stats: list[BucketStats] = []
         try:
             snapshots = list(self.sdk.list_buckets())
         except Exception as exc:
@@ -122,15 +123,22 @@ class CatalogService:
         prefix: str,
         *,
         limit: int,
-        cursor: Optional[str],
+        cursor: str | None,
         sort_order: ObjectSortOrder,
-        compressed: Optional[bool],
+        compressed: bool | None,
+        search: str | None = None,
     ) -> ObjectList:
-        cache_key = (bucket, prefix, sort_order.value, compressed)
-        cached: Optional[Tuple[List[LogicalObject], List[str]]] = self.caches.list_cache.get(cache_key)
+        cache_key = (bucket, prefix, sort_order.value, compressed, search)
+        cached: tuple[list[LogicalObject], list[str]] | None = self.caches.list_cache.get(cache_key)
         if cached is None:
             listing = self.sdk.list_objects(bucket, prefix)
             filtered = [obj for obj in listing.objects if compressed is None or obj.compressed == compressed]
+
+            # Apply search filter if provided
+            if search:
+                search_lower = search.lower()
+                filtered = [obj for obj in filtered if search_lower in obj.key.lower()]
+
             sorted_objects = _sort_objects(filtered, sort_order)
             cached = (sorted_objects, listing.common_prefixes)
             self.caches.list_cache.set(cache_key, cached)
@@ -195,7 +203,7 @@ class CatalogService:
         key: str,
         file_obj: BinaryIO,
         *,
-        relative_path: Optional[str] = None,
+        relative_path: str | None = None,
     ) -> UploadSummary:
         try:
             summary = self.sdk.upload(bucket, key, file_obj)

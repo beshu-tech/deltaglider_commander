@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
+from deltaglider.ports.storage import ObjectHead
 
 from dgcommander.services.deltaglider import S3DeltaGliderSDK, S3Settings
-from deltaglider.ports.storage import ObjectHead
 
 
 @pytest.fixture()
@@ -19,7 +19,7 @@ def test_logical_from_head_delta(s3_sdk):
         key="releases/v1.0.0/app.zip.delta",
         size=1024,
         etag="etag",
-        last_modified=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        last_modified=datetime(2024, 1, 1, tzinfo=UTC),
         metadata={
             "original_name": "app.zip",
             "file_size": "2048",
@@ -40,7 +40,7 @@ def test_resolve_head_handles_delta_suffix(monkeypatch, s3_sdk):
         key="releases/v1.0.0/app.zip.delta",
         size=1024,
         etag="etag",
-        last_modified=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        last_modified=datetime(2024, 1, 1, tzinfo=UTC),
         metadata={
             "original_name": "app.zip",
             "file_size": "2048",
@@ -70,7 +70,7 @@ def test_logical_from_head_direct_sets_flags(s3_sdk):
         key="documents/readme.txt",
         size=512,
         etag="etag",
-        last_modified=datetime(2024, 5, 1, tzinfo=timezone.utc),
+        last_modified=datetime(2024, 5, 1, tzinfo=UTC),
         metadata={
             "file_size": "512",
             "compression": "none",

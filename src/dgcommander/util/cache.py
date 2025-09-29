@@ -1,13 +1,14 @@
 """TTL-aware caches used across the service layer."""
+
 from __future__ import annotations
 
 import threading
 import time
+from collections.abc import Hashable, Iterable
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, Hashable, Iterable, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 from cachetools import TTLCache
-
 
 K = TypeVar("K", bound=Hashable)
 V = TypeVar("V")
@@ -20,7 +21,7 @@ class ThreadSafeTTLCache(Generic[K, V]):
         self._cache: TTLCache[K, V] = TTLCache(maxsize=maxsize, ttl=ttl_seconds)
         self._lock = threading.RLock()
 
-    def get(self, key: K) -> Optional[V]:
+    def get(self, key: K) -> V | None:
         with self._lock:
             return self._cache.get(key)
 
@@ -28,7 +29,7 @@ class ThreadSafeTTLCache(Generic[K, V]):
         with self._lock:
             self._cache[key] = value
 
-    def pop(self, key: K) -> Optional[V]:
+    def pop(self, key: K) -> V | None:
         with self._lock:
             return self._cache.pop(key, None)
 
@@ -45,7 +46,7 @@ class ThreadSafeTTLCache(Generic[K, V]):
         with self._lock:
             return list(self._cache.keys())
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Return best-effort metrics for observability."""
         with self._lock:
             return {
@@ -60,7 +61,7 @@ class CacheRegistry:
     list_cache: ThreadSafeTTLCache[Any, Any]
     meta_cache: ThreadSafeTTLCache[Any, Any]
     savings_cache: ThreadSafeTTLCache[Any, Any]
-    pending_jobs: Dict[str, float]
+    pending_jobs: dict[str, float]
     lock: threading.RLock
 
     def mark_pending(self, bucket: str) -> None:
@@ -84,4 +85,3 @@ def build_cache_registry() -> CacheRegistry:
         pending_jobs={},
         lock=threading.RLock(),
     )
-

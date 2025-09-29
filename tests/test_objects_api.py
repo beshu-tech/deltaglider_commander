@@ -42,4 +42,3 @@ def test_list_objects_unknown_bucket(client):
     assert response.status_code == 404
     payload = response.get_json()
     assert payload["error"]["code"] == "bucket_not_found"
-

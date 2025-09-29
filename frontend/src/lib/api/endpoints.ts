@@ -15,6 +15,7 @@ import {
 export interface ObjectsParams {
   bucket: string;
   prefix?: string;
+  search?: string;
   cursor?: string;
   limit?: number;
   sort?: string;
@@ -52,6 +53,7 @@ export async function fetchObjects(params: ObjectsParams): Promise<ObjectList> {
   const query = new URLSearchParams();
   query.set("bucket", params.bucket);
   if (params.prefix) query.set("prefix", params.prefix);
+  if (params.search) query.set("search", params.search);
   if (params.cursor) query.set("cursor", params.cursor);
   if (params.limit) query.set("limit", String(params.limit));
   if (params.sort) query.set("sort", params.sort);

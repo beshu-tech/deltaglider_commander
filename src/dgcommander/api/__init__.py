@@ -1,4 +1,5 @@
 """Blueprint helpers for the API package."""
+
 from __future__ import annotations
 
 from flask import current_app
@@ -11,4 +12,3 @@ def get_container() -> ServiceContainer:
         return current_app.extensions["dgcommander"]
     except KeyError as exc:  # pragma: no cover - defensive
         raise RuntimeError("Service container not configured") from exc
-

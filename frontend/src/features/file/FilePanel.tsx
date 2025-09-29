@@ -161,28 +161,40 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
 
       <section className="space-y-3">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Storage stats</h3>
-        <dl className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt className="text-xs uppercase text-slate-400">Original</dt>
-            <dd className="font-semibold text-slate-900 dark:text-slate-100">{formatBytes(metadata.original_bytes)}</dd>
+        <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+          {/* Main savings highlight */}
+          <div className="mb-3 text-center">
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              {savings.pct.toFixed(1)}%
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              {formatBytes(savings.bytes)} saved
+            </div>
           </div>
-          <div>
-            <dt className="text-xs uppercase text-slate-400">Stored</dt>
-            <dd className="font-semibold text-slate-900 dark:text-slate-100">{formatBytes(metadata.stored_bytes)}</dd>
+
+          {/* Compact stats grid */}
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="flex items-center justify-between rounded bg-white/50 px-2 py-1 dark:bg-slate-700/50">
+              <span className="text-slate-500 dark:text-slate-400">Original</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{formatBytes(metadata.original_bytes)}</span>
+            </div>
+            <div className="flex items-center justify-between rounded bg-white/50 px-2 py-1 dark:bg-slate-700/50">
+              <span className="text-slate-500 dark:text-slate-400">Stored</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{formatBytes(metadata.stored_bytes)}</span>
+            </div>
           </div>
-          <div>
-            <dt className="text-xs uppercase text-slate-400">Savings</dt>
-            <dd className="font-semibold text-emerald-600 dark:text-emerald-400">
-              {formatBytes(savings.bytes)} ({savings.pct.toFixed(1)}%)
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase text-slate-400">Compression</dt>
-            <dd className="font-semibold text-slate-900 dark:text-slate-100">
+
+          {/* Compression status */}
+          <div className="mt-2 text-center">
+            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+              metadata.compressed
+                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+                : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+            }`}>
               {metadata.compressed ? "Compressed" : "Original"}
-            </dd>
+            </span>
           </div>
-        </dl>
+        </div>
       </section>
 
       <section className="space-y-3">

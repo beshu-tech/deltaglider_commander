@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import sys
-
-import werkzeug
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Generator
 
 import pytest
+import werkzeug
 
 if not hasattr(werkzeug, "__version__"):
     werkzeug.__version__ = "3"
@@ -30,7 +28,7 @@ from dgcommander.services.deltaglider import (
 def sample_sdk() -> InMemoryDeltaGliderSDK:
     blob_path = Path("releases/readonlyrest-1.66.1_es6.8.0.zip")
     blob_bytes = blob_path.read_bytes()
-    now = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    now = datetime(2024, 1, 1, tzinfo=UTC)
     objects = {
         "releases": [
             LogicalObject(

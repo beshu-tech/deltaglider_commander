@@ -17,7 +17,7 @@ def test_prepare_and_download_round_trip(app, client):
     assert download.status_code == 200
     body = download.data
     assert len(body) == estimated
-    assert download.headers["Content-Disposition"].endswith("app.zip\"")
+    assert download.headers["Content-Disposition"].endswith('app.zip"')
     assert download.headers["Accept-Ranges"] == "none"
 
 
@@ -37,4 +37,3 @@ def test_download_with_invalid_token(app, client):
     response = client.get(f"/api/download/{fake_token}")
     assert response.status_code == 400
     assert response.get_json()["error"]["code"] == "invalid_token"
-

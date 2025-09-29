@@ -1,29 +1,29 @@
 """Dependency wiring helpers for the application."""
+
 from __future__ import annotations
 
 import os
 import secrets
 from dataclasses import dataclass, field
-from typing import Optional
 
+from .jobs.indexer import SavingsJobRunner
 from .middleware.rate_limit import FixedWindowRateLimiter, RateLimiterMiddleware
 from .services.catalog import CatalogService
 from .services.deltaglider import DeltaGliderSDK, S3DeltaGliderSDK, S3Settings
 from .services.downloads import DownloadService
-from .jobs.indexer import SavingsJobRunner
 from .util.cache import CacheRegistry, build_cache_registry
 
 
 @dataclass(slots=True)
 class S3Config:
-    endpoint_url: Optional[str] = None
-    region_name: Optional[str] = None
-    access_key_id: Optional[str] = None
-    secret_access_key: Optional[str] = None
-    session_token: Optional[str] = None
+    endpoint_url: str | None = None
+    region_name: str | None = None
+    access_key_id: str | None = None
+    secret_access_key: str | None = None
+    session_token: str | None = None
     addressing_style: str = "path"
     verify: bool = True
-    cache_dir: Optional[str] = None
+    cache_dir: str | None = None
 
 
 @dataclass(slots=True)
@@ -44,7 +44,7 @@ class ServiceContainer:
     caches: CacheRegistry
 
 
-def load_config(env: Optional[dict[str, str]] = None) -> DGCommanderConfig:
+def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
     env = env or os.environ
     secret = env.get("DGCOMM_HMAC_SECRET") or secrets.token_hex(32)
     ttl = int(env.get("DGCOMM_DOWNLOAD_TTL", "300"))
@@ -69,7 +69,7 @@ def load_config(env: Optional[dict[str, str]] = None) -> DGCommanderConfig:
     )
 
 
-def build_services(config: DGCommanderConfig, sdk: Optional[DeltaGliderSDK] = None) -> ServiceContainer:
+def build_services(config: DGCommanderConfig, sdk: DeltaGliderSDK | None = None) -> ServiceContainer:
     if sdk is None:
         sdk = build_default_sdk(config)
     caches = build_cache_registry()
@@ -101,7 +101,7 @@ def build_default_sdk(config: DGCommanderConfig) -> DeltaGliderSDK:
     return S3DeltaGliderSDK(settings)
 
 
-def _coerce_bool(value: Optional[str], default: bool) -> bool:
+def _coerce_bool(value: str | None, default: bool) -> bool:
     if value is None:
         return default
     normalized = value.strip().lower()

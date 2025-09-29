@@ -1,13 +1,13 @@
 """Helpers for pagination parameters."""
+
 from __future__ import annotations
 
 import base64
-from typing import Optional
 
 from .errors import APIError
 
 
-def coerce_limit(raw: Optional[str], *, default: int = 200, minimum: int = 1, maximum: int = 1000) -> int:
+def coerce_limit(raw: str | None, *, default: int = 200, minimum: int = 1, maximum: int = 1000) -> int:
     if raw is None:
         return default
     try:
@@ -27,11 +27,11 @@ _CURSOR_PREFIX = "offset:"
 
 
 def encode_cursor(offset: int) -> str:
-    payload = f"{_CURSOR_PREFIX}{offset}".encode("utf-8")
+    payload = f"{_CURSOR_PREFIX}{offset}".encode()
     return base64.urlsafe_b64encode(payload).decode("ascii")
 
 
-def decode_cursor(raw: Optional[str]) -> Optional[int]:
+def decode_cursor(raw: str | None) -> int | None:
     if not raw:
         return None
     try:
@@ -45,4 +45,3 @@ def decode_cursor(raw: Optional[str]) -> Optional[int]:
         return int(decoded[len(_CURSOR_PREFIX) :])
     except ValueError as exc:  # pragma: no cover - defensive
         raise APIError(code="invalid_cursor", message="Invalid cursor", http_status=400) from exc
-

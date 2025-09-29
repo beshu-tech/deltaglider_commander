@@ -1,13 +1,15 @@
 """Abstractions for the DeltaGlider SDK integration layer."""
+
 from __future__ import annotations
 
 import io
 import tempfile
 import threading
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import BinaryIO, Dict, Iterable, Iterator, List, Optional, Protocol, Tuple
+from typing import BinaryIO, Protocol
 
 # boto3 is ONLY used for bucket management operations (list, create, delete)
 # that are not provided by the DeltaGlider library.
@@ -15,7 +17,6 @@ from typing import BinaryIO, Dict, Iterable, Iterator, List, Optional, Protocol,
 import boto3
 from boto3.session import Session
 from botocore.config import Config as BotoConfig
-
 from deltaglider.adapters import (
     FsCacheAdapter,
     NoopMetricsAdapter,
@@ -56,39 +57,30 @@ class BucketSnapshot:
 
 @dataclass(slots=True)
 class ObjectListing:
-    objects: List[LogicalObject]
-    common_prefixes: List[str]
+    objects: list[LogicalObject]
+    common_prefixes: list[str]
 
 
 class DeltaGliderSDK(Protocol):
     """Interface the DeltaGlider integrations must implement."""
 
-    def list_buckets(self) -> Iterable[BucketSnapshot]:
-        ...
+    def list_buckets(self) -> Iterable[BucketSnapshot]: ...
 
-    def create_bucket(self, name: str) -> None:
-        ...
+    def create_bucket(self, name: str) -> None: ...
 
-    def delete_bucket(self, name: str) -> None:
-        ...
+    def delete_bucket(self, name: str) -> None: ...
 
-    def list_objects(self, bucket: str, prefix: str) -> ObjectListing:
-        ...
+    def list_objects(self, bucket: str, prefix: str) -> ObjectListing: ...
 
-    def get_metadata(self, bucket: str, key: str) -> FileMetadata:
-        ...
+    def get_metadata(self, bucket: str, key: str) -> FileMetadata: ...
 
-    def open_object_stream(self, bucket: str, key: str) -> io.BufferedReader:
-        ...
+    def open_object_stream(self, bucket: str, key: str) -> io.BufferedReader: ...
 
-    def estimated_object_size(self, bucket: str, key: str) -> int:
-        ...
+    def estimated_object_size(self, bucket: str, key: str) -> int: ...
 
-    def delete_object(self, bucket: str, key: str) -> None:
-        ...
+    def delete_object(self, bucket: str, key: str) -> None: ...
 
-    def upload(self, bucket: str, key: str, file_obj: BinaryIO) -> UploadSummary:
-        ...
+    def upload(self, bucket: str, key: str, file_obj: BinaryIO) -> UploadSummary: ...
 
 
 # -----------------------
@@ -103,8 +95,8 @@ class InMemoryDeltaGliderSDK:
         self,
         *,
         buckets: Iterable[BucketSnapshot],
-        objects: dict[str, List[LogicalObject]],
-        blobs: dict[Tuple[str, str], bytes],
+        objects: dict[str, list[LogicalObject]],
+        blobs: dict[tuple[str, str], bytes],
     ) -> None:
         self._buckets = list(buckets)
         self._objects = objects
@@ -122,7 +114,7 @@ class InMemoryDeltaGliderSDK:
             original_bytes=0,
             stored_bytes=0,
             savings_pct=0.0,
-            computed_at=datetime.now(timezone.utc),
+            computed_at=datetime.now(UTC),
         )
         self._buckets.append(snapshot)
         self._objects.setdefault(name, [])
@@ -156,7 +148,7 @@ class InMemoryDeltaGliderSDK:
                             original_bytes=max(snapshot.original_bytes - obj.original_bytes, 0),
                             stored_bytes=max(snapshot.stored_bytes - obj.stored_bytes, 0),
                             savings_pct=snapshot.savings_pct,
-                            computed_at=datetime.now(timezone.utc),
+                            computed_at=datetime.now(UTC),
                         )
                         self._buckets[i] = updated
                         break
@@ -168,7 +160,7 @@ class InMemoryDeltaGliderSDK:
         data = file_obj.read()
         original_bytes = len(data)
         stored_bytes = original_bytes
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         physical_key = normalized
 
         bucket_objects = self._objects.setdefault(bucket, [])
@@ -279,14 +271,14 @@ class InMemoryDeltaGliderSDK:
 class S3Settings:
     """Configuration values for the S3-backed SDK."""
 
-    endpoint_url: Optional[str] = None
-    region_name: Optional[str] = None
-    access_key_id: Optional[str] = None
-    secret_access_key: Optional[str] = None
-    session_token: Optional[str] = None
+    endpoint_url: str | None = None
+    region_name: str | None = None
+    access_key_id: str | None = None
+    secret_access_key: str | None = None
+    session_token: str | None = None
     addressing_style: str = "path"
     verify: bool = True
-    cache_dir: Optional[str] = None
+    cache_dir: str | None = None
 
 
 class S3DeltaGliderSDK:
@@ -319,15 +311,13 @@ class S3DeltaGliderSDK:
             aws_session_token=settings.session_token,
             region_name=settings.region_name or "us-east-1",
         )
-        client_kwargs: Dict[str, object] = {}
+        client_kwargs: dict[str, object] = {}
         if settings.endpoint_url:
             client_kwargs["endpoint_url"] = settings.endpoint_url
             if settings.endpoint_url.startswith("http://"):
                 client_kwargs["use_ssl"] = False
         client_kwargs["verify"] = settings.verify
-        client_kwargs["config"] = BotoConfig(
-            s3={"addressing_style": settings.addressing_style or "path"}
-        )
+        client_kwargs["config"] = BotoConfig(s3={"addressing_style": settings.addressing_style or "path"})
         self._client = self._session.client("s3", **client_kwargs)
         self._storage: StoragePort = S3StorageAdapter(client=self._client)
 
@@ -347,7 +337,7 @@ class S3DeltaGliderSDK:
             tool_version="dgcommander/0.1.0",
         )
 
-        self._logical_index: Dict[Tuple[str, str], str] = {}
+        self._logical_index: dict[tuple[str, str], str] = {}
         self._index_lock = threading.RLock()
 
     # -- public API -----------------------------------------------------
@@ -355,7 +345,7 @@ class S3DeltaGliderSDK:
     def list_buckets(self) -> Iterable[BucketSnapshot]:
         # boto3 required: DeltaGlider doesn't provide bucket listing
         response = self._client.list_buckets()
-        buckets: List[BucketSnapshot] = []
+        buckets: list[BucketSnapshot] = []
         for bucket in response.get("Buckets", []):
             name = bucket["Name"]
             listing = self.list_objects(name, prefix="")
@@ -371,14 +361,14 @@ class S3DeltaGliderSDK:
                     original_bytes=original_total,
                     stored_bytes=stored_total,
                     savings_pct=savings_pct,
-                    computed_at=datetime.now(timezone.utc),
+                    computed_at=datetime.now(UTC),
                 )
             )
         return buckets
 
     def create_bucket(self, name: str) -> None:
         # boto3 required: DeltaGlider doesn't provide bucket creation
-        params: Dict[str, object] = {"Bucket": name}
+        params: dict[str, object] = {"Bucket": name}
         region = self._session.region_name or "us-east-1"
         if not self._settings.endpoint_url and region != "us-east-1":
             params["CreateBucketConfiguration"] = {"LocationConstraint": region}
@@ -395,7 +385,7 @@ class S3DeltaGliderSDK:
     def list_objects(self, bucket: str, prefix: str) -> ObjectListing:
         normalized_prefix = self._normalize_prefix(prefix)
         heads = self._iter_heads(bucket, normalized_prefix)
-        objects_map: Dict[str, LogicalObject] = {}
+        objects_map: dict[str, LogicalObject] = {}
         prefixes: set[str] = set()
 
         for head in heads:
@@ -535,12 +525,8 @@ class S3DeltaGliderSDK:
         return upload_summary
 
     def upload_batch(
-        self,
-        bucket: str,
-        files: List[Tuple[str, BinaryIO]],
-        prefix: Optional[str] = None,
-        max_parallel: int = 4
-    ) -> List[UploadSummary]:
+        self, bucket: str, files: list[tuple[str, BinaryIO]], prefix: str | None = None, max_parallel: int = 4
+    ) -> list[UploadSummary]:
         """
         Upload multiple files in parallel.
         DeltaGlider automatically handles optimal compression per file.
@@ -579,7 +565,7 @@ class S3DeltaGliderSDK:
         finally:
             stream.close()
 
-    def get_compression_stats(self, bucket: str) -> Dict[str, any]:
+    def get_compression_stats(self, bucket: str) -> dict[str, any]:
         """Get compression statistics showing DeltaGlider's automatic optimization."""
         listing = self.list_objects(bucket, prefix="")
 
@@ -590,7 +576,7 @@ class S3DeltaGliderSDK:
             "total_stored_bytes": sum(obj.stored_bytes for obj in listing.objects),
             "total_savings_bytes": 0,
             "compression_rate": 0.0,
-            "top_compressions": []
+            "top_compressions": [],
         }
 
         stats["total_savings_bytes"] = stats["total_original_bytes"] - stats["total_stored_bytes"]
@@ -604,19 +590,17 @@ class S3DeltaGliderSDK:
             if obj.compressed and obj.original_bytes > 0:
                 savings = obj.original_bytes - obj.stored_bytes
                 rate = savings / obj.original_bytes
-                compressions.append({
-                    "key": obj.key,
-                    "original_bytes": obj.original_bytes,
-                    "stored_bytes": obj.stored_bytes,
-                    "savings_bytes": savings,
-                    "compression_rate": rate * 100
-                })
+                compressions.append(
+                    {
+                        "key": obj.key,
+                        "original_bytes": obj.original_bytes,
+                        "stored_bytes": obj.stored_bytes,
+                        "savings_bytes": savings,
+                        "compression_rate": rate * 100,
+                    }
+                )
 
-        stats["top_compressions"] = sorted(
-            compressions,
-            key=lambda x: x["savings_bytes"],
-            reverse=True
-        )[:10]
+        stats["top_compressions"] = sorted(compressions, key=lambda x: x["savings_bytes"], reverse=True)[:10]
 
         return stats
 
@@ -629,7 +613,7 @@ class S3DeltaGliderSDK:
             list_prefix = bucket
         return self._storage.list(list_prefix)
 
-    def _logical_from_head(self, bucket: str, head: ObjectHead) -> Optional[LogicalObject]:
+    def _logical_from_head(self, bucket: str, head: ObjectHead) -> LogicalObject | None:
         key = head.key
         if key.endswith("reference.bin"):
             return None
@@ -643,12 +627,16 @@ class S3DeltaGliderSDK:
         logical_key = logical_key.lstrip("/")
         original_bytes = self._coerce_int(metadata.get("file_size"), head.size)
         stored_bytes = self._coerce_int(metadata.get("delta_size"), head.size)
-        compressed = metadata.get("compression") not in {None, "none"} or metadata.get("delta_size") is not None or key.endswith(".delta")
+        compressed = (
+            metadata.get("compression") not in {None, "none"}
+            or metadata.get("delta_size") is not None
+            or key.endswith(".delta")
+        )
         modified = head.last_modified
         if modified.tzinfo is None:
-            modified = modified.replace(tzinfo=timezone.utc)
+            modified = modified.replace(tzinfo=UTC)
         else:
-            modified = modified.astimezone(timezone.utc)
+            modified = modified.astimezone(UTC)
         return LogicalObject(
             key=logical_key,
             original_bytes=original_bytes,
@@ -658,9 +646,9 @@ class S3DeltaGliderSDK:
             physical_key=key,
         )
 
-    def _resolve_head(self, bucket: str, logical_key: str) -> Tuple[ObjectHead, LogicalObject]:
+    def _resolve_head(self, bucket: str, logical_key: str) -> tuple[ObjectHead, LogicalObject]:
         normalized = self._normalize_key(logical_key)
-        candidates: List[str] = []
+        candidates: list[str] = []
         with self._index_lock:
             cached = self._logical_index.get((bucket, normalized))
         if cached:
@@ -680,7 +668,7 @@ class S3DeltaGliderSDK:
         raise KeyError(normalized)
 
     @staticmethod
-    def _coerce_int(value: Optional[str], fallback: int) -> int:
+    def _coerce_int(value: str | None, fallback: int) -> int:
         if value is None:
             return fallback
         try:

@@ -1,9 +1,9 @@
 """Object-related API contracts."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -12,6 +12,7 @@ from .base import BaseContract
 
 class ObjectSortOrder(str, Enum):
     """Object sorting options."""
+
     name_asc = "name_asc"
     name_desc = "name_desc"
     modified_desc = "modified_desc"
@@ -20,7 +21,7 @@ class ObjectSortOrder(str, Enum):
     size_desc = "size_desc"
 
     @classmethod
-    def from_query(cls, sort: Optional[str], direction: Optional[str]) -> ObjectSortOrder:
+    def from_query(cls, sort: str | None, direction: str | None) -> ObjectSortOrder:
         """Parse sort order from query parameters."""
         if not sort:
             return cls.modified_desc
@@ -40,6 +41,7 @@ class ObjectSortOrder(str, Enum):
 
 class ObjectItem(BaseContract):
     """Individual object in a listing."""
+
     key: str
     original_bytes: int = Field(ge=0)
     stored_bytes: int = Field(ge=0)
@@ -61,22 +63,25 @@ class ObjectItem(BaseContract):
 
 class ObjectListResponse(BaseContract):
     """Response for object listing."""
-    objects: List[ObjectItem]
-    common_prefixes: List[str] = Field(default_factory=list)
-    cursor: Optional[str] = None
+
+    objects: list[ObjectItem]
+    common_prefixes: list[str] = Field(default_factory=list)
+    cursor: str | None = None
 
 
 class ObjectListRequest(BaseModel):
     """Request parameters for object listing."""
+
     bucket: str
     prefix: str = ""
-    cursor: Optional[str] = None
+    search: str | None = None
+    cursor: str | None = None
     limit: int = Field(default=100, ge=1, le=1000)
-    sort: Optional[str] = None
-    order: Optional[str] = None
-    compressed: Optional[bool] = None
+    sort: str | None = None
+    order: str | None = None
+    compressed: bool | None = None
 
-    @field_validator('bucket')
+    @field_validator("bucket")
     @classmethod
     def validate_bucket(cls, v: str) -> str:
         """Validate bucket name."""
@@ -84,7 +89,7 @@ class ObjectListRequest(BaseModel):
             raise ValueError("Bucket name is required")
         return v.strip()
 
-    @field_validator('prefix')
+    @field_validator("prefix")
     @classmethod
     def normalize_prefix(cls, v: str) -> str:
         """Normalize prefix path."""
@@ -94,17 +99,26 @@ class ObjectListRequest(BaseModel):
         normalized = v.strip().strip("/")
         return normalized
 
+    @field_validator("cursor")
+    @classmethod
+    def normalize_cursor(cls, v: str | None) -> str | None:
+        """Normalize cursor value - handle 'null' string from frontend."""
+        if v == "null" or v == "":
+            return None
+        return v
+
 
 class FileMetadata(BaseContract):
     """File metadata response."""
+
     key: str
     original_bytes: int = Field(ge=0)
     stored_bytes: int = Field(ge=0)
     compressed: bool
     modified: datetime
     accept_ranges: bool = False
-    content_type: Optional[str] = None
-    etag: Optional[str] = None
+    content_type: str | None = None
+    etag: str | None = None
     metadata: dict = Field(default_factory=dict)
 
     @property
@@ -117,10 +131,11 @@ class FileMetadata(BaseContract):
 
 class DeleteObjectRequest(BaseModel):
     """Request to delete an object."""
+
     bucket: str
     key: str
 
-    @field_validator('key')
+    @field_validator("key")
     @classmethod
     def validate_key(cls, v: str) -> str:
         """Validate object key."""
@@ -132,5 +147,6 @@ class DeleteObjectRequest(BaseModel):
 
 class ObjectMetadataUpdate(BaseModel):
     """Update object metadata."""
+
     metadata: dict = Field(default_factory=dict)
     tags: dict = Field(default_factory=dict)

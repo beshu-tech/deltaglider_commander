@@ -1,28 +1,33 @@
 """Intelligent caching strategy with dependency tracking."""
+
 from __future__ import annotations
 
 import asyncio
+import builtins
 import hashlib
 import time
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, AsyncIterator, Dict, List, Optional, Set
+from typing import Any
 
 from cachetools import LRUCache, TTLCache
 
 
 class CacheLevel(Enum):
     """Cache levels for different data types."""
-    METADATA = "metadata"      # Object metadata, high hit rate
-    LISTING = "listing"         # Directory listings, moderate hit rate
-    CONTENT = "content"        # File content, low hit rate
-    STATS = "stats"           # Bucket statistics, moderate hit rate
-    SYSTEM = "system"         # System-wide data, high hit rate
+
+    METADATA = "metadata"  # Object metadata, high hit rate
+    LISTING = "listing"  # Directory listings, moderate hit rate
+    CONTENT = "content"  # File content, low hit rate
+    STATS = "stats"  # Bucket statistics, moderate hit rate
+    SYSTEM = "system"  # System-wide data, high hit rate
 
 
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
+
     key: str
     value: Any
     level: CacheLevel
@@ -30,8 +35,8 @@ class CacheEntry:
     accessed_at: float
     access_count: int
     size_bytes: int
-    dependencies: Set[str]
-    tags: Dict[str, str]
+    dependencies: set[str]
+    tags: dict[str, str]
 
     def touch(self):
         """Update access time and count."""
@@ -42,21 +47,22 @@ class CacheEntry:
 @dataclass
 class CacheStats:
     """Cache statistics."""
+
     total_entries: int
     total_size_bytes: int
     hit_rate: float
     miss_rate: float
     eviction_count: int
     avg_entry_age_seconds: float
-    entries_by_level: Dict[CacheLevel, int]
+    entries_by_level: dict[CacheLevel, int]
 
 
 class DependencyGraph:
     """Track cache entry dependencies for intelligent invalidation."""
 
     def __init__(self):
-        self._forward_deps: Dict[str, Set[str]] = {}  # key -> dependencies
-        self._reverse_deps: Dict[str, Set[str]] = {}  # key -> dependents
+        self._forward_deps: dict[str, set[str]] = {}  # key -> dependencies
+        self._reverse_deps: dict[str, set[str]] = {}  # key -> dependents
         self._lock = asyncio.Lock()
 
     async def add_dependency(self, key: str, depends_on: str):
@@ -72,7 +78,7 @@ class DependencyGraph:
                 self._reverse_deps[depends_on] = set()
             self._reverse_deps[depends_on].add(key)
 
-    async def get_affected(self, key: str) -> Set[str]:
+    async def get_affected(self, key: str) -> set[str]:
         """Get all cache entries affected by invalidating this key."""
         async with self._lock:
             affected = {key}
@@ -118,7 +124,7 @@ class IntelligentCache:
         self._stats_cache = TTLCache(maxsize=500, ttl=300)  # Moderate TTL for stats
 
         # Cache metadata tracking
-        self._entries: Dict[str, CacheEntry] = {}
+        self._entries: dict[str, CacheEntry] = {}
         self._dependency_graph = DependencyGraph()
 
         # Statistics
@@ -129,7 +135,7 @@ class IntelligentCache:
         # Locks
         self._lock = asyncio.Lock()
 
-    async def get(self, key: str, level: CacheLevel = CacheLevel.METADATA) -> Optional[Any]:
+    async def get(self, key: str, level: CacheLevel = CacheLevel.METADATA) -> Any | None:
         """Get value from cache."""
         async with self._lock:
             cache = self._get_cache_for_level(level)
@@ -149,8 +155,8 @@ class IntelligentCache:
         key: str,
         value: Any,
         level: CacheLevel = CacheLevel.METADATA,
-        dependencies: Optional[Set[str]] = None,
-        tags: Optional[Dict[str, str]] = None
+        dependencies: builtins.set[str] | None = None,
+        tags: dict[str, str] | None = None,
     ):
         """Set value in cache with metadata."""
         async with self._lock:
@@ -172,7 +178,7 @@ class IntelligentCache:
                 access_count=0,
                 size_bytes=size,
                 dependencies=dependencies or set(),
-                tags=tags or {}
+                tags=tags or {},
             )
             self._entries[key] = entry
 
@@ -210,7 +216,7 @@ class IntelligentCache:
 
             return count
 
-    async def invalidate_by_tag(self, tag_key: str, tag_value: Optional[str] = None) -> int:
+    async def invalidate_by_tag(self, tag_key: str, tag_value: str | None = None) -> int:
         """Invalidate all entries with specific tag."""
         async with self._lock:
             count = 0
@@ -227,19 +233,14 @@ class IntelligentCache:
 
             return count
 
-    async def stream_with_cache(
-        self,
-        key: str,
-        fetch_func,
-        chunk_size: int = 8192
-    ) -> AsyncIterator[bytes]:
+    async def stream_with_cache(self, key: str, fetch_func, chunk_size: int = 8192) -> AsyncIterator[bytes]:
         """Stream data with intelligent caching of chunks."""
         # Check if we have the full content cached
         cached_content = await self.get(key, CacheLevel.CONTENT)
         if cached_content:
             # Stream from cache
             for i in range(0, len(cached_content), chunk_size):
-                yield cached_content[i:i + chunk_size]
+                yield cached_content[i : i + chunk_size]
             return
 
         # Stream from source and cache chunks
@@ -249,7 +250,7 @@ class IntelligentCache:
             yield chunk
 
         # Cache the full content if it's not too large
-        full_content = b''.join(chunks)
+        full_content = b"".join(chunks)
         if len(full_content) < 10 * 1024 * 1024:  # Cache if < 10MB
             await self.set(key, full_content, CacheLevel.CONTENT)
 
@@ -291,7 +292,7 @@ class IntelligentCache:
                 miss_rate=miss_rate,
                 eviction_count=self._evictions,
                 avg_entry_age_seconds=avg_age,
-                entries_by_level=entries_by_level
+                entries_by_level=entries_by_level,
             )
 
     async def clear(self):
@@ -333,6 +334,7 @@ class IntelligentCache:
     def _matches_pattern(self, key: str, pattern: str) -> bool:
         """Check if key matches pattern (simple wildcard support)."""
         import fnmatch
+
         return fnmatch.fnmatch(key, pattern)
 
 

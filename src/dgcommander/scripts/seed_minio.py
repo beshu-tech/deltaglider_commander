@@ -1,14 +1,14 @@
 """Utility script to seed a MinIO bucket with sample DeltaGlider objects."""
+
 from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import boto3
 from botocore.exceptions import ClientError
-
 from deltaglider.client import create_client
 
 SEED_FILES = [
@@ -100,4 +100,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

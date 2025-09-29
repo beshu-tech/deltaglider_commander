@@ -1,9 +1,9 @@
 """S3-based implementation of BucketRepository."""
+
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
 
 from ...contracts.buckets import BucketStats
 from ...domain.repositories import BucketRepository
@@ -14,12 +14,12 @@ from ...util.cache import ThreadSafeTTLCache
 class S3BucketRepository(BucketRepository):
     """S3-backed bucket repository implementation."""
 
-    def __init__(self, sdk: EnhancedDeltaGliderSDK, cache: Optional[ThreadSafeTTLCache] = None):
+    def __init__(self, sdk: EnhancedDeltaGliderSDK, cache: ThreadSafeTTLCache | None = None):
         self._sdk = sdk
         self._cache = cache or ThreadSafeTTLCache(maxsize=100, ttl_seconds=60)
         self._lock = asyncio.Lock()
 
-    async def list_buckets(self) -> List[BucketStats]:
+    async def list_buckets(self) -> list[BucketStats]:
         """List all buckets with caching."""
         cache_key = "buckets:all"
 
@@ -41,7 +41,7 @@ class S3BucketRepository(BucketRepository):
                 stored_bytes=snapshot.stored_bytes,
                 savings_pct=snapshot.savings_pct,
                 computed_at=snapshot.computed_at,
-                pending=False
+                pending=False,
             )
             buckets.append(bucket)
 
@@ -50,7 +50,7 @@ class S3BucketRepository(BucketRepository):
 
         return buckets
 
-    async def get_bucket(self, name: str) -> Optional[BucketStats]:
+    async def get_bucket(self, name: str) -> BucketStats | None:
         """Get bucket by name."""
         buckets = await self.list_buckets()
         for bucket in buckets:
@@ -73,8 +73,8 @@ class S3BucketRepository(BucketRepository):
             original_bytes=0,
             stored_bytes=0,
             savings_pct=0.0,
-            computed_at=datetime.now(timezone.utc),
-            pending=False
+            computed_at=datetime.now(UTC),
+            pending=False,
         )
 
     async def delete_bucket(self, name: str, force: bool = False) -> bool:
@@ -113,8 +113,8 @@ class S3BucketRepository(BucketRepository):
             original_bytes=stats["total_original_bytes"],
             stored_bytes=stats["total_stored_bytes"],
             savings_pct=stats["overall_compression_rate"],
-            computed_at=datetime.now(timezone.utc),
-            pending=False
+            computed_at=datetime.now(UTC),
+            pending=False,
         )
 
         # Update cache

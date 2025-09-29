@@ -1,13 +1,14 @@
 """S3-based implementation of ObjectRepository."""
+
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncIterator, List, Optional
+from collections.abc import AsyncIterator
 
 from ...contracts.objects import ObjectItem
 from ...domain.repositories import ObjectRepository
+from ...services.cache_strategy import CacheLevel, IntelligentCache
 from ...services.deltaglider import S3DeltaGliderSDK
-from ...services.cache_strategy import IntelligentCache, CacheLevel
 
 
 class S3ObjectRepository(ObjectRepository):
@@ -19,13 +20,8 @@ class S3ObjectRepository(ObjectRepository):
         self._lock = asyncio.Lock()
 
     async def list_objects(
-        self,
-        bucket: str,
-        prefix: str = "",
-        limit: int = 100,
-        cursor: Optional[str] = None,
-        compressed: Optional[bool] = None
-    ) -> tuple[List[ObjectItem], Optional[str]]:
+        self, bucket: str, prefix: str = "", limit: int = 100, cursor: str | None = None, compressed: bool | None = None
+    ) -> tuple[list[ObjectItem], str | None]:
         """List objects with pagination and caching."""
         # Build cache key
         cache_key = f"list:{bucket}:{prefix}:{limit}:{cursor}:{compressed}"
@@ -47,7 +43,7 @@ class S3ObjectRepository(ObjectRepository):
                     original_bytes=obj.original_bytes,
                     stored_bytes=obj.stored_bytes,
                     compressed=obj.compressed,
-                    modified=obj.modified
+                    modified=obj.modified,
                 )
                 objects.append(item)
 
@@ -66,7 +62,7 @@ class S3ObjectRepository(ObjectRepository):
 
         return result
 
-    async def get_object_metadata(self, bucket: str, key: str) -> Optional[ObjectItem]:
+    async def get_object_metadata(self, bucket: str, key: str) -> ObjectItem | None:
         """Get object metadata with caching."""
         cache_key = f"meta:{bucket}:{key}"
 
@@ -84,7 +80,7 @@ class S3ObjectRepository(ObjectRepository):
                 original_bytes=metadata.original_bytes,
                 stored_bytes=metadata.stored_bytes,
                 compressed=metadata.compressed,
-                modified=metadata.modified
+                modified=metadata.modified,
             )
 
             # Cache result
@@ -114,13 +110,7 @@ class S3ObjectRepository(ObjectRepository):
         file_obj = BytesIO(data)
 
         # Upload with SDK
-        result = await self._run_sync(
-            self._sdk.analyze_and_upload,
-            bucket,
-            key,
-            file_obj,
-            auto_detect=True
-        )
+        result = await self._run_sync(self._sdk.analyze_and_upload, bucket, key, file_obj, auto_detect=True)
 
         # Create response item
         item = ObjectItem(
@@ -128,7 +118,7 @@ class S3ObjectRepository(ObjectRepository):
             original_bytes=result.original_bytes,
             stored_bytes=result.stored_bytes,
             compressed=result.compressed,
-            modified=result.modified if hasattr(result, 'modified') else None
+            modified=result.modified if hasattr(result, "modified") else None,
         )
 
         # Invalidate list cache for this bucket

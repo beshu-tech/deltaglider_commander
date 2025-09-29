@@ -1,7 +1,6 @@
 """Upload-related API contracts."""
-from __future__ import annotations
 
-from typing import List, Optional
+from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -10,6 +9,7 @@ from .base import BaseContract
 
 class UploadResult(BaseContract):
     """Result of a single file upload."""
+
     bucket: str
     key: str
     original_bytes: int = Field(ge=0)
@@ -18,31 +18,33 @@ class UploadResult(BaseContract):
     operation: str
     savings_bytes: int = Field(ge=0)
     savings_pct: float = Field(ge=0, le=100)
-    physical_key: Optional[str] = None
-    relative_path: Optional[str] = None
-    compression_strategy: Optional[str] = None
-    file_type: Optional[str] = None
+    physical_key: str | None = None
+    relative_path: str | None = None
+    compression_strategy: str | None = None
+    file_type: str | None = None
     metadata: dict = Field(default_factory=dict)
 
 
 class UploadStats(BaseContract):
     """Statistics for batch upload operation."""
+
     count: int = Field(ge=0)
     original_bytes: int = Field(ge=0)
     stored_bytes: int = Field(ge=0)
     savings_bytes: int = Field(ge=0)
     savings_pct: float = Field(ge=0, le=100)
     average_compression_ratio: float = Field(ge=0, le=1)
-    processing_time_seconds: Optional[float] = None
+    processing_time_seconds: float | None = None
 
 
 class UploadResponse(BaseContract):
     """Response for upload operations."""
+
     bucket: str
     prefix: str = ""
-    results: List[UploadResult]
+    results: list[UploadResult]
     stats: UploadStats
-    failed: List[UploadError] = Field(default_factory=list)
+    failed: list[UploadError] = Field(default_factory=list)
 
     @property
     def success_rate(self) -> float:
@@ -55,14 +57,16 @@ class UploadResponse(BaseContract):
 
 class UploadError(BaseModel):
     """Error information for failed uploads."""
+
     file_name: str
     error_code: str
     error_message: str
-    details: Optional[dict] = None
+    details: dict | None = None
 
 
 class UploadRequest(BaseModel):
     """Request for file upload."""
+
     bucket: str
     prefix: str = ""
     enable_compression: bool = True
@@ -70,7 +74,7 @@ class UploadRequest(BaseModel):
     tags: dict = Field(default_factory=dict)
     metadata: dict = Field(default_factory=dict)
 
-    @field_validator('prefix')
+    @field_validator("prefix")
     @classmethod
     def normalize_prefix(cls, v: str) -> str:
         """Normalize prefix path."""
@@ -82,7 +86,7 @@ class UploadRequest(BaseModel):
         segments = [s for s in normalized.split("/") if s and s not in {".", ".."}]
         return "/".join(segments)
 
-    @field_validator('compression_strategy')
+    @field_validator("compression_strategy")
     @classmethod
     def validate_strategy(cls, v: str) -> str:
         """Validate compression strategy."""
@@ -94,6 +98,7 @@ class UploadRequest(BaseModel):
 
 class BatchUploadRequest(BaseModel):
     """Request for batch file upload."""
+
     bucket: str
     prefix: str = ""
     parallel_uploads: int = Field(default=4, ge=1, le=10)
@@ -105,13 +110,14 @@ class BatchUploadRequest(BaseModel):
 
 class UploadProgressUpdate(BaseModel):
     """Progress update for upload operations."""
+
     upload_id: str
     file_name: str
     bytes_uploaded: int
     total_bytes: int
     percentage: float = Field(ge=0, le=100)
     status: str  # "pending", "uploading", "compressing", "completed", "failed"
-    error: Optional[str] = None
+    error: str | None = None
 
     @property
     def is_complete(self) -> bool:

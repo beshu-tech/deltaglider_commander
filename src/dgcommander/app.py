@@ -1,8 +1,8 @@
 """Flask application factory for the DeltaGlider UI backend."""
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
@@ -24,9 +24,9 @@ from .util.errors import register_error_handlers
 
 def create_app(
     *,
-    config: Optional[DGCommanderConfig] = None,
-    sdk: Optional[DeltaGliderSDK] = None,
-    services: Optional[ServiceContainer] = None,
+    config: DGCommanderConfig | None = None,
+    sdk: DeltaGliderSDK | None = None,
+    services: ServiceContainer | None = None,
 ) -> Flask:
     app = Flask(
         "dgcommander",
@@ -71,7 +71,11 @@ def create_app(
         index_path = static_dir / "index.html"
         if index_path.exists():
             return send_from_directory(static_dir, "index.html")
-        return "DeltaGlider Backend", 200
+        return app.response_class(
+            response='{"status":  "ok", "message": "Deltaglider Commander backend"}',
+            status=200,
+            mimetype="application/json",
+        )
 
     return app
 

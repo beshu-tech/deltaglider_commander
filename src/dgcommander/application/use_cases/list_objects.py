@@ -1,7 +1,6 @@
 """Use case for listing objects."""
-from __future__ import annotations
 
-from typing import Optional
+from __future__ import annotations
 
 from ...contracts.objects import ObjectListRequest, ObjectListResponse, ObjectSortOrder
 from ...domain.repositories import ObjectRepository
@@ -24,7 +23,7 @@ class ListObjectsUseCase:
             prefix=request.prefix,
             limit=request.limit,
             cursor=request.cursor,
-            compressed=request.compressed
+            compressed=request.compressed,
         )
 
         # Sort objects based on sort order
@@ -33,11 +32,7 @@ class ListObjectsUseCase:
         # Extract common prefixes (directories)
         common_prefixes = self._extract_common_prefixes(sorted_objects, request.prefix)
 
-        return ObjectListResponse(
-            objects=sorted_objects,
-            common_prefixes=common_prefixes,
-            cursor=next_cursor
-        )
+        return ObjectListResponse(objects=sorted_objects, common_prefixes=common_prefixes, cursor=next_cursor)
 
     def _sort_objects(self, objects: list, sort_order: ObjectSortOrder) -> list:
         """Sort objects based on the specified order."""

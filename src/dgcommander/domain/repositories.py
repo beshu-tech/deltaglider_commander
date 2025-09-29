@@ -1,26 +1,26 @@
 """Repository interfaces for domain layer."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from ..contracts.buckets import BucketStats
 from ..contracts.objects import ObjectItem
 
-
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class Repository(ABC, Generic[T]):
     """Base repository interface."""
 
     @abstractmethod
-    async def find_by_id(self, id: str) -> Optional[T]:
+    async def find_by_id(self, id: str) -> T | None:
         """Find entity by ID."""
         ...
 
     @abstractmethod
-    async def find_many(self, filter: dict) -> List[T]:
+    async def find_many(self, filter: dict) -> list[T]:
         """Find multiple entities matching filter."""
         ...
 
@@ -45,18 +45,13 @@ class ObjectRepository(ABC):
 
     @abstractmethod
     async def list_objects(
-        self,
-        bucket: str,
-        prefix: str = "",
-        limit: int = 100,
-        cursor: Optional[str] = None,
-        compressed: Optional[bool] = None
-    ) -> tuple[List[ObjectItem], Optional[str]]:
+        self, bucket: str, prefix: str = "", limit: int = 100, cursor: str | None = None, compressed: bool | None = None
+    ) -> tuple[list[ObjectItem], str | None]:
         """List objects with pagination."""
         ...
 
     @abstractmethod
-    async def get_object_metadata(self, bucket: str, key: str) -> Optional[ObjectItem]:
+    async def get_object_metadata(self, bucket: str, key: str) -> ObjectItem | None:
         """Get object metadata."""
         ...
 
@@ -85,12 +80,12 @@ class BucketRepository(ABC):
     """Repository interface for bucket operations."""
 
     @abstractmethod
-    async def list_buckets(self) -> List[BucketStats]:
+    async def list_buckets(self) -> list[BucketStats]:
         """List all buckets."""
         ...
 
     @abstractmethod
-    async def get_bucket(self, name: str) -> Optional[BucketStats]:
+    async def get_bucket(self, name: str) -> BucketStats | None:
         """Get bucket by name."""
         ...
 
@@ -119,12 +114,12 @@ class CacheRepository(ABC):
     """Repository interface for cache operations."""
 
     @abstractmethod
-    async def get(self, key: str) -> Optional[any]:
+    async def get(self, key: str) -> any | None:
         """Get cached value."""
         ...
 
     @abstractmethod
-    async def set(self, key: str, value: any, ttl: Optional[int] = None) -> None:
+    async def set(self, key: str, value: any, ttl: int | None = None) -> None:
         """Set cached value with optional TTL."""
         ...
 
@@ -144,11 +139,11 @@ class CacheRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_many(self, keys: List[str]) -> dict:
+    async def get_many(self, keys: list[str]) -> dict:
         """Get multiple cached values."""
         ...
 
     @abstractmethod
-    async def set_many(self, items: dict, ttl: Optional[int] = None) -> None:
+    async def set_many(self, items: dict, ttl: int | None = None) -> None:
         """Set multiple cached values."""
         ...

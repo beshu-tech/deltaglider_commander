@@ -1,8 +1,9 @@
 """Application-level error definitions and helpers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 from flask import Flask, jsonify
 
@@ -14,10 +15,10 @@ class APIError(Exception):
     code: str
     message: str
     http_status: int = 400
-    details: Optional[Dict[str, Any]] = None
+    details: dict[str, Any] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        payload: Dict[str, Any] = {
+    def to_dict(self) -> dict[str, Any]:
+        payload: dict[str, Any] = {
             "error": {
                 "code": self.code,
                 "message": self.message,
@@ -45,7 +46,7 @@ class NotFoundError(APIError):
 class SDKError(APIError):
     """Raised when the underlying DeltaGlider SDK fails."""
 
-    def __init__(self, message: str = "Storage backend error", *, details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, message: str = "Storage backend error", *, details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code="sdk_error",
             message=message,

@@ -1,4 +1,5 @@
 """Buckets API endpoints."""
+
 from __future__ import annotations
 
 from flask import Blueprint, request
@@ -6,7 +7,6 @@ from flask import Blueprint, request
 from ..util.errors import APIError, NotFoundError
 from ..util.json import json_response
 from . import get_container
-
 
 bp = Blueprint("buckets", __name__, url_prefix="/api/buckets")
 

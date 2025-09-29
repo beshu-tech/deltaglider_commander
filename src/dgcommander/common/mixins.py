@@ -1,11 +1,12 @@
 """Reusable mixins for DRY pattern implementation."""
+
 from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class AutoSerializableMixin:
@@ -15,23 +16,17 @@ class AutoSerializableMixin:
         """Convert object to dictionary."""
         result = {}
         for key, value in self.__dict__.items():
-            if key.startswith('_'):
+            if key.startswith("_"):
                 continue  # Skip private attributes
 
-            if hasattr(value, 'to_dict'):
+            if hasattr(value, "to_dict"):
                 result[key] = value.to_dict()
             elif isinstance(value, datetime):
                 result[key] = value.isoformat().replace("+00:00", "Z")
             elif isinstance(value, (list, tuple)):
-                result[key] = [
-                    item.to_dict() if hasattr(item, 'to_dict') else item
-                    for item in value
-                ]
+                result[key] = [item.to_dict() if hasattr(item, "to_dict") else item for item in value]
             elif isinstance(value, dict):
-                result[key] = {
-                    k: v.to_dict() if hasattr(v, 'to_dict') else v
-                    for k, v in value.items()
-                }
+                result[key] = {k: v.to_dict() if hasattr(v, "to_dict") else v for k, v in value.items()}
             else:
                 result[key] = value
 
@@ -42,12 +37,12 @@ class AutoSerializableMixin:
         return json.dumps(self.to_dict(), **kwargs)
 
     @classmethod
-    def from_dict(cls: Type[T], data: dict) -> T:
+    def from_dict(cls: type[T], data: dict) -> T:
         """Create instance from dictionary."""
         return cls(**data)
 
     @classmethod
-    def from_json(cls: Type[T], json_str: str) -> T:
+    def from_json(cls: type[T], json_str: str) -> T:
         """Create instance from JSON string."""
         return cls.from_dict(json.loads(json_str))
 
@@ -91,10 +86,10 @@ class CacheableMixin:
         """Generate cache key for this object."""
         class_name = self.__class__.__name__
         # Use important attributes for key generation
-        key_attrs = getattr(self, '_cache_key_attrs', [])
+        key_attrs = getattr(self, "_cache_key_attrs", [])
         if not key_attrs:
             # Default to all non-private attributes
-            key_attrs = [k for k in self.__dict__.keys() if not k.startswith('_')]
+            key_attrs = [k for k in self.__dict__.keys() if not k.startswith("_")]
 
         key_parts = [class_name]
         for attr in key_attrs:
@@ -106,11 +101,11 @@ class CacheableMixin:
 
     def cache_ttl(self) -> int:
         """Return TTL for caching this object."""
-        return getattr(self, '_cache_ttl', 300)  # Default 5 minutes
+        return getattr(self, "_cache_ttl", 300)  # Default 5 minutes
 
-    def cache_tags(self) -> Dict[str, str]:
+    def cache_tags(self) -> dict[str, str]:
         """Return tags for cache entry."""
-        return getattr(self, '_cache_tags', {})
+        return getattr(self, "_cache_tags", {})
 
 
 class ValidatableMixin:
@@ -189,12 +184,9 @@ class MetricsMixin:
                     "latest": values[-1][1],
                     "min": min(numeric_values),
                     "max": max(numeric_values),
-                    "avg": sum(numeric_values) / len(numeric_values)
+                    "avg": sum(numeric_values) / len(numeric_values),
                 }
             else:
-                summary[name] = {
-                    "count": len(values),
-                    "latest": values[-1][1]
-                }
+                summary[name] = {"count": len(values), "latest": values[-1][1]}
 
         return summary
