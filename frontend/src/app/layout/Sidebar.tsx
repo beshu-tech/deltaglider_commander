@@ -14,17 +14,25 @@ interface SidebarHeaderProps {
 
 function SidebarHeader({ onNavigateHome }: SidebarHeaderProps) {
   return (
-    <Link to="/buckets" className="block focus-visible:outline-none" onClick={onNavigateHome}>
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-500 text-white shadow-lg">
-          <Archive className="h-5 w-5" />
+    <Link to="/buckets" className="block focus-visible:outline-none group" onClick={onNavigateHome}>
+      <div className="flex items-center gap-3 mb-2">
+        {/* Deltaglider Logo - Compact Design */}
+        <div className="relative">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-red-600 shadow-lg ring-1 ring-red-400/20">
+            {/* Delta symbol inspired by the logo */}
+            <div className="relative">
+              <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-white"></div>
+              <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[3px] border-r-[3px] border-b-[6px] border-l-transparent border-r-transparent border-b-red-500"></div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col">
-          <span className="text-xs uppercase tracking-[0.2em] text-brand-200">DeltaGlider</span>
-          <span className="text-lg font-semibold text-white">Commander</span>
+        <div className="flex flex-col leading-tight">
+          <span className="text-sm font-bold text-white tracking-tight">Deltaglider</span>
+          <span className="text-xs text-slate-300 font-medium">Commander</span>
         </div>
       </div>
-      <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-brand-100">
+      <div className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/8 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-slate-200 backdrop-blur-sm group-hover:bg-white/12 transition-colors">
+        <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
         <span>Object Console</span>
       </div>
     </Link>
@@ -39,18 +47,18 @@ interface BucketFilterProps {
 function BucketFilter({ filter, onFilterChange }: BucketFilterProps) {
   return (
     <div className="space-y-2">
-      <label htmlFor="sidebar-filter" className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+      <label htmlFor="sidebar-filter" className="text-xs font-semibold uppercase tracking-wide text-slate-400">
         Filter Buckets
       </label>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
         <Input
           id="sidebar-filter"
           type="search"
           value={filter}
           onChange={(event) => onFilterChange(event.target.value)}
-          placeholder="Search"
-          className="pl-9 text-slate-100 placeholder:text-slate-400 focus:ring-brand-400/60"
+          placeholder="Search buckets..."
+          className="pl-9 h-9 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all"
         />
       </div>
     </div>
@@ -75,20 +83,20 @@ function CreateBucketForm({
   onCancel
 }: CreateBucketFormProps) {
   return (
-    <form onSubmit={onSubmit} className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-3">
+    <form onSubmit={onSubmit} className="space-y-3 rounded-lg border border-slate-700/50 bg-slate-800/30 p-4 backdrop-blur-sm">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-brand-100">New bucket</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">New bucket</span>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md p-1 text-slate-300 transition hover:bg-white/10 hover:text-white"
+          className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-700/50 hover:text-white"
           aria-label="Cancel bucket creation"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
       <div className="space-y-2">
-        <label htmlFor="sidebar-bucket-name" className="text-xs uppercase tracking-wide text-slate-200">
+        <label htmlFor="sidebar-bucket-name" className="text-xs font-medium uppercase tracking-wide text-slate-300">
           Bucket name
         </label>
         <Input
@@ -96,21 +104,25 @@ function CreateBucketForm({
           value={value}
           onChange={(event) => onValueChange(event.target.value)}
           placeholder="e.g. images-prod"
-          className="border-white/10 bg-black/20 text-white placeholder:text-slate-400 focus:ring-brand-400/60"
+          className="h-9 border-slate-600/50 bg-slate-700/50 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all"
           disabled={isSubmitting}
           autoFocus
         />
-        {validationError ? <p className="text-xs text-rose-200">{validationError}</p> : null}
+        {validationError ? <p className="text-xs text-red-300 font-medium">{validationError}</p> : null}
       </div>
       <div className="flex items-center gap-2">
-        <Button type="submit" className="flex-1 border-white/10 bg-brand-500 text-white hover:bg-brand-400" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="flex-1 h-9 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           Create
         </Button>
         <Button
           type="button"
           variant="ghost"
-          className="border-white/10 text-slate-200 hover:bg-white/10"
+          className="h-9 border border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all"
           onClick={onCancel}
           disabled={isSubmitting}
         >
@@ -127,9 +139,10 @@ interface BucketListProps {
   error: unknown;
   filter: string;
   activeBucket: string | null;
+  onCreateClick: () => void;
 }
 
-function BucketList({ buckets, isLoading, error, filter, activeBucket }: BucketListProps) {
+function BucketList({ buckets, isLoading, error, filter, activeBucket, onCreateClick }: BucketListProps) {
   const filteredBuckets = useMemo(() => {
     if (!buckets) {
       return [];
@@ -170,11 +183,11 @@ function BucketList({ buckets, isLoading, error, filter, activeBucket }: BucketL
     <nav className="flex flex-col gap-1 text-sm">
       <Link
         to="/buckets"
-        className="flex items-center gap-3 rounded-md px-3 py-2 text-slate-200 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-        activeProps={{ className: "bg-white/15 text-white shadow" }}
+        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-300 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+        activeProps={{ className: "bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-white shadow-sm border border-blue-500/30" }}
       >
-        <Archive className="h-4 w-4" />
-        Buckets overview
+        <Archive className="h-4 w-4 flex-shrink-0" />
+        <span className="font-medium">Buckets overview</span>
       </Link>
       {filteredBuckets.map((bucket) => {
         const isActive = activeBucket === bucket.name;
@@ -184,17 +197,19 @@ function BucketList({ buckets, isLoading, error, filter, activeBucket }: BucketL
             to="/b/$bucket"
             params={{ bucket: bucket.name }}
             search={DEFAULT_OBJECTS_SEARCH_STATE}
-            className={`group flex items-center justify-between rounded-md px-3 py-2 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
-              isActive ? "bg-white/20 text-white shadow" : "text-slate-200 hover:bg-white/10 hover:text-white"
+            className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 ${
+              isActive
+                ? "bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-white shadow-sm border border-blue-500/30"
+                : "text-slate-300 hover:bg-slate-800/50 hover:text-white border border-transparent"
             }`}
             aria-current={isActive ? "page" : undefined}
           >
-            <span className="flex items-center gap-3">
-              <Archive className="h-4 w-4" />
-              <span>{bucket.name}</span>
+            <span className="flex items-center gap-3 min-w-0">
+              <Archive className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate font-medium">{bucket.name}</span>
             </span>
             {bucket.pending ? (
-              <Badge className="border-white/30 bg-white/20 text-[10px] uppercase text-white">Pending</Badge>
+              <Badge className="border-amber-400/30 bg-amber-400/20 text-[10px] uppercase text-amber-200 font-medium">Pending</Badge>
             ) : null}
           </Link>
         );
@@ -229,7 +244,7 @@ function SidebarActions({
   onFilterChange
 }: SidebarActionsProps) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {showCreateForm ? (
         <CreateBucketForm
           value={bucketName}
@@ -239,12 +254,7 @@ function SidebarActions({
           onSubmit={onSubmitCreate}
           onCancel={onCancelCreate}
         />
-      ) : (
-        <Button className="w-full border-white/10 bg-brand-500 text-white hover:bg-brand-400" onClick={onCreateClick}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Bucket
-        </Button>
-      )}
+      ) : null}
       <BucketFilter filter={filter} onFilterChange={onFilterChange} />
     </div>
   );
@@ -256,31 +266,31 @@ interface SidebarFooterProps {
 
 function SidebarFooter({ className }: SidebarFooterProps) {
   return (
-    <div className={`space-y-1 border-t border-white/10 pt-4 text-sm text-slate-200 ${className ?? ""}`}>
+    <div className={`space-y-1 border-t border-slate-700/50 pt-4 text-sm text-slate-300 ${className ?? ""}`}>
       <a
         href="https://delta-glider.dev/docs"
         target="_blank"
         rel="noreferrer"
-        className="flex items-center gap-3 rounded-md px-3 py-2 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
       >
         <BookOpen className="h-4 w-4" />
-        Documentation
+        <span className="font-medium">Documentation</span>
       </a>
       <a
         href="https://delta-glider.dev/support"
         target="_blank"
         rel="noreferrer"
-        className="flex items-center gap-3 rounded-md px-3 py-2 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible-outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
       >
         <LifeBuoy className="h-4 w-4" />
-        Support
+        <span className="font-medium">Support</span>
       </a>
       <button
         type="button"
-        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
       >
         <LogOut className="h-4 w-4" />
-        Sign Out
+        <span className="font-medium">Sign Out</span>
       </button>
     </div>
   );
@@ -324,7 +334,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-gradient-to-b from-slate-950 via-brand-900 to-slate-950 px-5 py-6 text-slate-100">
+    <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 px-5 py-6 text-slate-100 border-r border-slate-800/50">
       <div className="space-y-6">
         <SidebarHeader onNavigateHome={() => setFilter("")} />
         <SidebarActions
@@ -346,7 +356,10 @@ export function Sidebar() {
           onFilterChange={setFilter}
         />
         <div className="space-y-3">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-300">Buckets</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Buckets</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>
+          </div>
           <BucketList
             buckets={buckets}
             isLoading={isLoading}
