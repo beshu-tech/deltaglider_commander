@@ -1,0 +1,79 @@
+# tests.txt
+
+RFC-DG-UI-FE-0002: E2E & Testing Strategy (Top-Tier)
+Status: Draft
+Depends on: FE RFC, Backend RFCs
+
+1. Tools
+- Playwright 1.47+ (Chromium + WebKit in CI), HTML report, traces/videos on failure
+- Vitest + React Testing Library; msw for unit tests only
+- axe-core/playwright for a11y smoke
+- faker for aux data
+
+2. Environments
+- e2e-local: docker-compose → minio:9000 (seeded), backend:5000, frontend:5173/preview
+- e2e-ci: same with GH Actions service containers; artifacts uploaded
+
+3. Fixtures
+- fixtures/manifest.json: 2–3 buckets, ≥10k logical objects, 5–10 versions for some keys
+- Known key: releases/v1.0.0/app.zip with published sha256
+- Backend readiness: GET /api/test/health
+
+4. Scenarios
+S01 Buckets & Savings Trigger
+- Visit /buckets → render < 2s
+- Click Compute Savings on 'releases' → button disables; polling; numbers update; pending=false
+
+S02 Objects Browsing (Large)
+- /b/releases?prefix=releases/ → virtualized scroll across ≥5 pages; sort=modified_desc reflected in network params
+
+S03 Deep Prefix & History
+- Navigate to prefix releases/2024/09/ → refresh preserves state; back/forward restores
+
+S04 Object Details & Metadata
+- Open releases/v1.0.0/app.zip → metadata shows sizes, savings, modified, accept_ranges=false
+
+S05 Download Happy Path
+- Click Download → prepare→token→stream; file saved; sha256 matches fixture
+
+S06 Download Integrity Failure
+- Backend test hook corrupts delta; UI shows toast "Integrity check failed"; no partial file saved
+
+S07 Error Surfaces
+- Force 500 on /objects → inline error with Retry; app doesn't crash
+
+S08 Accessibility
+- axe scan on /buckets and /b/:bucket → 0 serious violations
+
+S09 Mobile
+- iPhone 12 emulation; table collapses; tap navigates; actions accessible
+
+S10 Performance Probe
+- Log TTI on /b/:bucket under 10k objects < 2s in CI
+
+5. Example Playwright (abbrev)
+import { test, expect } from '@playwright/test';
+test('S05 Download Happy Path', async ({ page }) => {
+  await page.goto('/b/releases?prefix=releases/');
+  await page.getByRole('row', { name: /app\.zip/ }).click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Download' }).click(),
+  ]);
+  const path = await download.path();
+  expect(path).toBeTruthy();
+});
+
+6. Unit Tests (Vitest)
+- BucketsPanel: pending state disables button; refetch after compute
+- ObjectsTable: renders only visible rows; preserves scroll across data updates
+- FilePanel: shows metadata; disables download while preparing
+- bytes.ts: edge cases; schemas.ts: invalid payloads rejected
+
+7. CI Pipeline
+- Jobs: lint, typecheck, unit, e2e
+- e2e steps: compose up → seed fixtures → build & preview → playwright test
+- Upload playwright-report + traces/videos on failure
+
+8. Definition of Done
+- S01–S08 pass; budgets met; Lighthouse ≥ 90 on /buckets (static); 0 serious axe issues

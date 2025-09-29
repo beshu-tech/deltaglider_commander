@@ -1,0 +1,223 @@
+import { useEffect, useMemo, useRef } from "react";
+import { ArrowUpDown, ChevronDown, ChevronUp, FileText, Folder, Loader2 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead } from "../../lib/ui/Table";
+import { formatBytes } from "../../lib/utils/bytes";
+import { formatDateTime } from "../../lib/utils/dates";
+import { ObjectItem, ObjectSortKey } from "./types";
+import { SelectionTarget } from "./useObjectSelection";
+
+interface ObjectsTableProps {
+  objects: ObjectItem[];
+  directories: string[];
+  sort: ObjectSortKey;
+  order: "asc" | "desc";
+  onSortChange: (column: ObjectSortKey) => void;
+  selectedKey?: string | null;
+  isSelected: (target: SelectionTarget) => boolean;
+  onToggleSelect: (target: SelectionTarget) => void;
+  onToggleSelectAll: () => void;
+  pageSelectableCount: number;
+  pageSelectedCount: number;
+  onRowClick: (item: ObjectItem) => void;
+  onEnterDirectory: (prefix: string) => void;
+  isFetching: boolean;
+}
+
+export function ObjectsTable({
+  objects,
+  directories,
+  sort,
+  order,
+  onSortChange,
+  selectedKey,
+  isSelected,
+  onToggleSelect,
+  onToggleSelectAll,
+  pageSelectableCount,
+  pageSelectedCount,
+  onRowClick,
+  onEnterDirectory,
+  isFetching
+}: ObjectsTableProps) {
+  const headerCheckboxRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!headerCheckboxRef.current) {
+      return;
+    }
+    headerCheckboxRef.current.indeterminate =
+      pageSelectedCount > 0 && pageSelectedCount < pageSelectableCount;
+  }, [pageSelectableCount, pageSelectedCount]);
+
+  const allSelected = pageSelectableCount > 0 && pageSelectedCount === pageSelectableCount;
+  const selectionDisabled = pageSelectableCount === 0;
+
+  const renderSortIcon = useMemo(
+    () =>
+      function render(column: ObjectSortKey) {
+        if (sort !== column) {
+          return <ArrowUpDown className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />;
+        }
+        return order === "asc" ? (
+          <ChevronUp className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" />
+        );
+      },
+    [order, sort]
+  );
+
+  const renderDirectoryRows = () =>
+    directories.map((prefix) => {
+      const label = prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+      const target: SelectionTarget = { type: "prefix", key: prefix };
+      const directorySelected = isSelected(target);
+      const rowClasses = `cursor-pointer border-b border-slate-100 transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800 ${
+        directorySelected ? "bg-brand-50/70 dark:bg-slate-800" : ""
+      }`;
+      return (
+        <tr key={`dir-${prefix}`} className={rowClasses} onClick={() => onEnterDirectory(prefix)}>
+          <TableCell className="w-12">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
+              checked={directorySelected}
+              onChange={(event) => {
+                event.stopPropagation();
+                onToggleSelect(target);
+              }}
+              aria-checked={directorySelected}
+              aria-label={`Select folder ${label}`}
+            />
+          </TableCell>
+          <TableCell className="font-medium text-slate-700 dark:text-slate-200">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                <Folder className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>{label}</span>
+            </div>
+          </TableCell>
+          <TableCell className="text-slate-400 dark:text-slate-500">—</TableCell>
+          <TableCell className="text-slate-400 dark:text-slate-500">—</TableCell>
+          <TableCell className="text-slate-400 dark:text-slate-500">—</TableCell>
+        </tr>
+      );
+    });
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="relative flex-1 overflow-auto">
+        <Table className="min-w-full">
+          <TableHead className="sticky top-0 z-10">
+            <tr className="bg-white dark:bg-slate-900">
+              <th className="w-12 px-3 py-2 text-left">
+                <input
+                  ref={headerCheckboxRef}
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
+                  checked={allSelected}
+                  disabled={selectionDisabled}
+                  onChange={(event) => {
+                    event.stopPropagation();
+                    onToggleSelectAll();
+                  }}
+                  aria-label="Select all items on this page"
+                />
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <button
+                  type="button"
+                  onClick={() => onSortChange("name")}
+                  className="flex items-center gap-2 text-slate-600 transition hover:text-brand-600 dark:text-slate-300"
+                >
+                  <span>Name</span>
+                  {renderSortIcon("name")}
+                  {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-300" /> : null}
+                </button>
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <button
+                  type="button"
+                  onClick={() => onSortChange("size")}
+                  className="flex items-center gap-2 text-slate-600 transition hover:text-brand-600 dark:text-slate-300"
+                >
+                  <span>Size</span>
+                  {renderSortIcon("size")}
+                </button>
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <button
+                  type="button"
+                  onClick={() => onSortChange("modified")}
+                  className="flex items-center gap-2 text-slate-600 transition hover:text-brand-600 dark:text-slate-300"
+                >
+                  <span>Modified</span>
+                  {renderSortIcon("modified")}
+                </button>
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Compression
+              </th>
+            </tr>
+          </TableHead>
+          <TableBody className="bg-white dark:bg-slate-900">
+            {directories.length > 0 ? renderDirectoryRows() : null}
+            {objects.map((item) => {
+              const target: SelectionTarget = { type: "object", key: item.key };
+              const objectSelected = isSelected(target);
+              const isHighlighted = selectedKey === item.key;
+              const rowClasses = `cursor-pointer border-b border-slate-100 transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800 ${
+                isHighlighted || objectSelected ? "bg-brand-50/70 dark:bg-slate-800" : ""
+              }`;
+              const name = item.key.split("/").pop() ?? item.key;
+              return (
+                <tr
+                  key={item.key}
+                  className={rowClasses}
+                  onClick={() => onRowClick(item)}
+                >
+                  <TableCell className="w-12">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
+                      checked={objectSelected}
+                      onChange={(event) => {
+                        event.stopPropagation();
+                        onToggleSelect(target);
+                      }}
+                      aria-checked={objectSelected}
+                      aria-label={`Select ${item.key}`}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-700 dark:text-slate-200">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                        <FileText className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <span className="truncate" title={item.key}>
+                        {name}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatBytes(item.original_bytes)}</TableCell>
+                  <TableCell>{formatDateTime(item.modified)}</TableCell>
+                  <TableCell className="capitalize text-slate-500 dark:text-slate-300">
+                    {item.compressed ? "Compressed" : "Original"}
+                  </TableCell>
+                </tr>
+              );
+            })}
+            {directories.length === 0 && objects.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">
+                  No objects found for the current filters.
+                </td>
+              </tr>
+            ) : null}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}

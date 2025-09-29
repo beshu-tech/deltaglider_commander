@@ -4,6 +4,8 @@ import { AppLayout } from "./layout/AppLayout";
 import { BucketObjectsPage } from "../pages/BucketObjectsPage";
 import { BucketsPage } from "../pages/BucketsPage";
 import { ObjectDetailsPage } from "../pages/ObjectDetailsPage";
+import { UploadPage } from "../pages/UploadPage";
+import { normalizeObjectsSearch } from "../features/objects/search";
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -27,18 +29,7 @@ const bucketsRoute = createRoute({
   component: BucketsPage
 });
 
-const searchValidator = (search: Record<string, unknown>) => ({
-  prefix: typeof search.prefix === "string" ? search.prefix : "",
-  cursor: typeof search.cursor === "string" ? search.cursor : undefined,
-  sort: typeof search.sort === "string" ? search.sort : "modified",
-  order: search.order === "asc" ? "asc" : "desc",
-  limit:
-    typeof search.limit === "number"
-      ? search.limit
-      : typeof search.limit === "string"
-      ? Number.parseInt(search.limit, 10) || 100
-      : 100
-});
+const searchValidator = (search: Record<string, unknown>) => normalizeObjectsSearch(search);
 
 const bucketObjectsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -54,10 +45,18 @@ const objectDetailsRoute = createRoute({
   validateSearch: searchValidator
 });
 
+const uploadRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/b/$bucket/upload",
+  component: UploadPage,
+  validateSearch: searchValidator
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   bucketsRoute,
-  bucketObjectsRoute.addChildren([objectDetailsRoute])
+  bucketObjectsRoute.addChildren([objectDetailsRoute]),
+  uploadRoute
 ]);
 
 export const router = createRouter({

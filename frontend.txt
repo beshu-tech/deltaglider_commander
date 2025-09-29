@@ -1,0 +1,160 @@
+# frontend.txt
+
+RFC-DG-UI-FE-0001: Frontend Architecture & Specs (v1)
+Status: Draft
+Depends on: RFC-DG-UI-0001/0002 (backend API v1)
+Scope: Read-only browsing, on-demand savings computation, single-file download, minimal stats. No uploads in v1 UI.
+
+1. Goals / Non-Goals
+- Goals: fast bucket/object browsing at >10k objects, compute-savings trigger, download originals, simple stats, solid a11y.
+- Non-Goals: auth, global search across buckets, websockets, heavy dashboards, batch download.
+
+2. Tech Choices (locked)
+- Vite 5, TypeScript 5, React 18 (StrictMode)
+- TanStack Router 1, TanStack Query 5
+- TanStack Table 8 + @tanstack/react-virtual 3
+- Tailwind CSS 3 (+ tailwind-merge), Lucide React
+- React Hook Form 7 (light), zod (boundary validation)
+- date-fns; custom byte formatter
+- Output: SPA /dist with hashed assets
+
+3. Project Layout
+frontend/
+  src/
+    app/
+      providers.tsx           # QueryClient, Router, error overlays
+      routes.tsx              # route tree
+      layout/
+        AppLayout.tsx         # Header, Sidebar, Content outlet
+        Header.tsx
+        Sidebar.tsx
+    features/
+      buckets/
+        BucketsPanel.tsx
+        useBuckets.ts
+        types.ts
+      objects/
+        ObjectsView.tsx
+        ObjectsToolbar.tsx
+        ObjectsTable.tsx      # virtualized table
+        useObjects.ts
+        types.ts
+      file/
+        FilePanel.tsx         # metadata + download
+        useFile.ts
+      savings/
+        BucketSavingsButton.tsx
+        useSavings.ts
+      stats/
+        SummaryCard.tsx
+        useStats.ts
+    lib/
+      api/
+        client.ts             # fetch wrapper
+        endpoints.ts          # typed calls
+        schemas.ts            # zod schemas
+        queryKeys.ts
+      ui/
+        Button.tsx
+        Table.tsx
+        Tooltip.tsx
+        Badge.tsx
+        EmptyState.tsx
+      utils/
+        bytes.ts
+        dates.ts
+        invariant.ts
+        download.ts
+      config/
+        env.ts                # VITE_API_URL validation
+    pages/
+      BucketsPage.tsx
+      BucketObjectsPage.tsx
+      ObjectDetailsPage.tsx
+    styles/
+      index.css
+    main.tsx
+    index.html
+  vite.config.ts
+  tailwind.config.js
+  tsconfig.json
+  .eslintrc.cjs
+  .prettierrc
+
+4. Routing (URL contract)
+- '/' → redirect to '/buckets'
+- '/buckets' → bucket list + summary
+- '/b/:bucket' → objects view (prefix root)
+  - query: prefix, cursor, sort, order, limit
+- '/b/:bucket/o/*' → object metadata panel
+
+5. Data Types (mirror backend)
+interface Bucket { name:string; object_count:number; original_bytes:number; stored_bytes:number; savings_pct:number; pending?:boolean; }
+interface ObjectItem { key:string; original_bytes:number; stored_bytes:number; compressed:boolean; modified:string; }
+interface ObjectList { objects:ObjectItem[]; common_prefixes:string[]; cursor?:string; }
+interface FileMetadata { key:string; original_bytes:number; stored_bytes:number; compressed:boolean; modified:string; accept_ranges:boolean; }
+interface DownloadPrepare { download_token:string; estimated_bytes:number; }
+
+6. API Client
+- Base URL from VITE_API_URL (validated via zod)
+- AbortController timeout 30s for list/meta; downloads unbounded once streaming
+- Normalize errors: { error:{ code, message, details } }
+
+7. Query Keys / Caching
+qk.buckets = ['buckets']
+qk.objects = (b,prefix,sort,order,limit,cursor?) => ['objects',b,prefix,sort,order,limit,cursor]
+qk.meta = (b,k) => ['meta',b,k]
+qk.statsSummary = (b?) => ['stats','summary',b ?? '_all_']
+
+Policies:
+- buckets: staleTime=30s; refetchOnWindowFocus=false
+- objects: staleTime=30s; keepPreviousData=true
+- metadata: staleTime=5m
+
+8. Objects Table
+- Server-driven paging/sorting; client sorts only current page
+- Virtualization: row 40px, overscan 8–12; sticky header
+- Columns: Name | Size (original) | Savings | Modified
+- Row click → details route
+
+9. Compute Savings UX
+- Per-bucket button → POST /buckets/{bucket}/compute-savings
+- Disable while pending; poll /buckets each 3–5s; show last computed
+
+10. Download Flow
+- prepare → token → GET stream → save via ObjectURL
+- Inline + toast errors
+
+11. Error Handling & A11y
+- ErrorBoundary at root + feature
+- Toast portal for transient messages
+- Focus management on route change to h1
+- Keyboard: rows navigable (↑/↓), Enter opens details
+- WCAG AA colors; Tailwind tokens
+
+12. Theming
+- prefers-color-scheme + toggle; localStorage key: dg-theme=v1
+
+13. Performance Budgets
+- First load ≤ 180KB gzip; route chunks ≤ 80KB
+- Cold paged list TTI < 2s
+- Smooth virtual scroll
+
+14. Env
+VITE_API_URL=http://localhost:5000
+VITE_APP_NAME=DeltaGlider UI
+VITE_POLL_MS=5000
+
+15. Feature Flags
+VITE_ENABLE_UPLOADS=false (ignored in v1)
+
+16. CI Checks
+- tsc --noEmit, eslint, prettier --check, vitest, playwright
+
+17. Minimal Utilities (snippets)
+bytes.ts
+  export const formatBytes=(n:number)=>{if(n<1024)return `${n} B`;const u=['KB','MB','GB','TB','PB'];let i=-1;do{n/=1024;i++;}while(n>=1024&&i<u.length-1);return `${n.toFixed(n<10?2:n<100?1:0)} ${u[i]}`}
+
+api/client.ts
+  export async function api<T>(path:string,init?:RequestInit):Promise<T>{const c=new AbortController();const id=setTimeout(()=>c.abort(),30_000);try{const r=await fetch(`${import.meta.env.VITE_API_URL}${path}`,{...init,signal:c.signal});const ct=r.headers.get('content-type')??'';if(!r.ok){const body=ct.includes('json')?await r.json():{error:{code:'http_error',message:await r.text()}};throw body;}return ct.includes('json')?await r.json() as T:await r.arrayBuffer() as unknown as T;}finally{clearTimeout(id);}}
+

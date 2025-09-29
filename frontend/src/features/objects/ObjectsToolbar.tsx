@@ -1,0 +1,107 @@
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { ChevronRight, Search, UploadCloud } from "lucide-react";
+import { ObjectsCompressionFilter } from "./types";
+import { Input } from "../../lib/ui/Input";
+import { Select } from "../../lib/ui/Select";
+import { Button } from "../../lib/ui/Button";
+
+export interface ObjectsToolbarProps {
+  bucket: string;
+  prefix: string;
+  breadcrumbs: Array<{ label: string; value: string | null }>;
+  compression: ObjectsCompressionFilter;
+  onSearchSubmit: (value: string) => void;
+  onCompressionChange: (value: ObjectsCompressionFilter) => void;
+  onBreadcrumbNavigate: (value: string | null) => void;
+  onUploadClick?: () => void;
+}
+
+export function ObjectsToolbar({
+  bucket,
+  prefix,
+  breadcrumbs,
+  compression,
+  onSearchSubmit,
+  onCompressionChange,
+  onBreadcrumbNavigate,
+  onUploadClick
+}: ObjectsToolbarProps) {
+  const [searchValue, setSearchValue] = useState(prefix);
+
+  useEffect(() => {
+    setSearchValue(prefix);
+  }, [prefix]);
+
+  const compressionOptions = useMemo(
+    () => [
+      { value: "all" as const, label: "All files" },
+      { value: "compressed" as const, label: "Compressed only" },
+      { value: "original" as const, label: "Original only" }
+    ],
+    []
+  );
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSearchSubmit(searchValue.trim());
+  };
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+      <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-300">
+        {breadcrumbs.map((crumb, index) => {
+          const isActive = index === breadcrumbs.length - 1;
+          return (
+            <div key={`${crumb.label}-${index}`} className="flex items-center gap-2">
+              {crumb.value !== null ? (
+                <button
+                  type="button"
+                  onClick={() => onBreadcrumbNavigate(crumb.value)}
+                  className={`rounded-md px-2 py-1 text-sm transition hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                    isActive ? "font-semibold text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"
+                  }`}
+                >
+                  {crumb.label}
+                </button>
+              ) : (
+                <span className="px-2 py-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{crumb.label}</span>
+              )}
+              {index < breadcrumbs.length - 1 ? (
+                <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+              ) : null}
+            </div>
+          );
+        })}
+      </nav>
+      <div className="flex flex-wrap items-center gap-3">
+        <form onSubmit={handleSubmit} className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
+            placeholder="Search files..."
+            className="w-64 pl-9"
+            aria-label={`Search objects in ${bucket}`}
+          />
+        </form>
+        <Select
+          value={compression}
+          onChange={(event) => onCompressionChange(event.target.value as ObjectsCompressionFilter)}
+          aria-label="Filter by compression"
+        >
+          {compressionOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+        {onUploadClick ? (
+          <Button type="button" className="gap-2" onClick={onUploadClick}>
+            <UploadCloud className="h-4 w-4" />
+            Upload
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}

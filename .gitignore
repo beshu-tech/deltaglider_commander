@@ -1,0 +1,13 @@
+releases/
+*.log
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.env
+.venv
+.coverage
+htmlcov/
+.pytest_cache/
+src/dgcommander/api/uploads.py

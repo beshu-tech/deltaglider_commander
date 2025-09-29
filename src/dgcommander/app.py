@@ -10,6 +10,7 @@ from flask_cors import CORS
 from .api.buckets import bp as buckets_bp
 from .api.downloads import bp as downloads_bp
 from .api.objects import bp as objects_bp
+from .api.uploads import bp as uploads_bp
 from .deps import (
     DGCommanderConfig,
     ServiceContainer,
@@ -57,6 +58,7 @@ def create_app(
     app.register_blueprint(buckets_bp)
     app.register_blueprint(objects_bp)
     app.register_blueprint(downloads_bp)
+    app.register_blueprint(uploads_bp)
 
     @app.get("/api/test/health")
     def health() -> dict[str, str]:

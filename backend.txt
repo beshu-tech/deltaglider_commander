@@ -1,0 +1,93 @@
+# backend.txt
+
+RFC-DG-UI-0001: DeltaGlider Web UI – Public API v1
+Status: Draft
+Depends on: DeltaGlider SDK
+Scope: Read-only browsing + download; optional upload passthrough; no auth.
+
+API Conventions
+- Base: /api; JSON snake_case; sizes in bytes (int64)
+- Pagination: limit (1..1000, default 200) + opaque cursor
+- Errors: { "error": { "code", "message", "details" } }
+
+Endpoints
+GET /buckets
+  -> { "buckets": [ { "name","object_count","original_bytes","stored_bytes","savings_pct","pending?" } ] }
+
+POST /buckets/{bucket}/compute-savings
+  -> 202 { "status":"accepted","bucket","task_id":"opaque" }
+
+GET /objects?bucket=...&prefix=&cursor=&limit=&sort=modified_desc&compressed=any
+  -> { "objects":[{ "key","original_bytes","stored_bytes","compressed","modified" }], "common_prefixes":[...], "cursor?" }
+
+GET /objects/{bucket}/{*key}/metadata
+  -> { "key","original_bytes","stored_bytes","compressed","modified","accept_ranges":false }
+
+POST /download/prepare { "bucket","key" }
+  -> { "download_token","estimated_bytes" }
+
+GET /download/{token}
+  -> streams reconstructed original; headers: Content-Disposition; X-DG-Logical-ETag; Accept-Ranges: none
+
+POST /upload (optional passthrough)
+  -> delegates to SDK; returns { "status":"ok","key":... }
+
+Error Codes: bucket_not_found, key_not_found, invalid_prefix, sdk_error, integrity_failed, throttled, timeout
+Rate Limits: objects ≤10 req/s per IP; one compute-savings job per bucket
+
+RFC-DG-UI-0002: Server Behavior & SDK Integration
+Status: Draft
+Depends on: RFC-0001
+
+Process Model
+- Python 3.11+, Flask + Gunicorn (>=2 workers). S3 & reconstruction delegated to DeltaGlider SDK; boto3 only when SDK lacks helper.
+
+In-Memory State (no external DB)
+- LIST_CACHE: (bucket,prefix,sort,cursor)->ObjectList, TTL=30s, max 100 prefixes
+- META_CACHE: (bucket,key)->Metadata, TTL=300s, max 5000
+- SAVINGS_CACHE: (bucket)->{original_bytes,stored_bytes,object_count,computed_at}, TTL=15m
+- Eviction: LRU; memory soft cap ~256MB
+- Invalidate caches on successful upload/delete
+
+Logical Object Discovery
+- UI must not display .delta/.ref; SDK is source of truth for logical files
+- If SDK lacks list metadata, derive via SDK ls + per-key metadata probe
+
+Size & Savings
+- original_bytes: reconstructed size (SDK)
+- stored_bytes: total physical attributed by SDK recipe
+- savings_pct = (1 - stored/ original) * 100 (UI can compute)
+
+On-Demand Savings
+- POST /buckets/{bucket}/compute-savings enqueues in-process task (single thread per bucket)
+- Iterate logical keys via SDK ls, accumulate sizes; cache to SAVINGS_CACHE; pending=true during run
+
+Download Pipeline
+- prepare issues HMAC token (5 min TTL)
+- GET /download/{token}: resolve via SDK to recipe; stream reconstruction with 8–32MB buffer; integrity error -> 400 integrity_failed
+
+Upload Passthrough (optional)
+- Hand stream/file to SDK; SDK decides to delta or direct; server does not mutate keys/tags
+
+Sorting/Filtering/Search
+- Server-side: name|size|modified|savings_pct (asc/desc); filter compressed=true|false; delimiter '/' semantics on logical keys
+
+Limits/Timeouts
+- List/meta 60s timeout; downloads stream (no timeout once body flows)
+- Savings compute cancels on process shutdown; partials discarded
+
+Observability
+- JSON access logs: ts, ip, route, status, latency_ms, bytes_out, bucket, key?
+- SDK invocation logs at INFO: cmd, duration_ms, rc
+
+Implementation Skeleton (Python)
+- app.py (Flask init)
+- deps.py (boto3 client factory, HMAC secret)
+- api/: buckets.py, objects.py, downloads.py, stats.py, admin.py
+- services/: s3.py, deltaglider.py (SDK glue), resolver.py (recipe), catalog.py (in-memory views), jobs/indexer.py (on-demand compute)
+- middleware/: rate_limit.py
+- util/: paging.py, errors.py, types.py, json.py
+
+OpenAPI Notes
+- Provide YAML alongside server; generate TS types for FE
+
