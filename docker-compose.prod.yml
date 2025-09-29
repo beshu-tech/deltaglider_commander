@@ -1,0 +1,49 @@
+# Production Docker Compose example
+# 
+# Usage:
+#   1. Copy this file and create a .env file with your secrets
+#   2. docker compose -f docker-compose.prod.yml up -d
+#
+# Required .env variables:
+#   AWS_ACCESS_KEY_ID
+#   AWS_SECRET_ACCESS_KEY
+#   DGCOMM_S3_ENDPOINT
+#   DGCOMM_HMAC_SECRET
+
+version: "3.9"
+
+services:
+  dgcommander:
+    image: beshultd/deltaglider_commander:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # S3 Configuration
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      DGCOMM_S3_ENDPOINT: ${DGCOMM_S3_ENDPOINT}
+      DGCOMM_S3_ADDRESSING_STYLE: ${DGCOMM_S3_ADDRESSING_STYLE:-path}
+      DGCOMM_S3_VERIFY_SSL: ${DGCOMM_S3_VERIFY_SSL:-true}
+      
+      # Security
+      DGCOMM_HMAC_SECRET: ${DGCOMM_HMAC_SECRET}
+      
+      # Optional overrides
+      DGCOMM_CACHE_DIR: ${DGCOMM_CACHE_DIR:-/tmp/dgcommander-cache}
+      DGCOMM_OBJECT_RATE_LIMIT: ${DGCOMM_OBJECT_RATE_LIMIT:-10}
+      DGCOMM_OBJECT_RATE_WINDOW: ${DGCOMM_OBJECT_RATE_WINDOW:-1.0}
+      DGCOMM_DOWNLOAD_TTL: ${DGCOMM_DOWNLOAD_TTL:-300}
+    
+    # Optional: mount cache directory for persistence
+    # volumes:
+    #   - ./cache:/tmp/dgcommander-cache
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/test/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

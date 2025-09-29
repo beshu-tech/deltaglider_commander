@@ -6,6 +6,8 @@ from flask import Blueprint, request
 
 from ..common.decorators import api_endpoint, cached, with_timing
 from ..contracts.objects import (
+    BulkDeleteRequest,
+    BulkDeleteResponse,
     ObjectItem,
     ObjectListRequest,
     ObjectListResponse,
@@ -102,3 +104,27 @@ def delete_object(bucket: str, key: str):
     except KeyError as exc:
         raise NotFoundError("object", "key_not_found") from exc
     return json_response({"status": "deleted", "bucket": bucket, "key": key})
+
+
+@bp.delete("/bulk")
+@api_endpoint(request_model=BulkDeleteRequest, response_model=BulkDeleteResponse)
+@with_timing("bulk_delete_objects")
+def bulk_delete_objects(data: BulkDeleteRequest):
+    """Delete multiple objects in bulk."""
+    _enforce_rate_limit(request)
+    container = get_container()
+
+    # Check if bucket exists by listing buckets
+    known_buckets = {bucket.name for bucket in container.catalog.list_buckets()}
+    if data.bucket not in known_buckets:
+        raise NotFoundError("bucket", "bucket_not_found")
+
+    deleted, errors = container.catalog.bulk_delete_objects(data.bucket, data.keys)
+
+    return BulkDeleteResponse(
+        deleted=deleted,
+        errors=errors,
+        total_requested=len(data.keys),
+        total_deleted=len(deleted),
+        total_errors=len(errors)
+    )

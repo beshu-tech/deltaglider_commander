@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "../../app/toast";
-import { fetchObjects } from "../../lib/api/endpoints";
+import { bulkDeleteObjects, fetchObjects } from "../../lib/api/endpoints";
 import { Button } from "../../lib/ui/Button";
 import { EmptyState } from "../../lib/ui/EmptyState";
 import { downloadObject } from "../../lib/utils/download";
@@ -125,10 +125,10 @@ export function ObjectsView({
 
   const handleDirectoryEnter = useCallback(
     (prefixValue: string) => {
-      const nextPrefix = search.prefix ? `${search.prefix}${prefixValue}` : prefixValue;
-      updateSearchState({ prefix: nextPrefix });
+      // The prefixValue already contains the full path from the root
+      updateSearchState({ prefix: prefixValue });
     },
-    [search.prefix, updateSearchState]
+    [updateSearchState]
   );
 
   const expandSelectedKeys = useCallback(async (): Promise<string[]> => {
@@ -233,16 +233,86 @@ export function ObjectsView({
     clearSelection();
   }, [bucket, clearSelection, expandSelectedKeys, toast, totalSelectedCount]);
 
-  const handleBulkDelete = useCallback(() => {
-    if (!totalSelectedCount) {
+  const handleBulkDelete = useCallback(async () => {
+    if (!bucket || totalSelectedCount === 0) {
       return;
     }
+
+    // Show confirmation dialog using toast
+    const confirmDelete = confirm(
+      `Are you sure you want to delete ${totalSelectedCount} selected item${totalSelectedCount === 1 ? '' : 's'}? This action cannot be undone.`
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    let keys: string[];
+    try {
+      keys = await expandSelectedKeys();
+    } catch (error) {
+      toast.push({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : String(error),
+        level: "error"
+      });
+      return;
+    }
+
+    if (keys.length === 0) {
+      toast.push({
+        title: "Nothing to delete",
+        description: "Selected folders do not contain any objects.",
+        level: "info"
+      });
+      clearSelection();
+      return;
+    }
+
     toast.push({
-      title: "Bulk delete unavailable",
-      description: "Object removal is not supported in this environment yet.",
+      title: `Deleting ${keys.length} object${keys.length === 1 ? "" : "s"}...`,
       level: "info"
     });
-  }, [toast, totalSelectedCount]);
+
+    try {
+      const result = await bulkDeleteObjects(bucket, keys);
+
+      if (result.total_errors > 0) {
+        // Show summary of partial success
+        toast.push({
+          title: "Delete completed with errors",
+          description: `${result.total_deleted} deleted, ${result.total_errors} failed`,
+          level: "warning"
+        });
+
+        // Show first few error details
+        result.errors.slice(0, 3).forEach(error => {
+          toast.push({
+            title: `Failed to delete ${error.key}`,
+            description: error.error,
+            level: "error"
+          });
+        });
+      } else {
+        toast.push({
+          title: "Delete successful",
+          description: `${result.total_deleted} object${result.total_deleted === 1 ? "" : "s"} deleted`,
+          level: "success"
+        });
+      }
+    } catch (error) {
+      toast.push({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : String(error),
+        level: "error"
+      });
+    }
+
+    // Clear selection and refresh the view
+    clearSelection();
+    // Trigger a refetch by updating the query
+    query.refetch();
+  }, [bucket, clearSelection, expandSelectedKeys, toast, totalSelectedCount, query]);
 
   const canGoPrevious = search.cursor !== undefined;
   const canGoNext = Boolean(nextCursor);
@@ -265,6 +335,7 @@ export function ObjectsView({
       <ObjectsTable
         objects={objects}
         directories={prefixes}
+        currentPrefix={search.prefix}
         sort={search.sort}
         order={search.order}
         onSortChange={handleSortChange}

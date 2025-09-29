@@ -35,7 +35,7 @@ def api_endpoint(
         def wrapper(*args, **kwargs):
             try:
                 # Validate request body
-                if request_model and request.method in {"POST", "PUT", "PATCH"}:
+                if request_model and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
                     try:
                         data = request.get_json(force=True)
                         validated_data = request_model(**data)

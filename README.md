@@ -102,6 +102,34 @@ Frontend uses `VITE_` prefixed variables in `.env.local`:
 - **Frontend**: Vitest with Testing Library for component testing
 - **Integration**: Docker Compose provides MinIO for integration testing
 
+## Docker Deployment
+
+### Using Pre-built Image
+
+```bash
+# Copy env.example to .env and configure your S3 credentials
+cp env.example .env
+# Edit .env with your values
+
+# Run with docker-compose
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Building Your Own Image
+
+```bash
+# Build the image
+docker build -t dgcommander .
+
+# Run with required environment variables
+docker run -p 8000:8000 \
+  -e AWS_ACCESS_KEY_ID=your-key \
+  -e AWS_SECRET_ACCESS_KEY=your-secret \
+  -e DGCOMM_S3_ENDPOINT=https://s3.amazonaws.com \
+  -e DGCOMM_HMAC_SECRET=your-hmac-secret \
+  dgcommander
+```
+
 ## Related Projects
 
 - **[DeltaGlider SDK](https://github.com/beshu-tech/deltaglider)**: The core delta compression and storage optimization library that powers this application

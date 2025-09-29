@@ -145,6 +145,39 @@ class DeleteObjectRequest(BaseModel):
         return v.strip().lstrip("/")
 
 
+class BulkDeleteRequest(BaseModel):
+    """Request to delete multiple objects."""
+
+    bucket: str
+    keys: list[str] = Field(min_length=1, max_length=1000)
+
+    @field_validator("keys")
+    @classmethod
+    def validate_keys(cls, v: list[str]) -> list[str]:
+        """Validate object keys."""
+        if not v:
+            raise ValueError("At least one key is required")
+        # Normalize and validate each key
+        normalized = []
+        for key in v:
+            if not key or not key.strip():
+                continue  # Skip empty keys
+            normalized.append(key.strip().lstrip("/"))
+        if not normalized:
+            raise ValueError("At least one valid key is required")
+        return normalized
+
+
+class BulkDeleteResponse(BaseContract):
+    """Response for bulk delete operation."""
+
+    deleted: list[str] = Field(default_factory=list)
+    errors: list[dict] = Field(default_factory=list)
+    total_requested: int
+    total_deleted: int
+    total_errors: int
+
+
 class ObjectMetadataUpdate(BaseModel):
     """Update object metadata."""
 

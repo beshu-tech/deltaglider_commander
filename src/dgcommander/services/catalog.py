@@ -190,6 +190,24 @@ class CatalogService:
         self.invalidate_object(bucket, key)
         self.caches.savings_cache.pop(bucket)
 
+    def bulk_delete_objects(self, bucket: str, keys: list[str]) -> tuple[list[str], list[dict]]:
+        """Delete multiple objects and return results."""
+        deleted = []
+        errors = []
+
+        for key in keys:
+            try:
+                self.delete_object(bucket, key)
+                deleted.append(key)
+            except NotFoundError:
+                errors.append({"key": key, "error": "Object not found"})
+            except APIError as exc:
+                errors.append({"key": key, "error": str(exc)})
+            except Exception as exc:
+                errors.append({"key": key, "error": _summarize_exception(exc)})
+
+        return deleted, errors
+
     def invalidate_object(self, bucket: str, key: str) -> None:
         self.caches.meta_cache.pop((bucket, key))
         for cache_key in list(self.caches.list_cache.keys()):

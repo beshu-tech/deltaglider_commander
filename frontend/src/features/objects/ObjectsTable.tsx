@@ -9,6 +9,7 @@ import { SelectionTarget } from "./useObjectSelection";
 interface ObjectsTableProps {
   objects: ObjectItem[];
   directories: string[];
+  currentPrefix: string;
   sort: ObjectSortKey;
   order: "asc" | "desc";
   onSortChange: (column: ObjectSortKey) => void;
@@ -26,6 +27,7 @@ interface ObjectsTableProps {
 export function ObjectsTable({
   objects,
   directories,
+  currentPrefix,
   sort,
   order,
   onSortChange,
@@ -78,7 +80,11 @@ export function ObjectsTable({
 
   const renderDirectoryRows = () =>
     directories.map((prefix) => {
-      const label = prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+      // Extract the relative directory name by removing the current prefix
+      const fullPath = prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+      const label = fullPath.startsWith(currentPrefix)
+        ? fullPath.slice(currentPrefix.length)
+        : fullPath;
       const target: SelectionTarget = { type: "prefix", key: prefix };
       const directorySelected = isSelected(target);
       const rowClasses = `cursor-pointer border-b border-slate-100 transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800 ${

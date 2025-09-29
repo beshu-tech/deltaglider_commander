@@ -456,19 +456,19 @@ class S3DeltaGliderSDK:
         except KeyError as exc:
             raise KeyError(normalized) from exc
 
-        # Use DeltaGlider's native delete method for object operations
-        object_key = ObjectKey(bucket=bucket, key=logical.physical_key)
+        # Use storage adapter directly for deletion since DeltaService doesn't have delete
+        # Delete the physical object from storage
+        full_key = f"{bucket}/{logical.physical_key}"
         try:
-            # DeltaGlider's delete handles delta-aware deletion automatically
-            self._service.delete(object_key)
+            self._storage.delete(full_key)
         except Exception as e:
             # If the physical key doesn't exist directly, try without extension
             if logical.physical_key.endswith(".delta"):
                 base_key = logical.physical_key[: -len(".delta")]
                 if base_key:
                     try:
-                        base_object_key = ObjectKey(bucket=bucket, key=base_key)
-                        self._service.delete(base_object_key)
+                        base_full_key = f"{bucket}/{base_key}"
+                        self._storage.delete(base_full_key)
                     except Exception:
                         # Original deletion failed, re-raise original exception
                         raise e

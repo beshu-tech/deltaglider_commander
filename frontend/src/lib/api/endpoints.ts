@@ -53,6 +53,22 @@ export async function deleteObject(bucket: string, key: string): Promise<void> {
   });
 }
 
+export interface BulkDeleteResponse {
+  deleted: string[];
+  errors: Array<{ key: string; error: string }>;
+  total_requested: number;
+  total_deleted: number;
+  total_errors: number;
+}
+
+export async function bulkDeleteObjects(bucket: string, keys: string[]): Promise<BulkDeleteResponse> {
+  const data = await api<BulkDeleteResponse>("/api/objects/bulk", {
+    method: "DELETE",
+    body: JSON.stringify({ bucket, keys })
+  });
+  return data;
+}
+
 export async function fetchObjects(params: ObjectsParams): Promise<ObjectList> {
   const query = new URLSearchParams();
   query.set("bucket", params.bucket);
