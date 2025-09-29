@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dgcommander"
+version = "0.1.0"
+description = "DeltaGlider UI backend service"
+readme = "README.md"
+authors = [
+  { name = "DeltaGlider UI Team" }
+]
+requires-python = ">=3.11"
+dependencies = [
+  "flask>=3.0,<4",
+  "cachetools>=5.3",
+  "itsdangerous>=2.1",
+  "typing-extensions>=4.9",
+  "deltaglider>=0.3.0.dev0",
+  "boto3>=1.40.0,<2",
+  "Flask-Cors>=4.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.4",
+  "pytest-flask>=1.3",
+  "freezegun>=1.5"
+]
+server = [
+  "gunicorn>=21.2"
+]
+
+[project.urls]
+Home = "https://github.com/beshu-tech/deltaglider"
+
+[tool.pytest.ini_options]
+minversion = "7.4"
+addopts = "-ra"
+testpaths = ["tests"]
+filterwarnings = [
+  "error::DeprecationWarning",
+  "error::PendingDeprecationWarning"
+]
