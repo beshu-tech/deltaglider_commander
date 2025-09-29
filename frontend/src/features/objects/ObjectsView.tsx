@@ -168,7 +168,7 @@ export function ObjectsView({
               queue.push(childPrefix);
             }
           });
-          cursor = response.cursor;
+          cursor = response.cursor ?? undefined;
         } catch (error) {
           const reason = error instanceof Error ? error.message : String(error);
           throw new Error(

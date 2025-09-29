@@ -12,6 +12,9 @@ import {
   UploadResponse
 } from "./schemas";
 
+// Re-export types from schemas
+export type { UploadResponse };
+
 export interface ObjectsParams {
   bucket: string;
   prefix?: string;

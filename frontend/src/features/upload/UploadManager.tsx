@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, FileText, FolderPlus, Loader2, UploadCloud } from "lucide-react";
-import { uploadObjects, UploadFileInput, UploadResult } from "../../lib/api/endpoints";
+import { uploadObjects, UploadFileInput, UploadResponse } from "../../lib/api/endpoints";
 import { formatBytes } from "../../lib/utils/bytes";
 import { useToast } from "../../app/toast";
 import { Button } from "../../lib/ui/Button";
@@ -14,14 +14,14 @@ interface QueueItem {
   relativePath: string;
   size: number;
   status: QueueStatus;
-  result?: UploadResult;
+  result?: UploadResponse;
   error?: string;
 }
 
 interface UploadManagerProps {
   bucket: string;
   prefix: string;
-  onCompleted?: (results: UploadResult[]) => void;
+  onCompleted?: (results: UploadResponse[]) => void;
 }
 
 interface SessionStats {
@@ -150,9 +150,9 @@ async function extractDataTransferItems(items: DataTransferItemList): Promise<Up
       const entry = anyItem.webkitGetAsEntry();
       if (entry) {
         if (entry.isFile) {
-          promises.push(readFileEntry(entry as FileSystemFileEntry));
+          promises.push(readFileEntry(entry as unknown as FileSystemFileEntry));
         } else if (entry.isDirectory) {
-          promises.push(readDirectoryEntry(entry as FileSystemDirectoryEntry));
+          promises.push(readDirectoryEntry(entry as unknown as FileSystemDirectoryEntry));
         }
         continue;
       }
@@ -160,7 +160,7 @@ async function extractDataTransferItems(items: DataTransferItemList): Promise<Up
     const file = item.getAsFile();
     if (file) {
       const withPath = file as File & { webkitRelativePath?: string };
-      promises.push([{ file, relativePath: withPath.webkitRelativePath || file.name }]);
+      promises.push(Promise.resolve([{ file, relativePath: withPath.webkitRelativePath || file.name }]));
     }
   }
 
@@ -243,7 +243,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
           files: items.map((item) => ({ file: item.file, relativePath: item.relativePath }))
         });
 
-        const resultMap = new Map<string, UploadResult>();
+        const resultMap = new Map<string, UploadResponse>();
         payload.results.forEach((result) => {
           const key = result.relative_path || result.key;
           resultMap.set(key, result);

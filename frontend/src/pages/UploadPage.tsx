@@ -18,7 +18,7 @@ export function UploadPage() {
     navigate({
       to: "/b/$bucket",
       params: { bucket },
-      search: serializeObjectsSearch(currentSearch)
+      search: serializeObjectsSearch(currentSearch) as any
     });
   }, [bucket, currentSearch, navigate]);
 
