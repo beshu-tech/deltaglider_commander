@@ -48,6 +48,7 @@ export function ObjectsView({
   const query = useObjects({
     bucket,
     prefix: search.prefix,
+    search: search.search,
     cursor: search.cursor,
     sort: search.sort,
     order: search.order,
@@ -285,9 +286,10 @@ export function ObjectsView({
       <ObjectsToolbar
         bucket={bucket}
         prefix={search.prefix}
+        search={search.search}
         breadcrumbs={breadcrumbs}
         compression={search.compression}
-        onSearchSubmit={(value) => updateSearchState({ prefix: value })}
+        onSearchChange={(value) => updateSearchState({ search: value })}
         onCompressionChange={(value) => updateSearchState({ compression: value })}
         onBreadcrumbNavigate={handleBreadcrumbNavigate}
         onUploadClick={onUploadClick}

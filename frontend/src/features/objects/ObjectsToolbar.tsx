@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, Search, UploadCloud } from "lucide-react";
 import { ObjectsCompressionFilter } from "./types";
 import { Input } from "../../lib/ui/Input";
@@ -8,9 +8,10 @@ import { Button } from "../../lib/ui/Button";
 export interface ObjectsToolbarProps {
   bucket: string;
   prefix: string;
+  search: string | undefined;
   breadcrumbs: Array<{ label: string; value: string | null }>;
   compression: ObjectsCompressionFilter;
-  onSearchSubmit: (value: string) => void;
+  onSearchChange: (value: string | undefined) => void;
   onCompressionChange: (value: ObjectsCompressionFilter) => void;
   onBreadcrumbNavigate: (value: string | null) => void;
   onUploadClick?: () => void;
@@ -19,18 +20,20 @@ export interface ObjectsToolbarProps {
 export function ObjectsToolbar({
   bucket,
   prefix,
+  search,
   breadcrumbs,
   compression,
-  onSearchSubmit,
+  onSearchChange,
   onCompressionChange,
   onBreadcrumbNavigate,
   onUploadClick
 }: ObjectsToolbarProps) {
-  const [searchValue, setSearchValue] = useState(prefix);
+  const [searchValue, setSearchValue] = useState(search || "");
+  const debounceRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    setSearchValue(prefix);
-  }, [prefix]);
+    setSearchValue(search || "");
+  }, [search]);
 
   const compressionOptions = useMemo(
     () => [
@@ -41,9 +44,28 @@ export function ObjectsToolbar({
     []
   );
 
+  const debouncedSearch = useCallback((value: string) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      const trimmed = value.trim();
+      onSearchChange(trimmed || undefined);
+    }, 1000);
+  }, [onSearchChange]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+    debouncedSearch(value);
+  }, [debouncedSearch]);
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSearchSubmit(searchValue.trim());
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    const trimmed = searchValue.trim();
+    onSearchChange(trimmed || undefined);
   };
 
   return (
@@ -78,7 +100,7 @@ export function ObjectsToolbar({
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
+            onChange={(event) => handleSearchChange(event.target.value)}
             placeholder="Search files..."
             className="w-64 pl-9"
             aria-label={`Search objects in ${bucket}`}

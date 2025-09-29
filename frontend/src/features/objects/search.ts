@@ -34,6 +34,7 @@ function parseLimit(value: unknown): number {
 
 export function normalizeObjectsSearch(raw: RawSearch): ObjectsSearchState {
   const prefix = typeof raw?.prefix === "string" ? raw.prefix : DEFAULT_OBJECTS_SEARCH_STATE.prefix;
+  const search = typeof raw?.search === "string" ? raw.search : undefined;
   const cursor = typeof raw?.cursor === "string" ? raw.cursor : undefined;
   const sort = parseSort(raw?.sort);
   const order = parseOrder(raw?.order);
@@ -42,6 +43,7 @@ export function normalizeObjectsSearch(raw: RawSearch): ObjectsSearchState {
 
   return {
     prefix,
+    search,
     cursor,
     sort,
     order,
@@ -53,6 +55,7 @@ export function normalizeObjectsSearch(raw: RawSearch): ObjectsSearchState {
 export function serializeObjectsSearch(state: ObjectsSearchState): Record<string, string | number | undefined> {
   return {
     prefix: state.prefix,
+    search: state.search ?? undefined,
     cursor: state.cursor ?? undefined,
     sort: state.sort,
     order: state.order,

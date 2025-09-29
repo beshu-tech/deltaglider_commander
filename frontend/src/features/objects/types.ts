@@ -6,6 +6,7 @@ export type ObjectsCompressionFilter = "all" | "compressed" | "original";
 
 export interface ObjectsSearchState {
   prefix: string;
+  search: string | undefined;
   cursor: string | undefined;
   sort: ObjectSortKey;
   order: "asc" | "desc";
@@ -15,6 +16,7 @@ export interface ObjectsSearchState {
 
 export const DEFAULT_OBJECTS_SEARCH_STATE: ObjectsSearchState = {
   prefix: "",
+  search: undefined,
   cursor: undefined,
   sort: "modified",
   order: "desc",
