@@ -6,9 +6,23 @@ import { FilePanel } from "../FilePanel";
 import * as endpoints from "../../../lib/api/endpoints";
 import * as env from "../../../lib/config/env";
 
-const useFileMock = vi.fn();
-const useDeleteObjectMock = vi.fn();
-const downloadObjectMock = vi.fn(() => Promise.resolve());
+// Mock functions using vi.hoisted to avoid hoisting issues
+const mockUseFile = vi.hoisted(() => vi.fn());
+const mockUseDeleteObject = vi.hoisted(() => vi.fn());
+const mockDownloadObject = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+
+vi.mock("../useFile", () => ({
+  useFile: (...args: unknown[]) => mockUseFile(...args)
+}));
+
+vi.mock("../useDeleteObject", () => ({
+  useDeleteObject: (...args: unknown[]) => mockUseDeleteObject(...args)
+}));
+
+vi.mock("../../../lib/utils/download", () => ({
+  downloadObject: mockDownloadObject
+}));
+
 const prepareDownloadMock = vi.spyOn(endpoints, "prepareDownload");
 const getApiUrlMock = vi.spyOn(env, "getApiUrl");
 const clipboardWriteMock = vi.fn().mockResolvedValue(undefined);
@@ -18,18 +32,6 @@ Object.assign(navigator, {
     writeText: clipboardWriteMock
   }
 });
-
-vi.mock("../useFile", () => ({
-  useFile: (...args: unknown[]) => useFileMock(...args)
-}));
-
-vi.mock("../useDeleteObject", () => ({
-  useDeleteObject: (...args: unknown[]) => useDeleteObjectMock(...args)
-}));
-
-vi.mock("../../../lib/utils/download", () => ({
-  downloadObject: (...args: unknown[]) => downloadObjectMock(...args)
-}));
 
 const metadata = {
   key: "folder/example.txt",
@@ -41,14 +43,14 @@ const metadata = {
 };
 
 beforeEach(() => {
-  useFileMock.mockReturnValue({ data: metadata, isLoading: false, error: null });
-  useDeleteObjectMock.mockReturnValue({
+  mockUseFile.mockReturnValue({ data: metadata, isLoading: false, error: null });
+  mockUseDeleteObject.mockReturnValue({
     mutate: vi.fn(),
     isPending: false
   });
-  downloadObjectMock.mockClear();
+  mockDownloadObject.mockClear();
   prepareDownloadMock.mockReset();
-  prepareDownloadMock.mockResolvedValue({ download_token: "token-123" });
+  prepareDownloadMock.mockResolvedValue({ download_token: "token-123", estimated_bytes: 1024 });
   getApiUrlMock.mockReturnValue("https://api.test");
   clipboardWriteMock.mockClear();
 });
@@ -82,7 +84,7 @@ describe("FilePanel", () => {
 
     await user.click(screen.getByRole("button", { name: /download object/i }));
 
-    expect(downloadObjectMock).toHaveBeenCalledWith(
+    expect(mockDownloadObject).toHaveBeenCalledWith(
       "test-bucket",
       "folder/example.txt",
       expect.any(Object)
@@ -91,7 +93,7 @@ describe("FilePanel", () => {
 
   it("confirms deletion and calls mutation", async () => {
     const mutateSpy = vi.fn();
-    useDeleteObjectMock.mockReturnValue({ mutate: mutateSpy, isPending: false });
+    mockUseDeleteObject.mockReturnValue({ mutate: mutateSpy, isPending: false });
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const { user } = renderPanel();
 
@@ -107,17 +109,18 @@ describe("FilePanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    // Find all buttons with the text to make sure we get the right one
-    const copyButtons = screen.getAllByText("Copy download link");
-    const copyButton = copyButtons[0]; // Take the first one
+    // Find the copy download link button using test ID
+    const copyButton = screen.getByTestId("copy-download-link");
     expect(copyButton).toBeInTheDocument();
 
     await user.click(copyButton);
 
+    // First check if prepareDownload is called
     await waitFor(() => {
       expect(prepareDownloadMock).toHaveBeenCalledWith("test-bucket", "folder/example.txt");
     }, { timeout: 3000 });
 
+    // Then check if clipboard is called with the result
     await waitFor(() => {
       expect(clipboardWriteMock).toHaveBeenCalledWith(
         "https://api.test/api/download/token-123"

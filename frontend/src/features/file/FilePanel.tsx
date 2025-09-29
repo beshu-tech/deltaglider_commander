@@ -135,6 +135,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
             className="justify-start gap-2"
             onClick={handleCopyDownloadLink}
             disabled={isCopyingLink}
+            data-testid="copy-download-link"
           >
             <ExternalLink className="h-4 w-4" />
             Copy download link

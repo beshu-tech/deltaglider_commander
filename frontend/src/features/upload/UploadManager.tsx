@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, FileText, FolderPlus, Loader2, UploadCloud } from "lucide-react";
-import { uploadObjects, UploadFileInput, UploadResponse } from "../../lib/api/endpoints";
+import { uploadObjects, UploadFileInput, UploadResult } from "../../lib/api/endpoints";
 import { formatBytes } from "../../lib/utils/bytes";
 import { useToast } from "../../app/toast";
 import { Button } from "../../lib/ui/Button";
@@ -14,14 +14,14 @@ interface QueueItem {
   relativePath: string;
   size: number;
   status: QueueStatus;
-  result?: UploadResponse;
+  result?: UploadResult;
   error?: string;
 }
 
 interface UploadManagerProps {
   bucket: string;
   prefix: string;
-  onCompleted?: (results: UploadResponse[]) => void;
+  onCompleted?: (results: UploadResult[]) => void;
 }
 
 interface SessionStats {
@@ -243,7 +243,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
           files: items.map((item) => ({ file: item.file, relativePath: item.relativePath }))
         });
 
-        const resultMap = new Map<string, UploadResponse>();
+        const resultMap = new Map<string, UploadResult>();
         payload.results.forEach((result) => {
           const key = result.relative_path || result.key;
           resultMap.set(key, result);
@@ -261,7 +261,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
             if (!ids.has(item.id)) {
               return item;
             }
-            const result = resultMap.get(item.relativePath) || resultMap.get(item.result?.key ?? "");
+            const result = resultMap.get(item.relativePath);
             if (result) {
               return { ...item, status: "success", result };
             }

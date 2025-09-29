@@ -9,11 +9,12 @@ import {
   fileMetadataSchema,
   objectListSchema,
   uploadResponseSchema,
-  UploadResponse
+  UploadResponse,
+  UploadResult
 } from "./schemas";
 
 // Re-export types from schemas
-export type { UploadResponse };
+export type { UploadResponse, UploadResult };
 
 export interface ObjectsParams {
   bucket: string;
