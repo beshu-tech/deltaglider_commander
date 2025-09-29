@@ -1,5 +1,7 @@
 # DeltaGlider Commander
 
+![DeltaGlider Commander UI](dg_screenshot.png)
+
 DeltaGlider Commander is a Flask-based backend service with a React frontend that provides a REST API for browsing and managing objects in S3 buckets through the [DeltaGlider SDK](https://github.com/beshu-tech/deltaglider). The application focuses on delta compression and storage optimization.
 
 ## Features
