@@ -67,7 +67,7 @@ def create_app(
     static_dir = Path(app.static_folder or "")
 
     @app.get("/")
-    def root() -> str:
+    def root():
         index_path = static_dir / "index.html"
         if index_path.exists():
             return send_from_directory(static_dir, "index.html")
