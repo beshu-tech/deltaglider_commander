@@ -1,59 +1,36 @@
 """Objects API endpoints."""
 from __future__ import annotations
 
-from flask import Blueprint, Request, request
+from flask import Blueprint, request
 
-from ..util.errors import APIError, NotFoundError
-from ..util.json import json_response
-from ..util.paging import coerce_limit
-from ..util.types import ObjectSortOrder
+from ..application.use_cases.list_objects import ListObjectsUseCase
+from ..common.decorators import api_endpoint, cached, with_timing
+from ..contracts.objects import (
+    DeleteObjectRequest,
+    FileMetadata,
+    ObjectListRequest,
+    ObjectListResponse,
+)
+from ..infrastructure.repositories.s3_object_repository import S3ObjectRepository
+from ..util.errors import NotFoundError
 from . import get_container
 
 
 bp = Blueprint("objects", __name__, url_prefix="/api/objects")
 
 
-def _enforce_rate_limit(req: Request) -> None:
-    container = get_container()
-    container.rate_limiter.enforce(req)
-
-
-def _parse_compressed(value: str | None) -> bool | None:
-    if value is None or value == "any":
-        return None
-    if value.lower() in {"true", "1"}:
-        return True
-    if value.lower() in {"false", "0"}:
-        return False
-    raise APIError(code="invalid_filter", message="Invalid compressed filter", http_status=400)
-
-
 @bp.get("/")
-def list_objects():
-    _enforce_rate_limit(request)
+@api_endpoint(request_model=ObjectListRequest, response_model=ObjectListResponse, validate_query=True)
+@with_timing("list_objects")
+@cached(ttl_seconds=30)
+async def list_objects(query: ObjectListRequest):
+    """List objects with automatic validation and serialization."""
     container = get_container()
-    bucket = request.args.get("bucket")
-    if not bucket:
-        raise APIError(code="invalid_bucket", message="bucket query parameter is required", http_status=400)
-    known_buckets = {b.name for b in container.catalog.list_buckets()}
-    if bucket not in known_buckets:
-        raise NotFoundError("bucket", "bucket_not_found")
-    prefix = request.args.get("prefix", "")
-    cursor = request.args.get("cursor")
-    sort = request.args.get("sort")
-    order = request.args.get("order")
-    compressed = _parse_compressed(request.args.get("compressed"))
-    limit = coerce_limit(request.args.get("limit"))
-    sort_order = ObjectSortOrder.from_query(sort, order)
-    object_list = container.catalog.list_objects(
-        bucket=bucket,
-        prefix=prefix,
-        limit=limit,
-        cursor=cursor,
-        sort_order=sort_order,
-        compressed=compressed,
-    )
-    return json_response(object_list.to_dict())
+    sdk = container.extensions["dgcommander"].catalog.sdk
+    repository = S3ObjectRepository(sdk)
+
+    use_case = ListObjectsUseCase(repository)
+    return await use_case.execute(query)
 
 
 @bp.get("/<bucket>/<path:key>/metadata")

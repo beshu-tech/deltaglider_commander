@@ -1,0 +1,1 @@
+"""Type-safe API contracts using Pydantic."""

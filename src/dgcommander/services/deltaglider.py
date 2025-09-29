@@ -9,6 +9,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import BinaryIO, Dict, Iterable, Iterator, List, Optional, Protocol, Tuple
 
+# boto3 is ONLY used for bucket management operations (list, create, delete)
+# that are not provided by the DeltaGlider library.
+# All object operations use DeltaGlider's native methods.
 import boto3
 from boto3.session import Session
 from botocore.config import Config as BotoConfig
@@ -287,7 +290,26 @@ class S3Settings:
 
 
 class S3DeltaGliderSDK:
-    """Real SDK backed by the official deltaglider package and boto3."""
+    """
+    SDK backed by the official deltaglider package and boto3.
+
+    DeltaGlider ALREADY provides:
+    - Intelligent file type detection
+    - Automatic compression strategy selection
+    - Delta compression for archives (99%+ compression)
+    - Optimal handling per file type
+    - Object operations (put, get, delete, list)
+
+    This class adds:
+    - Bucket management (list, create, delete) via boto3
+    - Batch processing capabilities
+    - Streaming support
+    - Metadata/tagging
+    - Compression statistics
+
+    NOTE: boto3 is ONLY used for bucket-level operations that DeltaGlider
+    doesn't provide. All object operations use DeltaGlider's native methods.
+    """
 
     def __init__(self, settings: S3Settings) -> None:
         self._settings = settings
@@ -331,6 +353,7 @@ class S3DeltaGliderSDK:
     # -- public API -----------------------------------------------------
 
     def list_buckets(self) -> Iterable[BucketSnapshot]:
+        # boto3 required: DeltaGlider doesn't provide bucket listing
         response = self._client.list_buckets()
         buckets: List[BucketSnapshot] = []
         for bucket in response.get("Buckets", []):
@@ -354,6 +377,7 @@ class S3DeltaGliderSDK:
         return buckets
 
     def create_bucket(self, name: str) -> None:
+        # boto3 required: DeltaGlider doesn't provide bucket creation
         params: Dict[str, object] = {"Bucket": name}
         region = self._session.region_name or "us-east-1"
         if not self._settings.endpoint_url and region != "us-east-1":
@@ -361,6 +385,7 @@ class S3DeltaGliderSDK:
         self._client.create_bucket(**params)
 
     def delete_bucket(self, name: str) -> None:
+        # boto3 required: DeltaGlider doesn't provide bucket deletion
         self._client.delete_bucket(Bucket=name)
         with self._index_lock:
             for key in list(self._logical_index.keys()):
@@ -441,23 +466,24 @@ class S3DeltaGliderSDK:
         except KeyError as exc:
             raise KeyError(normalized) from exc
 
-        physical_key = logical.physical_key
-        candidates = {physical_key}
-        if physical_key.endswith(".delta"):
-            base = physical_key[: -len(".delta")]
-            if base:
-                candidates.add(base)
-        else:
-            candidates.add(f"{physical_key}.delta")
-
-        for candidate in list(candidates):
-            try:
-                self._client.delete_object(Bucket=bucket, Key=candidate)
-            except self._client.exceptions.NoSuchKey:
-                continue
-            except Exception:
-                # ignore best-effort deletions for derivative objects
-                continue
+        # Use DeltaGlider's native delete method for object operations
+        object_key = ObjectKey(bucket=bucket, key=logical.physical_key)
+        try:
+            # DeltaGlider's delete handles delta-aware deletion automatically
+            self._service.delete(object_key)
+        except Exception as e:
+            # If the physical key doesn't exist directly, try without extension
+            if logical.physical_key.endswith(".delta"):
+                base_key = logical.physical_key[: -len(".delta")]
+                if base_key:
+                    try:
+                        base_object_key = ObjectKey(bucket=bucket, key=base_key)
+                        self._service.delete(base_object_key)
+                    except Exception:
+                        # Original deletion failed, re-raise original exception
+                        raise e
+            else:
+                raise
 
         with self._index_lock:
             self._logical_index.pop((bucket, normalized), None)
@@ -507,6 +533,92 @@ class S3DeltaGliderSDK:
             physical_key=summary.key,
         )
         return upload_summary
+
+    def upload_batch(
+        self,
+        bucket: str,
+        files: List[Tuple[str, BinaryIO]],
+        prefix: Optional[str] = None,
+        max_parallel: int = 4
+    ) -> List[UploadSummary]:
+        """
+        Upload multiple files in parallel.
+        DeltaGlider automatically handles optimal compression per file.
+        """
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        results = []
+        with ThreadPoolExecutor(max_workers=max_parallel) as executor:
+            future_to_key = {}
+
+            for key, file_obj in files:
+                full_key = f"{prefix}/{key}" if prefix else key
+                future = executor.submit(self.upload, bucket, full_key, file_obj)
+                future_to_key[future] = key
+
+            for future in as_completed(future_to_key):
+                try:
+                    result = future.result()
+                    results.append(result)
+                except Exception as e:
+                    # Log error but continue with other files
+                    key = future_to_key[future]
+                    print(f"Failed to upload {key}: {e}")
+
+        return results
+
+    def stream_object(self, bucket: str, key: str, chunk_size: int = 8192) -> Iterator[bytes]:
+        """Stream object data in chunks for efficient memory usage."""
+        stream = self.open_object_stream(bucket, key)
+        try:
+            while True:
+                chunk = stream.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
+        finally:
+            stream.close()
+
+    def get_compression_stats(self, bucket: str) -> Dict[str, any]:
+        """Get compression statistics showing DeltaGlider's automatic optimization."""
+        listing = self.list_objects(bucket, prefix="")
+
+        stats = {
+            "total_objects": len(listing.objects),
+            "compressed_objects": sum(1 for obj in listing.objects if obj.compressed),
+            "total_original_bytes": sum(obj.original_bytes for obj in listing.objects),
+            "total_stored_bytes": sum(obj.stored_bytes for obj in listing.objects),
+            "total_savings_bytes": 0,
+            "compression_rate": 0.0,
+            "top_compressions": []
+        }
+
+        stats["total_savings_bytes"] = stats["total_original_bytes"] - stats["total_stored_bytes"]
+
+        if stats["total_original_bytes"] > 0:
+            stats["compression_rate"] = stats["total_savings_bytes"] / stats["total_original_bytes"]
+
+        # Find top compressed files
+        compressions = []
+        for obj in listing.objects:
+            if obj.compressed and obj.original_bytes > 0:
+                savings = obj.original_bytes - obj.stored_bytes
+                rate = savings / obj.original_bytes
+                compressions.append({
+                    "key": obj.key,
+                    "original_bytes": obj.original_bytes,
+                    "stored_bytes": obj.stored_bytes,
+                    "savings_bytes": savings,
+                    "compression_rate": rate * 100
+                })
+
+        stats["top_compressions"] = sorted(
+            compressions,
+            key=lambda x: x["savings_bytes"],
+            reverse=True
+        )[:10]
+
+        return stats
 
     # -- helpers --------------------------------------------------------
 

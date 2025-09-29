@@ -1,0 +1,136 @@
+"""Object-related API contracts."""
+from __future__ import annotations
+
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, Field, field_validator
+
+from .base import BaseContract
+
+
+class ObjectSortOrder(str, Enum):
+    """Object sorting options."""
+    name_asc = "name_asc"
+    name_desc = "name_desc"
+    modified_desc = "modified_desc"
+    modified_asc = "modified_asc"
+    size_asc = "size_asc"
+    size_desc = "size_desc"
+
+    @classmethod
+    def from_query(cls, sort: Optional[str], direction: Optional[str]) -> ObjectSortOrder:
+        """Parse sort order from query parameters."""
+        if not sort:
+            return cls.modified_desc
+
+        key = sort.lower()
+        dir_normalized = (direction or "desc").lower()
+
+        if key in {"name", "key"}:
+            return cls.name_desc if dir_normalized == "desc" else cls.name_asc
+        if key in {"size", "original_bytes"}:
+            return cls.size_desc if dir_normalized == "desc" else cls.size_asc
+        if key == "modified":
+            return cls.modified_desc if dir_normalized == "desc" else cls.modified_asc
+
+        return cls.modified_desc
+
+
+class ObjectItem(BaseContract):
+    """Individual object in a listing."""
+    key: str
+    original_bytes: int = Field(ge=0)
+    stored_bytes: int = Field(ge=0)
+    compressed: bool
+    modified: datetime
+
+    @property
+    def savings_bytes(self) -> int:
+        """Calculate storage savings."""
+        return max(self.original_bytes - self.stored_bytes, 0)
+
+    @property
+    def savings_pct(self) -> float:
+        """Calculate savings percentage."""
+        if self.original_bytes == 0:
+            return 0.0
+        return (self.savings_bytes / self.original_bytes) * 100.0
+
+
+class ObjectListResponse(BaseContract):
+    """Response for object listing."""
+    objects: List[ObjectItem]
+    common_prefixes: List[str] = Field(default_factory=list)
+    cursor: Optional[str] = None
+
+
+class ObjectListRequest(BaseModel):
+    """Request parameters for object listing."""
+    bucket: str
+    prefix: str = ""
+    cursor: Optional[str] = None
+    limit: int = Field(default=100, ge=1, le=1000)
+    sort: Optional[str] = None
+    order: Optional[str] = None
+    compressed: Optional[bool] = None
+
+    @field_validator('bucket')
+    @classmethod
+    def validate_bucket(cls, v: str) -> str:
+        """Validate bucket name."""
+        if not v or not v.strip():
+            raise ValueError("Bucket name is required")
+        return v.strip()
+
+    @field_validator('prefix')
+    @classmethod
+    def normalize_prefix(cls, v: str) -> str:
+        """Normalize prefix path."""
+        if not v:
+            return ""
+        # Remove leading/trailing slashes
+        normalized = v.strip().strip("/")
+        return normalized
+
+
+class FileMetadata(BaseContract):
+    """File metadata response."""
+    key: str
+    original_bytes: int = Field(ge=0)
+    stored_bytes: int = Field(ge=0)
+    compressed: bool
+    modified: datetime
+    accept_ranges: bool = False
+    content_type: Optional[str] = None
+    etag: Optional[str] = None
+    metadata: dict = Field(default_factory=dict)
+
+    @property
+    def compression_ratio(self) -> float:
+        """Calculate compression ratio."""
+        if self.original_bytes == 0:
+            return 0.0
+        return 1.0 - (self.stored_bytes / self.original_bytes)
+
+
+class DeleteObjectRequest(BaseModel):
+    """Request to delete an object."""
+    bucket: str
+    key: str
+
+    @field_validator('key')
+    @classmethod
+    def validate_key(cls, v: str) -> str:
+        """Validate object key."""
+        if not v or not v.strip():
+            raise ValueError("Object key is required")
+        # Normalize path
+        return v.strip().lstrip("/")
+
+
+class ObjectMetadataUpdate(BaseModel):
+    """Update object metadata."""
+    metadata: dict = Field(default_factory=dict)
+    tags: dict = Field(default_factory=dict)
