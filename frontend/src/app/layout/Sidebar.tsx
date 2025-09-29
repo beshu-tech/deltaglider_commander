@@ -183,11 +183,11 @@ function BucketList({ buckets, isLoading, error, filter, activeBucket, onCreateC
     <nav className="flex flex-col gap-1 text-sm">
       <Link
         to="/buckets"
-        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-300 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
-        activeProps={{ className: "bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-white shadow-sm border border-blue-500/30" }}
+        className="flex items-center gap-3 rounded-md px-3 py-2 text-slate-400 text-xs uppercase tracking-wide font-semibold transition-all duration-200 hover:bg-slate-800/30 hover:text-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+        activeProps={{ className: "bg-slate-800/50 text-slate-200" }}
       >
-        <Archive className="h-4 w-4 flex-shrink-0" />
-        <span className="font-medium">Buckets overview</span>
+        <Archive className="h-3.5 w-3.5 flex-shrink-0" />
+        <span>Overview</span>
       </Link>
       {filteredBuckets.map((bucket) => {
         const isActive = activeBucket === bucket.name;
@@ -214,6 +214,13 @@ function BucketList({ buckets, isLoading, error, filter, activeBucket, onCreateC
           </Link>
         );
       })}
+      <button
+        onClick={onCreateClick}
+        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-400 text-sm transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 border border-dashed border-slate-600/50 hover:border-slate-500/50 mt-2"
+      >
+        <Plus className="h-4 w-4 flex-shrink-0" />
+        <span className="font-medium">Create Bucket</span>
+      </button>
     </nav>
   );
 }
@@ -236,7 +243,6 @@ function SidebarActions({
   showCreateForm,
   bucketName,
   validationError,
-  onCreateClick,
   onCancelCreate,
   onSubmitCreate,
   onBucketNameChange,
@@ -366,6 +372,10 @@ export function Sidebar() {
             error={isError ? error : null}
             filter={filter}
             activeBucket={activeBucket}
+            onCreateClick={() => {
+              setShowCreateForm(true);
+              setTimeout(() => setValidationError(null), 0);
+            }}
           />
         </div>
       </div>

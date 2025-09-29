@@ -19,7 +19,6 @@ export interface ObjectsToolbarProps {
 
 export function ObjectsToolbar({
   bucket,
-  prefix,
   search,
   breadcrumbs,
   compression,

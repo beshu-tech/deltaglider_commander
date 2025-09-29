@@ -46,6 +46,7 @@ vi.mock("../useObjects", () => ({
 
 const defaultSearch: ObjectsSearchState = {
   prefix: "",
+  search: undefined,
   cursor: undefined,
   sort: "modified",
   order: "desc",
@@ -110,7 +111,7 @@ describe("ObjectsView", () => {
 
     await waitFor(() => {
       expect(onSearchChange).toHaveBeenCalledWith(
-        expect.objectContaining({ prefix: "documents" })
+        expect.objectContaining({ search: "documents" })
       );
     });
   });

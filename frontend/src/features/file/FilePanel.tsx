@@ -44,11 +44,6 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
     return parts[parts.length - 1] || objectKey;
   }, [objectKey]);
 
-  const parentPath = useMemo(() => {
-    if (!objectKey) return "";
-    const index = objectKey.lastIndexOf("/");
-    return index >= 0 ? objectKey.slice(0, index + 1) : "";
-  }, [objectKey]);
 
   const handleCopy = useCallback(
     async (value: string, field: "key" | "uri" | "link") => {
@@ -197,30 +192,22 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
         </div>
       </section>
 
-      <section className="space-y-3">
+      <section className="space-y-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Object info</h3>
-        <dl className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
-          {parentPath ? (
-            <div>
-              <dt className="text-xs uppercase text-slate-400">Folder</dt>
-              <dd className="font-medium">{parentPath}</dd>
-            </div>
-          ) : null}
-          <div>
-            <dt className="text-xs uppercase text-slate-400">Bucket</dt>
-            <dd className="font-medium">{bucket}</dd>
+        <dl className="space-y-4 text-sm">
+          <div className="space-y-1">
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">Location</dt>
+            <dd className="font-medium text-slate-700 dark:text-slate-200 break-words">
+              <span className="text-slate-500 dark:text-slate-400">{bucket}/</span>{metadata.key}
+            </dd>
           </div>
-          <div>
-            <dt className="text-xs uppercase text-slate-400">Key</dt>
-            <dd className="font-medium break-words">{metadata.key}</dd>
+          <div className="space-y-1">
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">Last modified</dt>
+            <dd className="font-medium text-slate-700 dark:text-slate-200">{formatDateTime(metadata.modified)}</dd>
           </div>
-          <div>
-            <dt className="text-xs uppercase text-slate-400">Last modified</dt>
-            <dd className="font-medium">{formatDateTime(metadata.modified)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase text-slate-400">Accept-Ranges</dt>
-            <dd className="font-medium">{metadata.accept_ranges ? "Enabled" : "Disabled"}</dd>
+          <div className="space-y-1">
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">Accept-Ranges</dt>
+            <dd className="font-medium text-slate-700 dark:text-slate-200">{metadata.accept_ranges ? "Enabled" : "Disabled"}</dd>
           </div>
         </dl>
       </section>

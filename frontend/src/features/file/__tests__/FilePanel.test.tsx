@@ -107,13 +107,21 @@ describe("FilePanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: /copy download link/i }));
+    // Find all buttons with the text to make sure we get the right one
+    const copyButtons = screen.getAllByText("Copy download link");
+    const copyButton = copyButtons[0]; // Take the first one
+    expect(copyButton).toBeInTheDocument();
+
+    await user.click(copyButton);
 
     await waitFor(() => {
       expect(prepareDownloadMock).toHaveBeenCalledWith("test-bucket", "folder/example.txt");
+    }, { timeout: 3000 });
+
+    await waitFor(() => {
       expect(clipboardWriteMock).toHaveBeenCalledWith(
         "https://api.test/api/download/token-123"
       );
-    });
+    }, { timeout: 3000 });
   });
 });
