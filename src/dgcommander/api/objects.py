@@ -45,9 +45,8 @@ def list_objects(query: ObjectListRequest):
     contract_sort_order = ObjectSortOrder.from_query(query.sort, query.order)
     util_sort_order = sort_order_map[contract_sort_order]
 
-    # Check if bucket exists by listing buckets
-    known_buckets = {bucket.name for bucket in catalog.list_buckets()}
-    if query.bucket not in known_buckets:
+    # Check if bucket exists efficiently
+    if not catalog.bucket_exists(query.bucket):
         raise NotFoundError("bucket", "bucket_not_found")
 
     try:
@@ -114,9 +113,8 @@ def bulk_delete_objects(data: BulkDeleteRequest):
     _enforce_rate_limit(request)
     container = get_container()
 
-    # Check if bucket exists by listing buckets
-    known_buckets = {bucket.name for bucket in container.catalog.list_buckets()}
-    if data.bucket not in known_buckets:
+    # Check if bucket exists efficiently
+    if not container.catalog.bucket_exists(data.bucket):
         raise NotFoundError("bucket", "bucket_not_found")
 
     deleted, errors = container.catalog.bulk_delete_objects(data.bucket, data.keys)

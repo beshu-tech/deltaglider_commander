@@ -36,10 +36,11 @@ class CatalogService:
     sdk: DeltaGliderSDK
     caches: CacheRegistry
 
-    def list_buckets(self) -> list[BucketStats]:
+    def list_buckets(self, compute_stats: bool = False) -> list[BucketStats]:
         stats: list[BucketStats] = []
         try:
-            snapshots = list(self.sdk.list_buckets())
+            # Only compute expensive stats when explicitly requested
+            snapshots = list(self.sdk.list_buckets(compute_stats=compute_stats))
         except Exception as exc:
             if isinstance(exc, APIError):
                 raise
@@ -49,8 +50,10 @@ class CatalogService:
         for snapshot in snapshots:
             cached = self.caches.savings_cache.get(snapshot.name)
             if cached:
+                # Use cached stats if available
                 base = cached
             else:
+                # Use snapshot stats (might be placeholder if compute_stats=False)
                 base = BucketStats(
                     name=snapshot.name,
                     object_count=snapshot.object_count,
@@ -117,6 +120,10 @@ class CatalogService:
             raise SDKError("Unable to delete bucket", details=details) from exc
         self._purge_bucket_caches(bucket)
 
+    def bucket_exists(self, bucket: str) -> bool:
+        """Check if a bucket exists without listing all buckets."""
+        return self.sdk.bucket_exists(bucket)
+
     def list_objects(
         self,
         bucket: str,
@@ -131,7 +138,10 @@ class CatalogService:
         cache_key = (bucket, prefix, sort_order.value, compressed, search)
         cached: tuple[list[LogicalObject], list[str]] | None = self.caches.list_cache.get(cache_key)
         if cached is None:
-            listing = self.sdk.list_objects(bucket, prefix)
+            # Pass a hint to limit items fetched from S3 (fetch slightly more than limit for filtering)
+            max_items_hint = limit + 50 if limit < 1000 else None
+            # Use quick mode for better performance on initial listing
+            listing = self.sdk.list_objects(bucket, prefix, max_items=max_items_hint, quick_mode=True)
             filtered = [obj for obj in listing.objects if compressed is None or obj.compressed == compressed]
 
             # Apply search filter if provided
@@ -141,7 +151,9 @@ class CatalogService:
 
             sorted_objects = _sort_objects(filtered, sort_order)
             cached = (sorted_objects, listing.common_prefixes)
-            self.caches.list_cache.set(cache_key, cached)
+            # Only cache if we fetched everything (no max_items limit)
+            if max_items_hint is None or len(listing.objects) < max_items_hint:
+                self.caches.list_cache.set(cache_key, cached)
         objects, prefixes = cached
         offset = decode_cursor(cursor) or 0
         page = objects[offset : offset + limit]

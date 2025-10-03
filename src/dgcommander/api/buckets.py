@@ -15,7 +15,8 @@ bp = Blueprint("buckets", __name__, url_prefix="/api/buckets")
 def list_buckets():
     container = get_container()
     payload = []
-    for bucket in container.catalog.list_buckets():
+    # Use fast listing without expensive stats computation
+    for bucket in container.catalog.list_buckets(compute_stats=False):
         entry = {
             "name": bucket.name,
             "object_count": bucket.object_count,
@@ -44,8 +45,8 @@ def create_bucket():
 @bp.post("/<bucket>/compute-savings")
 def compute_savings(bucket: str):
     container = get_container()
-    buckets = {b.name for b in container.catalog.list_buckets()}
-    if bucket not in buckets:
+    # Use efficient bucket existence check
+    if not container.catalog.bucket_exists(bucket):
         raise NotFoundError("bucket", "bucket_not_found")
     task_id = container.jobs.enqueue(bucket)
     return json_response({"status": "accepted", "bucket": bucket, "task_id": task_id}, status=202)
