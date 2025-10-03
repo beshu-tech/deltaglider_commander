@@ -31,6 +31,7 @@ def sample_sdk() -> InMemoryDeltaGliderSDK:
     if not blob_path.exists():
         blob_path.parent.mkdir(parents=True, exist_ok=True)
         import zipfile
+
         with zipfile.ZipFile(blob_path, "w") as zf:
             zf.writestr("readme.txt", "Test fixture file for dgcommander tests")
     blob_bytes = blob_path.read_bytes()
