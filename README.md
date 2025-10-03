@@ -9,8 +9,10 @@ DeltaGlider Commander is a Flask-based backend service with a React frontend tha
 - **S3 Object Management**: Browse, download, and upload objects in S3-compatible storage
 - **Delta Compression**: Leverages DeltaGlider SDK for efficient storage and transfer
 - **Modern Web UI**: React-based frontend with TypeScript and Vite
-- **RESTful API**: Comprehensive Flask API with authentication and rate limiting
-- **Docker Support**: Containerized development environment with MinIO
+- **RESTful API**: Comprehensive Flask API with HMAC authentication and rate limiting
+- **Docker Support**: Multi-stage Docker builds with automated CI/CD pipeline
+- **Performance Optimizations**: Fast metadata retrieval with optional quick-mode listing
+- **Security**: Bandit scanning, secure temp directory handling, HMAC-signed download tokens
 
 ## Architecture
 
@@ -96,17 +98,33 @@ Frontend uses `VITE_` prefixed variables in `.env.local`:
 - `POST /api/buckets/{bucket}/objects` - Upload object
 - `DELETE /api/buckets/{bucket}/objects/{key}` - Delete object
 
-## Testing
+## Testing & CI/CD
 
+### Testing
 - **Backend**: pytest with fixtures, using `InMemoryDeltaGliderSDK` for isolation
 - **Frontend**: Vitest with Testing Library for component testing
 - **Integration**: Docker Compose provides MinIO for integration testing
+- **Quality Gates**: Ruff linting, mypy type checking, Bandit security scanning
+
+### CI/CD Pipeline
+- **Automated Testing**: Full test suite runs on every push and PR
+- **Quality Checks**: Code formatting (Prettier), linting (ESLint/Ruff), type checking (TypeScript/mypy)
+- **Security Scanning**: Bandit for Python security vulnerabilities
+- **Docker Images**: Automated builds published to Docker Hub on tags (e.g., `v0.1.2` → `beshultd/deltaglider_commander:0.1.2`)
 
 ## Docker Deployment
 
 ### Using Pre-built Image
 
+Pre-built Docker images are available on Docker Hub:
+
 ```bash
+# Pull the latest version
+docker pull beshultd/deltaglider_commander:latest
+
+# Or pull a specific version
+docker pull beshultd/deltaglider_commander:0.1.2
+
 # Copy env.example to .env and configure your S3 credentials
 cp env.example .env
 # Edit .env with your values
@@ -129,6 +147,31 @@ docker run -p 8000:8000 \
   -e DGCOMM_HMAC_SECRET=your-hmac-secret \
   dgcommander
 ```
+
+## Recent Improvements (v0.1.2)
+
+### Performance Enhancements
+- **Fast Metadata Retrieval**: Optimized `get_metadata` endpoint using `list_objects` instead of `get_object`
+- **Quick-Mode Listing**: Optional quick listing mode for faster bucket browsing
+- **Improved Error Handling**: Better error messages and navigation edge cases
+
+### Security & Quality
+- **Security Hardening**: Fixed Bandit warnings by using `tempfile.gettempdir()` instead of hardcoded `/tmp` paths
+- **CI/CD Pipeline**: Comprehensive GitHub Actions workflow with quality gates
+- **Type Safety**: Full mypy type checking with strict configuration
+- **Code Quality**: Ruff linting and Prettier formatting enforcement
+
+### Bug Fixes
+- Fixed S3 navigation issues with prefix handling
+- Fixed metadata endpoint performance issues
+- Resolved Docker build issues with frontend asset compilation
+- Fixed CI test flakiness with clipboard operations
+
+### Infrastructure
+- Multi-stage Docker builds with optimized caching
+- Automated Docker Hub publishing on version tags
+- Integration testing with MinIO in CI pipeline
+- pnpm 9 support with updated lockfile
 
 ## Related Projects
 
