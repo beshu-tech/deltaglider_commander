@@ -4,11 +4,8 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import Iterable
 from pathlib import Path
 
-import boto3
-from botocore.exceptions import ClientError
 from deltaglider.client import create_client
 
 SEED_FILES = [
@@ -30,45 +27,52 @@ def _bool_env(name: str, default: bool) -> bool:
     return default
 
 
-def ensure_bucket(s3_client, bucket: str) -> None:
+def ensure_bucket(client, bucket: str) -> None:
+    """Ensure bucket exists, create if it doesn't."""
     try:
-        s3_client.head_bucket(Bucket=bucket)
-    except ClientError as exc:  # pragma: no cover - defensive network guard
-        error_code = exc.response.get("Error", {}).get("Code", "")
-        if error_code not in {"404", "NoSuchBucket", "NotFound"}:
-            raise
-        params = {"Bucket": bucket}
-        region = os.getenv("AWS_DEFAULT_REGION")
-        if region and region != "us-east-1":
-            params["CreateBucketConfiguration"] = {"LocationConstraint": region}
-        s3_client.create_bucket(**params)
+        # Check if bucket exists by trying to list buckets
+        response = client.list_buckets()
+        bucket_names = [b["Name"] for b in response.get("Buckets", [])]
+        if bucket not in bucket_names:
+            # Create bucket with region configuration if needed
+            region = os.getenv("AWS_DEFAULT_REGION")
+            if region and region != "us-east-1":
+                client.create_bucket(Bucket=bucket, CreateBucketConfiguration={"LocationConstraint": region})
+            else:
+                client.create_bucket(Bucket=bucket)
+    except Exception:
+        # If any error occurs, try to create the bucket anyway
+        try:
+            client.create_bucket(Bucket=bucket)
+        except Exception as e:
+            # Bucket might already exist or creation failed
+            print(f"Warning: Could not create bucket: {e}")
 
 
-def object_exists(s3_client, bucket: str, key_candidates: Iterable[str]) -> bool:
+def object_exists(client, bucket: str, key_candidates: list[str]) -> bool:
+    """Check if any of the key candidates exist in the bucket."""
     for key in key_candidates:
         try:
-            s3_client.head_object(Bucket=bucket, Key=key)
-            return True
-        except ClientError as exc:
-            error_code = exc.response.get("Error", {}).get("Code", "")
-            if error_code not in {"404", "NoSuchKey", "NotFound"}:
-                raise
+            # Use list_objects to check if object exists
+            response = client.list_objects(Bucket=bucket, Prefix=key, MaxKeys=1)
+            if response.get("Contents"):
+                return True
+        except Exception as e:
+            # Object doesn't exist or error accessing it, try next candidate
+            print(f"Warning: Could not check object {key}: {e}")
+            continue
     return False
 
 
 def main() -> int:
     bucket = os.getenv("DGCOMM_SEED_BUCKET", "dg-demo")
     endpoint = os.getenv("DGCOMM_S3_ENDPOINT")
-    verify_ssl = _bool_env("DGCOMM_S3_VERIFY_SSL", True)
     cache_dir = os.getenv("DGCOMM_CACHE_DIR", "/tmp/dgcommander-cache")
-    region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 
-    session = boto3.session.Session(region_name=region)
-    s3_client = session.client("s3", endpoint_url=endpoint, verify=verify_ssl)
-
-    ensure_bucket(s3_client, bucket)
-
+    # Use deltaglider client for all S3 operations including bucket management
     client = create_client(endpoint_url=endpoint, cache_dir=cache_dir)
+
+    ensure_bucket(client, bucket)
 
     source_root = Path(os.getenv("DGCOMM_SEED_SOURCE", "/app/releases"))
     if not source_root.exists():
@@ -81,11 +85,8 @@ def main() -> int:
             print(f"Skipping missing seed file: {source_path}")
             continue
         prefix = f"releases/{name}"
-        if object_exists(
-            s3_client,
-            bucket,
-            [prefix, f"{prefix}.delta"],
-        ):
+        # deltaglider 4.1.0 abstracts .delta suffixes, so just check the logical key
+        if object_exists(client, bucket, [prefix]):
             print(f"Object already present for {name}, skipping upload")
             continue
         s3_url = f"s3://{bucket}/releases/"

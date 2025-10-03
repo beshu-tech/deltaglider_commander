@@ -32,15 +32,15 @@ vi.mock("@tanstack/react-router", () => ({
     );
   },
   useMatch: (options: unknown) => useMatchMock(options),
-  useNavigate: () => navigateMock
+  useNavigate: () => navigateMock,
 }));
 
 vi.mock("../../../features/buckets/useBuckets", () => ({
-  useBuckets: () => useBucketsMock()
+  useBuckets: () => useBucketsMock(),
 }));
 
 vi.mock("../../../features/buckets/useBucketManagement", () => ({
-  useCreateBucket: () => useCreateBucketMock()
+  useCreateBucket: () => useCreateBucketMock(),
 }));
 
 const sampleBuckets = [
@@ -50,7 +50,7 @@ const sampleBuckets = [
     original_bytes: 100,
     stored_bytes: 80,
     savings_pct: 20,
-    pending: false
+    pending: false,
   },
   {
     name: "beta",
@@ -58,8 +58,8 @@ const sampleBuckets = [
     original_bytes: 50,
     stored_bytes: 40,
     savings_pct: 20,
-    pending: true
-  }
+    pending: true,
+  },
 ];
 
 beforeEach(() => {
@@ -69,11 +69,11 @@ beforeEach(() => {
     data: sampleBuckets,
     isLoading: false,
     isError: false,
-    error: null
+    error: null,
   });
   useCreateBucketMock.mockReturnValue({
     mutateAsync: vi.fn(() => Promise.resolve()),
-    isPending: false
+    isPending: false,
   });
 });
 
@@ -110,7 +110,7 @@ describe("Sidebar", () => {
     expect(navigateMock).toHaveBeenCalledWith({
       to: "/b/$bucket",
       params: { bucket: "new-bucket" },
-      search: expect.any(Object)
+      search: expect.any(Object),
     });
   });
 });

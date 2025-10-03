@@ -15,7 +15,7 @@ const invalidStyles = "border-rose-400 focus:border-rose-400 focus:ring-rose-300
 
 export const Input = forwardRef(function Input(
   { className, invalid, ...rest }: InputProps,
-  ref: ForwardedRef<HTMLInputElement>
+  ref: ForwardedRef<HTMLInputElement>,
 ) {
   return (
     <input
@@ -26,4 +26,3 @@ export const Input = forwardRef(function Input(
     />
   );
 });
-

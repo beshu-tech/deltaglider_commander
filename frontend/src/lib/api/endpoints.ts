@@ -10,7 +10,7 @@ import {
   objectListSchema,
   uploadResponseSchema,
   UploadResponse,
-  UploadResult
+  UploadResult,
 } from "./schemas";
 
 // Re-export types from schemas
@@ -36,20 +36,20 @@ export async function fetchBuckets(): Promise<Bucket[]> {
 export async function createBucket(name: string): Promise<void> {
   await api("/api/buckets/", {
     method: "POST",
-    body: JSON.stringify({ name })
+    body: JSON.stringify({ name }),
   });
 }
 
 export async function deleteBucket(name: string): Promise<void> {
   await api(`/api/buckets/${encodeURIComponent(name)}`, {
-    method: "DELETE"
+    method: "DELETE",
   });
 }
 
 export async function deleteObject(bucket: string, key: string): Promise<void> {
   const encodedKey = key.split("/").map(encodeURIComponent).join("/");
   await api(`/api/objects/${encodeURIComponent(bucket)}/${encodedKey}`, {
-    method: "DELETE"
+    method: "DELETE",
   });
 }
 
@@ -61,10 +61,13 @@ export interface BulkDeleteResponse {
   total_errors: number;
 }
 
-export async function bulkDeleteObjects(bucket: string, keys: string[]): Promise<BulkDeleteResponse> {
+export async function bulkDeleteObjects(
+  bucket: string,
+  keys: string[],
+): Promise<BulkDeleteResponse> {
   const data = await api<BulkDeleteResponse>("/api/objects/bulk", {
     method: "DELETE",
-    body: JSON.stringify({ bucket, keys })
+    body: JSON.stringify({ bucket, keys }),
   });
   return data;
 }
@@ -87,21 +90,23 @@ export async function fetchObjects(params: ObjectsParams): Promise<ObjectList> {
 
 export async function fetchObjectMetadata(bucket: string, key: string): Promise<FileMetadata> {
   const encodedKey = key.split("/").map(encodeURIComponent).join("/");
-  const data = await api<unknown>(`/api/objects/${encodeURIComponent(bucket)}/${encodedKey}/metadata`);
+  const data = await api<unknown>(
+    `/api/objects/${encodeURIComponent(bucket)}/${encodedKey}/metadata`,
+  );
   return fileMetadataSchema.parse(data);
 }
 
 export async function triggerSavings(bucket: string): Promise<void> {
   await api(`/api/buckets/${encodeURIComponent(bucket)}/compute-savings`, {
     method: "POST",
-    body: JSON.stringify({})
+    body: JSON.stringify({}),
   });
 }
 
 export async function prepareDownload(bucket: string, key: string): Promise<DownloadPrepare> {
   const data = await api<unknown>("/api/download/prepare", {
     method: "POST",
-    body: JSON.stringify({ bucket, key })
+    body: JSON.stringify({ bucket, key }),
   });
   return downloadPrepareSchema.parse(data);
 }
@@ -109,7 +114,7 @@ export async function prepareDownload(bucket: string, key: string): Promise<Down
 export async function fetchDownload(token: string): Promise<ArrayBuffer> {
   return api<ArrayBuffer>(`/api/download/${encodeURIComponent(token)}`, {
     timeoutMs: null,
-    parseAs: "arrayBuffer"
+    parseAs: "arrayBuffer",
   });
 }
 
@@ -137,14 +142,17 @@ export async function uploadObjects(params: UploadObjectsParams): Promise<Upload
 
   params.files.forEach((item) => {
     const fallbackName = item.file.name || "file";
-    const relative = item.relativePath || (item.file as File & { webkitRelativePath?: string }).webkitRelativePath || fallbackName;
+    const relative =
+      item.relativePath ||
+      (item.file as File & { webkitRelativePath?: string }).webkitRelativePath ||
+      fallbackName;
     const normalized = relative.replace(/^\/+/, "");
     formData.append("files", item.file, normalized || fallbackName);
   });
 
   const data = await api<unknown>("/api/upload/", {
     method: "POST",
-    body: formData
+    body: formData,
   });
   return uploadResponseSchema.parse(data);
 }

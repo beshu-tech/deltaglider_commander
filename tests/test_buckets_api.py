@@ -43,7 +43,7 @@ def test_compute_savings_triggers_job(app, client):
 def test_list_buckets_handles_sdk_errors(app, client, monkeypatch):
     container = app.extensions["dgcommander"]
 
-    def broken_list_buckets():
+    def broken_list_buckets(compute_stats=False):
         raise RuntimeError("boom")
 
     monkeypatch.setattr(container.catalog.sdk, "list_buckets", broken_list_buckets)

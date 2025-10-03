@@ -31,14 +31,20 @@ function serializeSelectionTarget(target: SelectionTarget): string {
   return `${target.type}${TOKEN_SEPARATOR}${encodeURIComponent(target.key)}`;
 }
 
-export function useObjectSelection({ pageEntries, resetToken }: UseObjectSelectionOptions): ObjectSelectionState {
+export function useObjectSelection({
+  pageEntries,
+  resetToken,
+}: UseObjectSelectionOptions): ObjectSelectionState {
   const [selectedMap, setSelectedMap] = useState<Map<string, SelectionTarget>>(new Map());
 
   useEffect(() => {
     setSelectedMap(new Map());
   }, [resetToken]);
 
-  const pageTokens = useMemo(() => pageEntries.map((entry) => serializeSelectionTarget(entry)), [pageEntries]);
+  const pageTokens = useMemo(
+    () => pageEntries.map((entry) => serializeSelectionTarget(entry)),
+    [pageEntries],
+  );
 
   const pageSelectableCount = pageTokens.length;
 
@@ -111,7 +117,7 @@ export function useObjectSelection({ pageEntries, resetToken }: UseObjectSelecti
 
   const isSelected = useCallback(
     (target: SelectionTarget) => selectedMap.has(serializeSelectionTarget(target)),
-    [selectedMap]
+    [selectedMap],
   );
 
   return {
@@ -124,6 +130,6 @@ export function useObjectSelection({ pageEntries, resetToken }: UseObjectSelecti
     pageSelectableCount,
     pageSelectedCount,
     totalSelectedCount,
-    hasSelection
+    hasSelection,
   };
 }

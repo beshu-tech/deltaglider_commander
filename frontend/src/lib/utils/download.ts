@@ -6,7 +6,11 @@ export interface DownloadOptions {
   onError?: (error: unknown) => void;
 }
 
-export async function downloadObject(bucket: string, key: string, options: DownloadOptions = {}): Promise<void> {
+export async function downloadObject(
+  bucket: string,
+  key: string,
+  options: DownloadOptions = {},
+): Promise<void> {
   try {
     const { download_token, estimated_bytes } = await prepareDownload(bucket, key);
     options.onPrepared?.(estimated_bytes);

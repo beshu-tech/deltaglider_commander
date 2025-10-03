@@ -37,7 +37,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setToasts((current) => [...current, { ...toast, id }]);
       window.setTimeout(() => remove(id), 5000);
     },
-    [remove]
+    [remove],
   );
 
   const value = useMemo(() => ({ push }), [push]);
@@ -53,7 +53,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             onClick={() => remove(toast.id)}
             className="pointer-events-auto w-fit min-w-[280px] max-w-[360px] rounded-lg border border-slate-200 bg-white p-4 text-left shadow transition hover:shadow-lg dark:border-slate-700 dark:bg-slate-900"
           >
-            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{toast.title}</div>
+            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {toast.title}
+            </div>
             {toast.description ? (
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{toast.description}</p>
             ) : null}

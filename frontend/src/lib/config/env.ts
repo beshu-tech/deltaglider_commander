@@ -3,16 +3,11 @@ import { z } from "zod";
 const envSchema = z.object({
   VITE_API_URL: z.string().url(),
   VITE_APP_NAME: z.string().min(1),
-  VITE_POLL_MS: z.coerce
-    .number()
-    .int()
-    .min(1000)
-    .max(60000)
-    .default(5000),
+  VITE_POLL_MS: z.coerce.number().int().min(1000).max(60000).default(5000),
   VITE_ENABLE_UPLOADS: z
     .union([z.literal("true"), z.literal("false"), z.boolean()])
     .optional()
-    .default("false")
+    .default("false"),
 });
 
 type Env = z.infer<typeof envSchema> & {
@@ -28,7 +23,8 @@ export function getEnv(): Env {
   const parsed = envSchema.parse(import.meta.env);
   cachedEnv = {
     ...parsed,
-    VITE_ENABLE_UPLOADS: parsed.VITE_ENABLE_UPLOADS === true || parsed.VITE_ENABLE_UPLOADS === "true"
+    VITE_ENABLE_UPLOADS:
+      parsed.VITE_ENABLE_UPLOADS === true || parsed.VITE_ENABLE_UPLOADS === "true",
   };
   return cachedEnv;
 }

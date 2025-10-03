@@ -17,14 +17,18 @@ export function ObjectsSelectionBar({
   isFetching,
   onClear,
   onBulkDownload,
-  onBulkDelete
+  onBulkDelete,
 }: ObjectsSelectionBarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-5 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{totalSelected}</span>
+        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {totalSelected}
+        </span>
         <span>selected</span>
-        <Badge className="bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">{pageSelected} on this page</Badge>
+        <Badge className="bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+          {pageSelected} on this page
+        </Badge>
         <button
           type="button"
           onClick={onClear}
@@ -34,7 +38,12 @@ export function ObjectsSelectionBar({
         </button>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="secondary" onClick={onBulkDownload} disabled={isFetching} className="min-w-[140px]">
+        <Button
+          variant="secondary"
+          onClick={onBulkDownload}
+          disabled={isFetching}
+          className="min-w-[140px]"
+        >
           <Download className="h-4 w-4" />
           Download
         </Button>

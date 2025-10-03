@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, CheckCircle2, FileText, FolderPlus, Loader2, UploadCloud } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  FileText,
+  FolderPlus,
+  Loader2,
+  UploadCloud,
+} from "lucide-react";
 import { uploadObjects, UploadFileInput, UploadResult } from "../../lib/api/endpoints";
 import { formatBytes } from "../../lib/utils/bytes";
 import { useToast } from "../../app/toast";
@@ -55,7 +62,7 @@ interface FileSystemDirectoryEntry extends FileSystemEntryBase {
 interface FileSystemDirectoryReader {
   readEntries: (
     successCallback: (entries: FileSystemEntry[]) => void,
-    errorCallback?: (error: DOMException) => void
+    errorCallback?: (error: DOMException) => void,
   ) => void;
 }
 
@@ -90,14 +97,14 @@ async function readFileEntry(entry: FileSystemFileEntry): Promise<UploadFileInpu
         try {
           Object.defineProperty(file, "webkitRelativePath", {
             value: relativePath,
-            configurable: true
+            configurable: true,
           });
         } catch (error) {
           // Ignore if property is read-only in this environment
         }
         resolve({ file, relativePath });
       },
-      (error) => reject(error)
+      (error) => reject(error),
     );
   });
 }
@@ -132,7 +139,7 @@ async function readDirectoryEntry(entry: FileSystemDirectoryEntry): Promise<Uplo
           }
           readBatch();
         },
-        (error) => reject(error)
+        (error) => reject(error),
       );
     };
     readBatch();
@@ -160,7 +167,9 @@ async function extractDataTransferItems(items: DataTransferItemList): Promise<Up
     const file = item.getAsFile();
     if (file) {
       const withPath = file as File & { webkitRelativePath?: string };
-      promises.push(Promise.resolve([{ file, relativePath: withPath.webkitRelativePath || file.name }]));
+      promises.push(
+        Promise.resolve([{ file, relativePath: withPath.webkitRelativePath || file.name }]),
+      );
     }
   }
 
@@ -168,7 +177,7 @@ async function extractDataTransferItems(items: DataTransferItemList): Promise<Up
   settled.forEach((result) => {
     if (!result) return;
     if (Array.isArray(result)) {
-      uploads.push(...result.filter(Boolean) as UploadFileInput[]);
+      uploads.push(...(result.filter(Boolean) as UploadFileInput[]));
     } else {
       uploads.push(result);
     }
@@ -180,7 +189,12 @@ async function extractDataTransferItems(items: DataTransferItemList): Promise<Up
 export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProps) {
   const toast = useToast();
   const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [stats, setStats] = useState<SessionStats>({ count: 0, original: 0, stored: 0, savings: 0 });
+  const [stats, setStats] = useState<SessionStats>({
+    count: 0,
+    original: 0,
+    stored: 0,
+    savings: 0,
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const activeUploads = useRef(0);
@@ -227,10 +241,8 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
       const ids = new Set(items.map((item) => item.id));
       setQueue((prev) =>
         prev.map((item) =>
-          ids.has(item.id)
-            ? { ...item, status: "uploading", error: undefined }
-            : item
-        )
+          ids.has(item.id) ? { ...item, status: "uploading", error: undefined } : item,
+        ),
       );
 
       activeUploads.current += 1;
@@ -240,7 +252,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
         const payload = await uploadObjects({
           bucket,
           prefix: normalizedPrefix,
-          files: items.map((item) => ({ file: item.file, relativePath: item.relativePath }))
+          files: items.map((item) => ({ file: item.file, relativePath: item.relativePath })),
         });
 
         const resultMap = new Map<string, UploadResult>();
@@ -253,7 +265,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
           count: prev.count + payload.stats.count,
           original: prev.original + payload.stats.original_bytes,
           stored: prev.stored + payload.stats.stored_bytes,
-          savings: prev.savings + payload.stats.savings_bytes
+          savings: prev.savings + payload.stats.savings_bytes,
         }));
 
         setQueue((prev) =>
@@ -268,9 +280,9 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
             return {
               ...item,
               status: "error",
-              error: "Upload completed but response was missing results"
+              error: "Upload completed but response was missing results",
             };
-          })
+          }),
         );
 
         if (payload.results.length) {
@@ -293,8 +305,8 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
           prev.map((item) =>
             ids.has(item.id)
               ? { ...item, status: "error", error: message || "Upload failed" }
-              : item
-          )
+              : item,
+          ),
         );
         toast.push({ title: "Upload failed", description: message, level: "error" });
       } finally {
@@ -302,7 +314,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
         updateUploadingState();
       }
     },
-    [bucket, normalizedPrefix, onCompleted, toast, updateUploadingState]
+    [bucket, normalizedPrefix, onCompleted, toast, updateUploadingState],
   );
 
   const addFiles = useCallback(
@@ -311,19 +323,20 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
         return;
       }
       const items = files.map<QueueItem>((entry) => {
-        const normalized = normalizeRelativePath(entry.relativePath || entry.file.name) || entry.file.name;
+        const normalized =
+          normalizeRelativePath(entry.relativePath || entry.file.name) || entry.file.name;
         return {
           id: generateId(),
           file: entry.file,
           relativePath: normalized,
           size: entry.file.size,
-          status: "pending"
+          status: "pending",
         };
       });
       setQueue((prev) => [...prev, ...items]);
       void uploadBatch(items);
     },
-    [uploadBatch]
+    [uploadBatch],
   );
 
   const handleFileSelection = useCallback(
@@ -339,7 +352,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
       addFiles(entries);
       event.target.value = "";
     },
-    [addFiles]
+    [addFiles],
   );
 
   const handleDrop = useCallback(
@@ -350,7 +363,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
         toast.push({
           title: "Upload in progress",
           description: "Please wait for the active upload to finish before adding more files.",
-          level: "info"
+          level: "info",
         });
         return;
       }
@@ -363,7 +376,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
         addFiles(uploads);
       }
     },
-    [addFiles, isUploading, toast]
+    [addFiles, isUploading, toast],
   );
 
   const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
@@ -422,20 +435,37 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
         >
-          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelection} />
-          <input ref={folderInputRef} type="file" multiple className="hidden" onChange={handleFileSelection} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={handleFileSelection}
+          />
+          <input
+            ref={folderInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={handleFileSelection}
+          />
           <UploadCloud className="mb-4 h-12 w-12 text-brand-500" />
           <h3 className="text-lg font-semibold">Drag and drop files or folders here</h3>
           <p className="mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
             We'll automatically organise uploads under
-            {normalizedPrefix ? ` ${normalizedPrefix}` : " the bucket root"}. Delta compression is applied when beneficial.
+            {normalizedPrefix ? ` ${normalizedPrefix}` : " the bucket root"}. Delta compression is
+            applied when beneficial.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Button onClick={() => fileInputRef.current?.click()} className="gap-2">
               <FileText className="h-4 w-4" />
               Select files
             </Button>
-            <Button variant="secondary" onClick={() => folderInputRef.current?.click()} className="gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => folderInputRef.current?.click()}
+              className="gap-2"
+            >
               <FolderPlus className="h-4 w-4" />
               Select folder
             </Button>
@@ -453,7 +483,12 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Upload Queue ({queue.length})
           </h3>
-          <Button variant="ghost" disabled={!hasCompleted} onClick={clearCompleted} className="text-sm">
+          <Button
+            variant="ghost"
+            disabled={!hasCompleted}
+            onClick={clearCompleted}
+            className="text-sm"
+          >
             Clear completed
           </Button>
         </header>
@@ -493,8 +528,12 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
                     <FileText className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.relativePath}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{formatBytes(item.size)}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {item.relativePath}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {formatBytes(item.size)}
+                    </p>
                   </div>
                 </div>
                 <div className={`flex items-center gap-2 text-sm ${statusColor}`}>

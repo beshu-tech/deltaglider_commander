@@ -26,7 +26,11 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
 
   useEffect(() => {
     if (query.error) {
-      toast.push({ title: "Could not load file", description: String(query.error), level: "error" });
+      toast.push({
+        title: "Could not load file",
+        description: String(query.error),
+        level: "error",
+      });
     }
   }, [query.error, toast]);
 
@@ -44,7 +48,6 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
     return parts[parts.length - 1] || objectKey;
   }, [objectKey]);
 
-
   const handleCopy = useCallback(
     async (value: string, field: "key" | "uri" | "link") => {
       try {
@@ -56,7 +59,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
         toast.push({ title: "Copy failed", description: String(error), level: "error" });
       }
     },
-    [toast]
+    [toast],
   );
 
   if (query.isLoading) {
@@ -95,12 +98,12 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
           toast.push({
             title: "Preparing download",
             description: `${formatBytes(estimated)} expected`,
-            level: "info"
+            level: "info",
           });
         },
         onCompleted: () => {
           toast.push({ title: "Download ready", description: metadata.key, level: "success" });
-        }
+        },
       });
     } catch (error) {
       toast.push({ title: "Download failed", description: String(error), level: "error" });
@@ -119,12 +122,19 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
             <p className="text-xs text-slate-500 dark:text-slate-400">{metadata.key}</p>
           </div>
         </div>
-        <Button variant="ghost" onClick={onClose} aria-label="Close" className="text-slate-500 hover:text-slate-900">
+        <Button
+          variant="ghost"
+          onClick={onClose}
+          aria-label="Close"
+          className="text-slate-500 hover:text-slate-900"
+        >
           <X className="h-4 w-4" />
         </Button>
       </div>
       <section className="space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Quick actions</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Quick actions
+        </h3>
         <div className="grid gap-2">
           <Button className="justify-start gap-2" onClick={handleDownload}>
             <Download className="h-4 w-4" />
@@ -150,13 +160,17 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
           >
             <Share2 className="h-4 w-4" />
             Copy S3 URI
-            <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">{copiedField === "uri" ? "Copied" : ""}</span>
+            <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
+              {copiedField === "uri" ? "Copied" : ""}
+            </span>
           </Button>
         </div>
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Storage stats</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Storage stats
+        </h3>
         <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
           {/* Main savings highlight */}
           <div className="mb-3 text-center">
@@ -172,21 +186,27 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div className="flex items-center justify-between rounded bg-white/50 px-2 py-1 dark:bg-slate-700/50">
               <span className="text-slate-500 dark:text-slate-400">Original</span>
-              <span className="font-semibold text-slate-700 dark:text-slate-200">{formatBytes(metadata.original_bytes)}</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">
+                {formatBytes(metadata.original_bytes)}
+              </span>
             </div>
             <div className="flex items-center justify-between rounded bg-white/50 px-2 py-1 dark:bg-slate-700/50">
               <span className="text-slate-500 dark:text-slate-400">Stored</span>
-              <span className="font-semibold text-slate-700 dark:text-slate-200">{formatBytes(metadata.stored_bytes)}</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">
+                {formatBytes(metadata.stored_bytes)}
+              </span>
             </div>
           </div>
 
           {/* Compression status */}
           <div className="mt-2 text-center">
-            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-              metadata.compressed
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
-                : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
-            }`}>
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                metadata.compressed
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+                  : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+              }`}
+            >
               {metadata.compressed ? "Compressed" : "Original"}
             </span>
           </div>
@@ -194,27 +214,42 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Object info</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Object info
+        </h3>
         <dl className="space-y-4 text-sm">
           <div className="space-y-1">
-            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">Location</dt>
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Location
+            </dt>
             <dd className="font-medium text-slate-700 dark:text-slate-200 break-words">
-              <span className="text-slate-500 dark:text-slate-400">{bucket}/</span>{metadata.key}
+              <span className="text-slate-500 dark:text-slate-400">{bucket}/</span>
+              {metadata.key}
             </dd>
           </div>
           <div className="space-y-1">
-            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">Last modified</dt>
-            <dd className="font-medium text-slate-700 dark:text-slate-200">{formatDateTime(metadata.modified)}</dd>
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Last modified
+            </dt>
+            <dd className="font-medium text-slate-700 dark:text-slate-200">
+              {formatDateTime(metadata.modified)}
+            </dd>
           </div>
           <div className="space-y-1">
-            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">Accept-Ranges</dt>
-            <dd className="font-medium text-slate-700 dark:text-slate-200">{metadata.accept_ranges ? "Enabled" : "Disabled"}</dd>
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Accept-Ranges
+            </dt>
+            <dd className="font-medium text-slate-700 dark:text-slate-200">
+              {metadata.accept_ranges ? "Enabled" : "Disabled"}
+            </dd>
           </div>
         </dl>
       </section>
 
       <section className="space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tags</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Tags
+        </h3>
         <div className="flex items-center gap-2 rounded-lg border border-dashed border-slate-200 p-3 text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">
           <Tag className="h-4 w-4" />
           No tags available
@@ -232,11 +267,15 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
             deleteMutation.mutate(metadata.key, {
               onSuccess: () => {
                 onDeleted?.(metadata.key);
-              }
+              },
             });
           }}
         >
-          {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+          {deleteMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
           Delete object
         </Button>
       </div>

@@ -14,10 +14,10 @@ export function AppProviders() {
           queries: {
             retry: 2,
             refetchOnWindowFocus: false,
-            gcTime: getPollMs() * 3
-          }
-        }
-      })
+            gcTime: getPollMs() * 3,
+          },
+        },
+      }),
   );
   const [appRouter] = useState(() => router);
 

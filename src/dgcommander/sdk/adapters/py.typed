@@ -1,0 +1,2 @@
+# Marker file indicating this package supports type checking
+# But SDK adapters interact with third-party APIs with incomplete type stubs

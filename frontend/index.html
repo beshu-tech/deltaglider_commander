@@ -7,8 +7,10 @@
     <script>
       const THEME_KEY = "dg-theme=v1";
       const stored = localStorage.getItem(THEME_KEY);
-      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const theme = stored === "light" || stored === "dark" ? stored : prefersDark ? "dark" : "light";
+      const prefersDark =
+        window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme =
+        stored === "light" || stored === "dark" ? stored : prefersDark ? "dark" : "light";
       document.documentElement.classList.toggle("dark", theme === "dark");
       document.documentElement.setAttribute("data-theme", theme);
     </script>

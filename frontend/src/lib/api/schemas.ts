@@ -6,11 +6,11 @@ export const bucketSchema = z.object({
   original_bytes: z.number().int().nonnegative(),
   stored_bytes: z.number().int().nonnegative(),
   savings_pct: z.number(),
-  pending: z.boolean().optional()
+  pending: z.boolean().optional(),
 });
 
 export const bucketsResponseSchema = z.object({
-  buckets: z.array(bucketSchema)
+  buckets: z.array(bucketSchema),
 });
 
 export const objectItemSchema = z.object({
@@ -18,13 +18,13 @@ export const objectItemSchema = z.object({
   original_bytes: z.number().int().nonnegative(),
   stored_bytes: z.number().int().nonnegative(),
   compressed: z.boolean(),
-  modified: z.string()
+  modified: z.string(),
 });
 
 export const objectListSchema = z.object({
   objects: z.array(objectItemSchema),
   common_prefixes: z.array(z.string()),
-  cursor: z.string().nullable().optional()
+  cursor: z.string().nullable().optional(),
 });
 
 export const fileMetadataSchema = z.object({
@@ -33,12 +33,12 @@ export const fileMetadataSchema = z.object({
   stored_bytes: z.number().int().nonnegative(),
   compressed: z.boolean(),
   modified: z.string(),
-  accept_ranges: z.boolean()
+  accept_ranges: z.boolean(),
 });
 
 export const downloadPrepareSchema = z.object({
   download_token: z.string(),
-  estimated_bytes: z.number().int().nonnegative()
+  estimated_bytes: z.number().int().nonnegative(),
 });
 
 export const uploadResultSchema = z.object({
@@ -51,7 +51,7 @@ export const uploadResultSchema = z.object({
   savings_bytes: z.number().int().nonnegative(),
   savings_pct: z.number(),
   physical_key: z.string().optional(),
-  relative_path: z.string().optional()
+  relative_path: z.string().optional(),
 });
 
 export const uploadStatsSchema = z.object({
@@ -59,14 +59,14 @@ export const uploadStatsSchema = z.object({
   original_bytes: z.number().int().nonnegative(),
   stored_bytes: z.number().int().nonnegative(),
   savings_bytes: z.number().int().nonnegative(),
-  savings_pct: z.number()
+  savings_pct: z.number(),
 });
 
 export const uploadResponseSchema = z.object({
   bucket: z.string(),
   prefix: z.string().optional().default(""),
   results: z.array(uploadResultSchema),
-  stats: uploadStatsSchema
+  stats: uploadStatsSchema,
 });
 
 const errorDetailsSchema = z.object({}).passthrough();
@@ -75,8 +75,8 @@ export const apiErrorSchema = z.object({
   error: z.object({
     code: z.string(),
     message: z.string(),
-    details: errorDetailsSchema.optional()
-  })
+    details: errorDetailsSchema.optional(),
+  }),
 });
 
 export type Bucket = z.infer<typeof bucketSchema>;

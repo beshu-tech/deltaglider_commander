@@ -14,7 +14,16 @@ export interface UseObjectsOptions {
   compressed?: "true" | "false" | "any";
 }
 
-export function useObjects({ bucket, prefix = "", search, cursor, sort, order, limit, compressed }: UseObjectsOptions) {
+export function useObjects({
+  bucket,
+  prefix = "",
+  search,
+  cursor,
+  sort,
+  order,
+  limit,
+  compressed,
+}: UseObjectsOptions) {
   return useQuery<ObjectList>({
     queryKey: qk.objects(bucket, prefix, sort, order, limit, compressed ?? "any", cursor, search),
     queryFn: () =>
@@ -26,8 +35,8 @@ export function useObjects({ bucket, prefix = "", search, cursor, sort, order, l
         sort,
         order,
         limit,
-        compressed
+        compressed,
       }),
-    staleTime: 30_000
+    staleTime: 30_000,
   });
 }

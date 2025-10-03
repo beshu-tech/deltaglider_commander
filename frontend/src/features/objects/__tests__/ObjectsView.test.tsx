@@ -7,7 +7,7 @@ import { ObjectsSearchState } from "../types";
 import { ToastProvider } from "../../../app/toast";
 
 vi.mock("../../../lib/utils/download", () => ({
-  downloadObject: vi.fn(() => Promise.resolve())
+  downloadObject: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("../../../lib/api/endpoints", () => ({
@@ -15,9 +15,9 @@ vi.mock("../../../lib/api/endpoints", () => ({
     Promise.resolve({
       objects: [],
       common_prefixes: [],
-      cursor: undefined
-    })
-  )
+      cursor: undefined,
+    }),
+  ),
 }));
 
 import { downloadObject } from "../../../lib/utils/download";
@@ -32,16 +32,16 @@ vi.mock("../useObjects", () => ({
           original_bytes: 1024,
           stored_bytes: 512,
           compressed: true,
-          modified: new Date().toISOString()
-        }
+          modified: new Date().toISOString(),
+        },
       ],
       common_prefixes: ["folder/"],
-      cursor: "next"
+      cursor: "next",
     },
     isLoading: false,
     isError: false,
-    isFetching: false
-  }))
+    isFetching: false,
+  })),
 }));
 
 const defaultSearch: ObjectsSearchState = {
@@ -51,7 +51,7 @@ const defaultSearch: ObjectsSearchState = {
   sort: "modified",
   order: "desc",
   limit: 100,
-  compression: "all"
+  compression: "all",
 };
 
 const downloadObjectMock = vi.mocked(downloadObject);
@@ -72,7 +72,7 @@ function setup(overrides: Partial<React.ComponentProps<typeof ObjectsView>> = {}
     selectedKey: null,
     onNextPage: vi.fn(),
     onPreviousPage: vi.fn(),
-    ...overrides
+    ...overrides,
   };
 
   return {
@@ -83,8 +83,8 @@ function setup(overrides: Partial<React.ComponentProps<typeof ObjectsView>> = {}
         <ToastProvider>
           <ObjectsView {...props} />
         </ToastProvider>
-      </QueryClientProvider>
-    )
+      </QueryClientProvider>,
+    ),
   };
 }
 
@@ -96,9 +96,7 @@ describe("ObjectsView", () => {
     expect(await screen.findByText("file.txt")).toBeInTheDocument();
 
     await userEvent.click(screen.getByText("file.txt"));
-    expect(onRowClick).toHaveBeenCalledWith(
-      expect.objectContaining({ key: "folder/file.txt" })
-    );
+    expect(onRowClick).toHaveBeenCalledWith(expect.objectContaining({ key: "folder/file.txt" }));
   });
 
   it("triggers search change when submitting search form", async () => {
@@ -110,9 +108,7 @@ describe("ObjectsView", () => {
     await user.type(searchInput, "documents{enter}");
 
     await waitFor(() => {
-      expect(onSearchChange).toHaveBeenCalledWith(
-        expect.objectContaining({ search: "documents" })
-      );
+      expect(onSearchChange).toHaveBeenCalledWith(expect.objectContaining({ search: "documents" }));
     });
   });
 
@@ -137,11 +133,11 @@ describe("ObjectsView", () => {
           original_bytes: 10,
           stored_bytes: 10,
           compressed: false,
-          modified: now
-        }
+          modified: now,
+        },
       ],
       common_prefixes: ["folder/nested/"],
-      cursor: undefined
+      cursor: undefined,
     }));
 
     fetchObjectsMock.mockImplementationOnce(async () => ({
@@ -151,11 +147,11 @@ describe("ObjectsView", () => {
           original_bytes: 20,
           stored_bytes: 20,
           compressed: false,
-          modified: now
-        }
+          modified: now,
+        },
       ],
       common_prefixes: [],
-      cursor: undefined
+      cursor: undefined,
     }));
 
     await user.click(folderCheckbox);
@@ -168,7 +164,7 @@ describe("ObjectsView", () => {
 
     const downloadedKeys = downloadObjectMock.mock.calls.map(([, key]) => key);
     expect(downloadedKeys).toEqual(
-      expect.arrayContaining(["folder/file.txt", "folder/nested/deep.txt"])
+      expect.arrayContaining(["folder/file.txt", "folder/nested/deep.txt"]),
     );
   });
 });
