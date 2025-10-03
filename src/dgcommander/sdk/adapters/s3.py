@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import os
+import tempfile
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -68,7 +69,8 @@ class S3DeltaGliderSDK:
         # This replaces the low-level DeltaService + S3StorageAdapter approach
         self._client = create_client(
             endpoint_url=settings.endpoint_url,
-            cache_dir=settings.cache_dir or "/tmp/dgcommander-cache",
+            cache_dir=settings.cache_dir
+            or os.path.join(tempfile.gettempdir(), "dgcommander-cache"),
         )
 
     # -- public API -----------------------------------------------------

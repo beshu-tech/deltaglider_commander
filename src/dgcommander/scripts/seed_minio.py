@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 from deltaglider.client import create_client
@@ -67,7 +68,9 @@ def object_exists(client, bucket: str, key_candidates: list[str]) -> bool:
 def main() -> int:
     bucket = os.getenv("DGCOMM_SEED_BUCKET", "dg-demo")
     endpoint = os.getenv("DGCOMM_S3_ENDPOINT")
-    cache_dir = os.getenv("DGCOMM_CACHE_DIR", "/tmp/dgcommander-cache")
+    cache_dir = os.getenv("DGCOMM_CACHE_DIR") or os.path.join(
+        tempfile.gettempdir(), "dgcommander-cache"
+    )
 
     # Use deltaglider client for all S3 operations including bucket management
     client = create_client(endpoint_url=endpoint, cache_dir=cache_dir)
