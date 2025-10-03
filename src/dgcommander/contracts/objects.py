@@ -95,8 +95,8 @@ class ObjectListRequest(BaseModel):
         """Normalize prefix path."""
         if not v:
             return ""
-        # Remove leading/trailing slashes
-        normalized = v.strip().strip("/")
+        # Remove only leading slashes; preserve trailing slashes for S3 directory navigation
+        normalized = v.strip().lstrip("/")
         return normalized
 
     @field_validator("cursor")

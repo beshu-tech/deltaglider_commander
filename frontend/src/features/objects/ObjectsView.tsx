@@ -282,7 +282,7 @@ export function ObjectsView({
         toast.push({
           title: "Delete completed with errors",
           description: `${result.total_deleted} deleted, ${result.total_errors} failed`,
-          level: "warning"
+          level: "error"
         });
 
         // Show first few error details

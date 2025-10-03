@@ -20,6 +20,20 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Extract user-friendly error message from an error object.
+ * For ApiError, prefers details.reason over the generic message.
+ */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.details && typeof error.details === 'object') {
+    const details = error.details as Record<string, any>;
+    if (details.reason && typeof details.reason === 'string') {
+      return details.reason;
+    }
+  }
+  return String(error);
+}
+
 async function parseError(response: Response): Promise<ApiErrorPayload> {
   const contentType = response.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
