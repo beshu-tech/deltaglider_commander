@@ -10,4 +10,3 @@ build/
 .coverage
 htmlcov/
 .pytest_cache/
-src/dgcommander/api/uploads.py
