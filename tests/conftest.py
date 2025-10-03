@@ -27,6 +27,12 @@ from dgcommander.services.deltaglider import (
 @pytest.fixture(scope="session")
 def sample_sdk() -> InMemoryDeltaGliderSDK:
     blob_path = Path("releases/readonlyrest-1.66.1_es6.8.0.zip")
+    # Create dummy test fixture if it doesn't exist (releases/ is gitignored)
+    if not blob_path.exists():
+        blob_path.parent.mkdir(parents=True, exist_ok=True)
+        import zipfile
+        with zipfile.ZipFile(blob_path, "w") as zf:
+            zf.writestr("readme.txt", "Test fixture file for dgcommander tests")
     blob_bytes = blob_path.read_bytes()
     now = datetime(2024, 1, 1, tzinfo=UTC)
     objects = {
