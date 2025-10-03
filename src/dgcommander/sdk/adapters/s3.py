@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import io
 import os
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import BinaryIO
@@ -75,7 +75,7 @@ class S3DeltaGliderSDK:
 
     def list_buckets(self, compute_stats: bool = False) -> Iterable[BucketSnapshot]:
         # Use deltaglider client's list_buckets method
-        response = self._client.list_buckets()
+        response = self._client.list_buckets()  # type: ignore[attr-defined]
         buckets: list[BucketSnapshot] = []
         for bucket in response.get("Buckets", []):
             name = bucket["Name"]
@@ -111,10 +111,7 @@ class S3DeltaGliderSDK:
         # Use deltaglider client's create_bucket method
         region = self._region
         if not self._settings.endpoint_url and region != "us-east-1":
-            self._client.create_bucket(
-                Bucket=name,
-                CreateBucketConfiguration={"LocationConstraint": region}
-            )
+            self._client.create_bucket(Bucket=name, CreateBucketConfiguration={"LocationConstraint": region})
         else:
             self._client.create_bucket(Bucket=name)
 
@@ -151,7 +148,7 @@ class S3DeltaGliderSDK:
             Prefix=normalized_prefix,
             MaxKeys=max_items or 1000,
             Delimiter="/",  # Get common prefixes for folder-like navigation
-            FetchMetadata=True  # Fetch metadata for compression info
+            FetchMetadata=True,  # Fetch metadata for compression info
         )
 
         objects: list[LogicalObject] = []
@@ -187,10 +184,7 @@ class S3DeltaGliderSDK:
             )
 
         # Extract common prefixes (folders)
-        common_prefixes = [
-            p["Prefix"]
-            for p in response.common_prefixes
-        ]
+        common_prefixes = [p["Prefix"] for p in response.common_prefixes]
 
         return ObjectListing(objects=objects, common_prefixes=sorted(common_prefixes))
 
@@ -252,11 +246,7 @@ class S3DeltaGliderSDK:
         original_size = len(content)
 
         # Use deltaglider client's put_object - it handles compression automatically
-        response = self._client.put_object(
-            Bucket=bucket,
-            Key=normalized,
-            Body=content
-        )
+        self._client.put_object(Bucket=bucket, Key=normalized, Body=content)
 
         # Get metadata to determine compression stats
         metadata = self.get_metadata(bucket, normalized)

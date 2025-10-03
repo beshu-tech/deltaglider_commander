@@ -11,8 +11,7 @@ const themeStyles =
 
 export const Select = forwardRef(function Select(
   { className, ...rest }: SelectProps,
-  ref: ForwardedRef<HTMLSelectElement>
+  ref: ForwardedRef<HTMLSelectElement>,
 ) {
   return <select ref={ref} className={twMerge(baseStyles, themeStyles, className)} {...rest} />;
 });
-

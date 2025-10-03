@@ -18,12 +18,7 @@ export function Header() {
           {title}
         </Link>
       </div>
-      <Button
-        variant="ghost"
-        className="gap-2"
-        aria-label="Toggle theme"
-        onClick={toggleTheme}
-      >
+      <Button variant="ghost" className="gap-2" aria-label="Toggle theme" onClick={toggleTheme}>
         {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         <span className="text-sm capitalize">{theme} mode</span>
       </Button>

@@ -12,15 +12,15 @@ const mockUseDeleteObject = vi.hoisted(() => vi.fn());
 const mockDownloadObject = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 
 vi.mock("../useFile", () => ({
-  useFile: (...args: unknown[]) => mockUseFile(...args)
+  useFile: (...args: unknown[]) => mockUseFile(...args),
 }));
 
 vi.mock("../useDeleteObject", () => ({
-  useDeleteObject: (...args: unknown[]) => mockUseDeleteObject(...args)
+  useDeleteObject: (...args: unknown[]) => mockUseDeleteObject(...args),
 }));
 
 vi.mock("../../../lib/utils/download", () => ({
-  downloadObject: mockDownloadObject
+  downloadObject: mockDownloadObject,
 }));
 
 const prepareDownloadMock = vi.spyOn(endpoints, "prepareDownload");
@@ -29,8 +29,8 @@ const clipboardWriteMock = vi.fn().mockResolvedValue(undefined);
 
 Object.assign(navigator, {
   clipboard: {
-    writeText: clipboardWriteMock
-  }
+    writeText: clipboardWriteMock,
+  },
 });
 
 const metadata = {
@@ -39,14 +39,14 @@ const metadata = {
   stored_bytes: 1024,
   compressed: true,
   modified: new Date().toISOString(),
-  accept_ranges: true
+  accept_ranges: true,
 };
 
 beforeEach(() => {
   mockUseFile.mockReturnValue({ data: metadata, isLoading: false, error: null });
   mockUseDeleteObject.mockReturnValue({
     mutate: vi.fn(),
-    isPending: false
+    isPending: false,
   });
   mockDownloadObject.mockClear();
   prepareDownloadMock.mockReset();
@@ -61,7 +61,7 @@ function renderPanel(overrides: Partial<React.ComponentProps<typeof FilePanel>> 
     objectKey: "folder/example.txt",
     onClose: vi.fn(),
     onDeleted: vi.fn(),
-    ...overrides
+    ...overrides,
   };
 
   return {
@@ -70,8 +70,8 @@ function renderPanel(overrides: Partial<React.ComponentProps<typeof FilePanel>> 
     ...render(
       <ToastProvider>
         <FilePanel {...props} />
-      </ToastProvider>
-    )
+      </ToastProvider>,
+    ),
   };
 }
 
@@ -87,7 +87,7 @@ describe("FilePanel", () => {
     expect(mockDownloadObject).toHaveBeenCalledWith(
       "test-bucket",
       "folder/example.txt",
-      expect.any(Object)
+      expect.any(Object),
     );
   });
 
@@ -116,15 +116,19 @@ describe("FilePanel", () => {
     await user.click(copyButton);
 
     // First check if prepareDownload is called
-    await waitFor(() => {
-      expect(prepareDownloadMock).toHaveBeenCalledWith("test-bucket", "folder/example.txt");
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(prepareDownloadMock).toHaveBeenCalledWith("test-bucket", "folder/example.txt");
+      },
+      { timeout: 3000 },
+    );
 
     // Then check if clipboard is called with the result
-    await waitFor(() => {
-      expect(clipboardWriteMock).toHaveBeenCalledWith(
-        "https://api.test/api/download/token-123"
-      );
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(clipboardWriteMock).toHaveBeenCalledWith("https://api.test/api/download/token-123");
+      },
+      { timeout: 3000 },
+    );
   });
 });

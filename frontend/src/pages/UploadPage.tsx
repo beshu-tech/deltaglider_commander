@@ -18,13 +18,14 @@ export function UploadPage() {
     navigate({
       to: "/b/$bucket",
       params: { bucket },
-      search: serializeObjectsSearch(currentSearch) as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      search: serializeObjectsSearch(currentSearch) as any,
     });
   }, [bucket, currentSearch, navigate]);
 
   const handleCompleted = useCallback(() => {
     queryClient.invalidateQueries({
-      predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "objects"
+      predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "objects",
     });
   }, [queryClient]);
 
@@ -38,7 +39,8 @@ export function UploadPage() {
               Upload to {bucket}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Drag, drop, or select files and folders. DeltaGlider picks the optimal storage strategy automatically.
+              Drag, drop, or select files and folders. DeltaGlider picks the optimal storage
+              strategy automatically.
             </p>
           </div>
           <Button variant="secondary" onClick={handleBack} className="gap-2">
@@ -47,7 +49,11 @@ export function UploadPage() {
           </Button>
         </header>
 
-        <UploadManager bucket={bucket} prefix={currentSearch.prefix} onCompleted={handleCompleted} />
+        <UploadManager
+          bucket={bucket}
+          prefix={currentSearch.prefix}
+          onCompleted={handleCompleted}
+        />
       </div>
     </div>
   );

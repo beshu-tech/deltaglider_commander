@@ -21,5 +21,5 @@ export const DEFAULT_OBJECTS_SEARCH_STATE: ObjectsSearchState = {
   sort: "modified",
   order: "desc",
   limit: 100,
-  compression: "all"
+  compression: "all",
 };

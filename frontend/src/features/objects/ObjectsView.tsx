@@ -34,7 +34,7 @@ export function ObjectsView({
   onNextPage,
   onPreviousPage,
   selectionResetKey,
-  onUploadClick
+  onUploadClick,
 }: ObjectsViewProps) {
   const toast = useToast();
 
@@ -42,7 +42,7 @@ export function ObjectsView({
     (updates: Partial<ObjectsSearchState>) => {
       onSearchChange({ ...search, ...updates, cursor: undefined });
     },
-    [onSearchChange, search]
+    [onSearchChange, search],
   );
 
   const query = useObjects({
@@ -53,7 +53,7 @@ export function ObjectsView({
     sort: search.sort,
     order: search.order,
     limit: search.limit,
-    compressed: getCompressionQueryParam(search)
+    compressed: getCompressionQueryParam(search),
   });
 
   const data = query.data;
@@ -62,14 +62,21 @@ export function ObjectsView({
   const nextCursor = data?.cursor;
 
   const pageEntries = useMemo<SelectionTarget[]>(() => {
-    const directoryEntries = prefixes.map<SelectionTarget>((prefix) => ({ type: "prefix", key: prefix }));
-    const objectEntries = objects.map<SelectionTarget>((item) => ({ type: "object", key: item.key }));
+    const directoryEntries = prefixes.map<SelectionTarget>((prefix) => ({
+      type: "prefix",
+      key: prefix,
+    }));
+    const objectEntries = objects.map<SelectionTarget>((item) => ({
+      type: "object",
+      key: item.key,
+    }));
     return [...directoryEntries, ...objectEntries];
   }, [objects, prefixes]);
 
   const selectionResetToken = useMemo(
-    () => `${bucket}|${search.prefix}|${search.sort}|${search.order}|${search.compression}|${selectionResetKey ?? ""}`,
-    [bucket, search.compression, search.order, search.prefix, search.sort, selectionResetKey]
+    () =>
+      `${bucket}|${search.prefix}|${search.sort}|${search.order}|${search.compression}|${selectionResetKey ?? ""}`,
+    [bucket, search.compression, search.order, search.prefix, search.sort, selectionResetKey],
   );
 
   const {
@@ -82,19 +89,25 @@ export function ObjectsView({
     pageSelectableCount,
     pageSelectedCount,
     totalSelectedCount,
-    hasSelection
+    hasSelection,
   } = useObjectSelection({
     pageEntries,
-    resetToken: selectionResetToken
+    resetToken: selectionResetToken,
   });
 
   const handleSortChange = useCallback(
     (column: ObjectSortKey) => {
       const nextOrder =
-        search.sort === column ? (search.order === "asc" ? "desc" : "asc") : column === "name" ? "asc" : "desc";
+        search.sort === column
+          ? search.order === "asc"
+            ? "desc"
+            : "asc"
+          : column === "name"
+            ? "asc"
+            : "desc";
       updateSearchState({ sort: column, order: nextOrder });
     },
-    [search.order, search.sort, updateSearchState]
+    [search.order, search.sort, updateSearchState],
   );
 
   const breadcrumbSegments = useMemo(() => {
@@ -120,7 +133,7 @@ export function ObjectsView({
       if (value === null) return;
       updateSearchState({ prefix: value });
     },
-    [updateSearchState]
+    [updateSearchState],
   );
 
   const handleDirectoryEnter = useCallback(
@@ -128,7 +141,7 @@ export function ObjectsView({
       // The prefixValue already contains the full path from the root
       updateSearchState({ prefix: prefixValue });
     },
-    [updateSearchState]
+    [updateSearchState],
   );
 
   const expandSelectedKeys = useCallback(async (): Promise<string[]> => {
@@ -160,7 +173,7 @@ export function ObjectsView({
             limit: 500,
             sort: "name",
             order: "asc",
-            compressed: "any"
+            compressed: "any",
           });
           response.objects.forEach((item) => collected.add(item.key));
           response.common_prefixes.forEach((childPrefix) => {
@@ -172,7 +185,9 @@ export function ObjectsView({
         } catch (error) {
           const reason = error instanceof Error ? error.message : String(error);
           throw new Error(
-            currentPrefix ? `Failed to list objects under ${currentPrefix}: ${reason}` : `Failed to list objects: ${reason}`
+            currentPrefix
+              ? `Failed to list objects under ${currentPrefix}: ${reason}`
+              : `Failed to list objects: ${reason}`,
           );
         }
       } while (cursor);
@@ -193,7 +208,7 @@ export function ObjectsView({
       toast.push({
         title: "Download failed",
         description: error instanceof Error ? error.message : String(error),
-        level: "error"
+        level: "error",
       });
       return;
     }
@@ -202,7 +217,7 @@ export function ObjectsView({
       toast.push({
         title: "Nothing to download",
         description: "Selected folders do not contain any objects.",
-        level: "info"
+        level: "info",
       });
       clearSelection();
       return;
@@ -210,7 +225,7 @@ export function ObjectsView({
 
     toast.push({
       title: `Preparing ${keys.length} download${keys.length === 1 ? "" : "s"}`,
-      level: "info"
+      level: "info",
     });
 
     for (const key of keys) {
@@ -220,7 +235,7 @@ export function ObjectsView({
         toast.push({
           title: "Download failed",
           description: `${key}: ${error instanceof Error ? error.message : String(error)}`,
-          level: "error"
+          level: "error",
         });
       }
     }
@@ -228,7 +243,7 @@ export function ObjectsView({
     toast.push({
       title: "Downloads ready",
       description: `${keys.length} file${keys.length === 1 ? "" : "s"} queued in your browser`,
-      level: "success"
+      level: "success",
     });
     clearSelection();
   }, [bucket, clearSelection, expandSelectedKeys, toast, totalSelectedCount]);
@@ -240,7 +255,7 @@ export function ObjectsView({
 
     // Show confirmation dialog using toast
     const confirmDelete = confirm(
-      `Are you sure you want to delete ${totalSelectedCount} selected item${totalSelectedCount === 1 ? '' : 's'}? This action cannot be undone.`
+      `Are you sure you want to delete ${totalSelectedCount} selected item${totalSelectedCount === 1 ? "" : "s"}? This action cannot be undone.`,
     );
 
     if (!confirmDelete) {
@@ -254,7 +269,7 @@ export function ObjectsView({
       toast.push({
         title: "Delete failed",
         description: error instanceof Error ? error.message : String(error),
-        level: "error"
+        level: "error",
       });
       return;
     }
@@ -263,7 +278,7 @@ export function ObjectsView({
       toast.push({
         title: "Nothing to delete",
         description: "Selected folders do not contain any objects.",
-        level: "info"
+        level: "info",
       });
       clearSelection();
       return;
@@ -271,7 +286,7 @@ export function ObjectsView({
 
     toast.push({
       title: `Deleting ${keys.length} object${keys.length === 1 ? "" : "s"}...`,
-      level: "info"
+      level: "info",
     });
 
     try {
@@ -282,29 +297,29 @@ export function ObjectsView({
         toast.push({
           title: "Delete completed with errors",
           description: `${result.total_deleted} deleted, ${result.total_errors} failed`,
-          level: "error"
+          level: "error",
         });
 
         // Show first few error details
-        result.errors.slice(0, 3).forEach(error => {
+        result.errors.slice(0, 3).forEach((error) => {
           toast.push({
             title: `Failed to delete ${error.key}`,
             description: error.error,
-            level: "error"
+            level: "error",
           });
         });
       } else {
         toast.push({
           title: "Delete successful",
           description: `${result.total_deleted} object${result.total_deleted === 1 ? "" : "s"} deleted`,
-          level: "success"
+          level: "success",
         });
       }
     } catch (error) {
       toast.push({
         title: "Delete failed",
         description: error instanceof Error ? error.message : String(error),
-        level: "error"
+        level: "error",
       });
     }
 

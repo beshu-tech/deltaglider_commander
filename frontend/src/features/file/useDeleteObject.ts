@@ -18,13 +18,20 @@ export function useDeleteObject(bucket: string | null) {
       toast.push({ title: "Object deleted", description: key, level: "success" });
       if (bucket) {
         void queryClient.invalidateQueries({
-          predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "objects" && query.queryKey[1] === bucket
+          predicate: (query) =>
+            Array.isArray(query.queryKey) &&
+            query.queryKey[0] === "objects" &&
+            query.queryKey[1] === bucket,
         });
         void queryClient.removeQueries({ queryKey: qk.metadata(bucket, key) });
       }
     },
     onError: (error, key) => {
-      toast.push({ title: "Could not delete object", description: `${key}: ${String(error)}`, level: "error" });
-    }
+      toast.push({
+        title: "Could not delete object",
+        description: `${key}: ${String(error)}`,
+        level: "error",
+      });
+    },
   });
 }

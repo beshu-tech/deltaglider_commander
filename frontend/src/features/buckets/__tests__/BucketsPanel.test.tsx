@@ -9,19 +9,19 @@ const useDeleteBucketMock = vi.fn();
 const useSavingsMock = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => navigateMock
+  useNavigate: () => navigateMock,
 }));
 
 vi.mock("../useBuckets", () => ({
-  useBuckets: () => useBucketsMock()
+  useBuckets: () => useBucketsMock(),
 }));
 
 vi.mock("../useBucketManagement", () => ({
-  useDeleteBucket: () => useDeleteBucketMock()
+  useDeleteBucket: () => useDeleteBucketMock(),
 }));
 
 vi.mock("../../savings/useSavings", () => ({
-  useSavings: (...args: unknown[]) => useSavingsMock(...args)
+  useSavings: (...args: unknown[]) => useSavingsMock(...args),
 }));
 
 const buckets = [
@@ -31,8 +31,8 @@ const buckets = [
     original_bytes: 100,
     stored_bytes: 80,
     savings_pct: 20,
-    pending: false
-  }
+    pending: false,
+  },
 ];
 
 beforeEach(() => {
@@ -53,7 +53,7 @@ describe("BucketsPanel", () => {
     expect(navigateMock).toHaveBeenCalledWith({
       to: "/b/$bucket",
       params: { bucket: "alpha" },
-      search: expect.any(Object)
+      search: expect.any(Object),
     });
   });
 

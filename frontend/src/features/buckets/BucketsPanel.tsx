@@ -53,7 +53,8 @@ export function BucketsPanel() {
         </TableHead>
         <TableBody>
           {data.map((bucket) => {
-            const pendingDelete = deleteMutation.isPending && deleteMutation.variables === bucket.name;
+            const pendingDelete =
+              deleteMutation.isPending && deleteMutation.variables === bucket.name;
             return (
               <TableRow
                 key={bucket.name}
@@ -63,56 +64,62 @@ export function BucketsPanel() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    navigate({ to: "/b/$bucket", params: { bucket: bucket.name }, search: { ...DEFAULT_OBJECTS_SEARCH_STATE } });
+                    navigate({
+                      to: "/b/$bucket",
+                      params: { bucket: bucket.name },
+                      search: { ...DEFAULT_OBJECTS_SEARCH_STATE },
+                    });
                   }
                 }}
                 onClick={() => {
                   navigate({
                     to: "/b/$bucket",
                     params: { bucket: bucket.name },
-                    search: { ...DEFAULT_OBJECTS_SEARCH_STATE }
+                    search: { ...DEFAULT_OBJECTS_SEARCH_STATE },
                   });
                 }}
               >
-              <TableCell className="font-medium text-brand-600 group-hover:underline">
-                <span className="inline-flex items-center gap-2">
-                  {bucket.name}
-                  {bucket.pending ? <Badge className="text-xs">Pending</Badge> : null}
-                </span>
-              </TableCell>
-              <TableCell>{bucket.object_count.toLocaleString()}</TableCell>
-              <TableCell>{formatBytes(bucket.original_bytes)}</TableCell>
-              <TableCell>{formatBytes(bucket.stored_bytes)}</TableCell>
-              <TableCell>{renderSavings(bucket)}</TableCell>
-              <TableCell
-                className="text-right"
-                onClick={(event) => {
-                  event.stopPropagation();
-                }}
-              >
-                <div className="flex items-center justify-end gap-2">
-                  <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
-                  <Button
-                    variant="ghost"
-                    className="gap-1 border-slate-200 text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-slate-800 dark:text-red-300 dark:hover:bg-red-900"
-                    onClick={() => {
-                      const confirmed = window.confirm(`Delete bucket “${bucket.name}”? This cannot be undone.`);
-                      if (!confirmed) return;
-                      deleteMutation.mutate(bucket.name);
-                    }}
-                    disabled={pendingDelete}
-                  >
-                    {pendingDelete ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-4 w-4" />
-                    )}
-                    Delete
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          );
+                <TableCell className="font-medium text-brand-600 group-hover:underline">
+                  <span className="inline-flex items-center gap-2">
+                    {bucket.name}
+                    {bucket.pending ? <Badge className="text-xs">Pending</Badge> : null}
+                  </span>
+                </TableCell>
+                <TableCell>{bucket.object_count.toLocaleString()}</TableCell>
+                <TableCell>{formatBytes(bucket.original_bytes)}</TableCell>
+                <TableCell>{formatBytes(bucket.stored_bytes)}</TableCell>
+                <TableCell>{renderSavings(bucket)}</TableCell>
+                <TableCell
+                  className="text-right"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                  }}
+                >
+                  <div className="flex items-center justify-end gap-2">
+                    <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
+                    <Button
+                      variant="ghost"
+                      className="gap-1 border-slate-200 text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-slate-800 dark:text-red-300 dark:hover:bg-red-900"
+                      onClick={() => {
+                        const confirmed = window.confirm(
+                          `Delete bucket “${bucket.name}”? This cannot be undone.`,
+                        );
+                        if (!confirmed) return;
+                        deleteMutation.mutate(bucket.name);
+                      }}
+                      disabled={pendingDelete}
+                    >
+                      {pendingDelete ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                      Delete
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
           })}
         </TableBody>
       </Table>

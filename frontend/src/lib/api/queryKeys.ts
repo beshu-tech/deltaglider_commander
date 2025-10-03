@@ -8,8 +8,19 @@ export const qk = {
     limit: number,
     compressed: string,
     cursor?: string | null,
-    search?: string | null
-  ) => ["objects", bucket, prefix, sort, order, limit, compressed, cursor ?? null, search ?? null] as const,
+    search?: string | null,
+  ) =>
+    [
+      "objects",
+      bucket,
+      prefix,
+      sort,
+      order,
+      limit,
+      compressed,
+      cursor ?? null,
+      search ?? null,
+    ] as const,
   metadata: (bucket: string, key: string) => ["meta", bucket, key] as const,
-  statsSummary: (bucket?: string | null) => ["stats", "summary", bucket ?? "_all_"] as const
+  statsSummary: (bucket?: string | null) => ["stats", "summary", bucket ?? "_all_"] as const,
 } as const;

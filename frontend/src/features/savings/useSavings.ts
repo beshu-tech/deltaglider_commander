@@ -14,7 +14,11 @@ export function useSavings(bucket: string) {
       void queryClient.invalidateQueries({ queryKey: qk.buckets });
     },
     onError: (error) => {
-      toast.push({ title: "Could not trigger savings", description: String(error), level: "error" });
-    }
+      toast.push({
+        title: "Could not trigger savings",
+        description: String(error),
+        level: "error",
+      });
+    },
   });
 }

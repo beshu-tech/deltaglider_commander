@@ -27,7 +27,8 @@ export function useStats(targetBucket?: string) {
     const originalBytes = filtered.reduce((total, bucket) => total + bucket.original_bytes, 0);
     const storedBytes = filtered.reduce((total, bucket) => total + bucket.stored_bytes, 0);
     const pendingCount = filtered.reduce((total, bucket) => total + (bucket.pending ? 1 : 0), 0);
-    const savingsPct = originalBytes === 0 ? 0 : ((originalBytes - storedBytes) / originalBytes) * 100;
+    const savingsPct =
+      originalBytes === 0 ? 0 : ((originalBytes - storedBytes) / originalBytes) * 100;
     return { bucketCount, objectCount, originalBytes, storedBytes, savingsPct, pendingCount };
   }, [bucketsQuery.data, targetBucket]);
 
@@ -36,6 +37,6 @@ export function useStats(targetBucket?: string) {
     isLoading: bucketsQuery.isLoading,
     isError: bucketsQuery.isError,
     error: bucketsQuery.error,
-    refetch: bucketsQuery.refetch
+    refetch: bucketsQuery.refetch,
   };
 }

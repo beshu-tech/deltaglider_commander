@@ -25,9 +25,9 @@ export class ApiError extends Error {
  * For ApiError, prefers details.reason over the generic message.
  */
 export function getErrorMessage(error: unknown): string {
-  if (error instanceof ApiError && error.details && typeof error.details === 'object') {
-    const details = error.details as Record<string, any>;
-    if (details.reason && typeof details.reason === 'string') {
+  if (error instanceof ApiError && error.details && typeof error.details === "object") {
+    const details = error.details as Record<string, unknown>;
+    if (details.reason && typeof details.reason === "string") {
       return details.reason;
     }
   }
@@ -82,7 +82,7 @@ export async function api<T>(path: string, options: ApiRequestOptions = {}): Pro
       body,
       method,
       headers: finalHeaders,
-      signal: controller ? controller.signal : signal
+      signal: controller ? controller.signal : signal,
     });
 
     if (!response.ok) {
@@ -91,7 +91,7 @@ export async function api<T>(path: string, options: ApiRequestOptions = {}): Pro
         code: payload.error.code,
         message: payload.error.message,
         details: payload.error.details,
-        status: response.status
+        status: response.status,
       });
     }
 

@@ -6,12 +6,12 @@ export default defineConfig({
   plugins: [react()],
   build: {
     sourcemap: true,
-    target: "es2020"
+    target: "es2020",
   },
   test: {
     environment: "jsdom",
     setupFiles: ["./test/setup.ts"],
     clearMocks: true,
-    globals: true
-  }
+    globals: true,
+  },
 });

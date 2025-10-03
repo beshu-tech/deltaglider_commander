@@ -35,8 +35,9 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     navigate({
       to: "/b/$bucket",
       params: { bucket },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       search: serializeObjectsSearch(next) as any,
-      replace: true
+      replace: true,
     });
   };
 
@@ -45,8 +46,9 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     navigate({
       to: "/b/$bucket",
       params: { bucket },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       search: serializeObjectsSearch({ ...currentSearch, cursor }) as any,
-      replace: true
+      replace: true,
     });
   };
 
@@ -55,8 +57,9 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     navigate({
       to: "/b/$bucket",
       params: { bucket },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       search: serializeObjectsSearch({ ...currentSearch, cursor: prevCursor }) as any,
-      replace: true
+      replace: true,
     });
   };
 
@@ -64,7 +67,8 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     navigate({
       to: "/b/$bucket/o/$objectKey+",
       params: { bucket, "objectKey+": itemKey },
-      search: serializeObjectsSearch(currentSearch) as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      search: serializeObjectsSearch(currentSearch) as any,
     });
   };
 
@@ -72,7 +76,8 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     navigate({
       to: "/b/$bucket",
       params: { bucket },
-      search: serializeObjectsSearch(currentSearch) as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      search: serializeObjectsSearch(currentSearch) as any,
     });
   };
 
@@ -85,7 +90,8 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     navigate({
       to: "/b/$bucket/upload",
       params: { bucket },
-      search: serializeObjectsSearch(currentSearch) as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      search: serializeObjectsSearch(currentSearch) as any,
     });
   };
 

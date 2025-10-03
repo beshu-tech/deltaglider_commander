@@ -9,6 +9,6 @@ export function useBuckets() {
     queryKey: qk.buckets,
     queryFn: fetchBuckets,
     staleTime: 30_000,
-    refetchInterval: getPollMs()
+    refetchInterval: getPollMs(),
   });
 }

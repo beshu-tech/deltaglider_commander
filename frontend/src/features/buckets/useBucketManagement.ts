@@ -15,8 +15,12 @@ export function useCreateBucket() {
       void queryClient.invalidateQueries({ queryKey: qk.buckets });
     },
     onError: (error) => {
-      toast.push({ title: "Could not create bucket", description: getErrorMessage(error), level: "error" });
-    }
+      toast.push({
+        title: "Could not create bucket",
+        description: getErrorMessage(error),
+        level: "error",
+      });
+    },
   });
 }
 
@@ -31,7 +35,11 @@ export function useDeleteBucket() {
       void queryClient.invalidateQueries({ queryKey: qk.buckets });
     },
     onError: (error) => {
-      toast.push({ title: "Could not delete bucket", description: getErrorMessage(error), level: "error" });
-    }
+      toast.push({
+        title: "Could not delete bucket",
+        description: getErrorMessage(error),
+        level: "error",
+      });
+    },
   });
 }

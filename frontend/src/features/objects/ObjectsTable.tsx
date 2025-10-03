@@ -39,7 +39,7 @@ export function ObjectsTable({
   pageSelectedCount,
   onRowClick,
   onEnterDirectory,
-  isFetching
+  isFetching,
 }: ObjectsTableProps) {
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
@@ -75,7 +75,7 @@ export function ObjectsTable({
           <ChevronDown className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" />
         );
       },
-    [order, sort]
+    [order, sort],
   );
 
   const renderDirectoryRows = () =>
@@ -148,7 +148,9 @@ export function ObjectsTable({
                 >
                   <span>Name</span>
                   {renderSortIcon("name")}
-                  {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-300" /> : null}
+                  {isFetching ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-300" />
+                  ) : null}
                 </button>
               </th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -187,11 +189,7 @@ export function ObjectsTable({
               }`;
               const name = item.key.split("/").pop() ?? item.key;
               return (
-                <tr
-                  key={item.key}
-                  className={rowClasses}
-                  onClick={() => onRowClick(item)}
-                >
+                <tr key={item.key} className={rowClasses} onClick={() => onRowClick(item)}>
                   <TableCell className="w-12">
                     <input
                       type="checkbox"
@@ -230,7 +228,9 @@ export function ObjectsTable({
                           </span>
                         );
                       }
-                      return <span className="font-medium">{formatBytes(item.original_bytes)}</span>;
+                      return (
+                        <span className="font-medium">{formatBytes(item.original_bytes)}</span>
+                      );
                     })()}
                   </TableCell>
                   <TableCell>{formatDateTime(item.modified)}</TableCell>
@@ -247,15 +247,21 @@ export function ObjectsTable({
 
                       // Color coding based on compression percentage
                       const getCompressionColor = (pct: number) => {
-                        if (pct >= 90) return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
-                        if (pct >= 70) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-                        if (pct >= 50) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-                        if (pct >= 30) return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+                        if (pct >= 90)
+                          return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+                        if (pct >= 70)
+                          return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+                        if (pct >= 50)
+                          return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+                        if (pct >= 30)
+                          return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
                         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
                       };
 
                       return (
-                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getCompressionColor(percentage)}`}>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getCompressionColor(percentage)}`}
+                        >
                           {percentage.toFixed(1)}%
                         </span>
                       );
@@ -266,7 +272,10 @@ export function ObjectsTable({
             })}
             {directories.length === 0 && objects.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">
+                <td
+                  colSpan={5}
+                  className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300"
+                >
                   No objects found for the current filters.
                 </td>
               </tr>

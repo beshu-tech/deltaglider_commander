@@ -124,5 +124,5 @@ def bulk_delete_objects(data: BulkDeleteRequest):
         errors=errors,
         total_requested=len(data.keys),
         total_deleted=len(deleted),
-        total_errors=len(errors)
+        total_errors=len(errors),
     )

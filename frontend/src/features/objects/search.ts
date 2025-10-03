@@ -1,4 +1,9 @@
-import { DEFAULT_OBJECTS_SEARCH_STATE, ObjectSortKey, ObjectsCompressionFilter, ObjectsSearchState } from "./types";
+import {
+  DEFAULT_OBJECTS_SEARCH_STATE,
+  ObjectSortKey,
+  ObjectsCompressionFilter,
+  ObjectsSearchState,
+} from "./types";
 
 type RawSearch = Record<string, unknown> | undefined;
 
@@ -48,11 +53,13 @@ export function normalizeObjectsSearch(raw: RawSearch): ObjectsSearchState {
     sort,
     order,
     limit,
-    compression
+    compression,
   };
 }
 
-export function serializeObjectsSearch(state: ObjectsSearchState): Record<string, string | number | undefined> {
+export function serializeObjectsSearch(
+  state: ObjectsSearchState,
+): Record<string, string | number | undefined> {
   return {
     prefix: state.prefix,
     search: state.search ?? undefined,
@@ -60,7 +67,7 @@ export function serializeObjectsSearch(state: ObjectsSearchState): Record<string
     sort: state.sort,
     order: state.order,
     limit: state.limit,
-    compression: state.compression === "all" ? undefined : state.compression
+    compression: state.compression === "all" ? undefined : state.compression,
   };
 }
 

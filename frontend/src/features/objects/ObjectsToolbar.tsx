@@ -25,7 +25,7 @@ export function ObjectsToolbar({
   onSearchChange,
   onCompressionChange,
   onBreadcrumbNavigate,
-  onUploadClick
+  onUploadClick,
 }: ObjectsToolbarProps) {
   const [searchValue, setSearchValue] = useState(search || "");
   const debounceRef = useRef<NodeJS.Timeout>();
@@ -38,25 +38,31 @@ export function ObjectsToolbar({
     () => [
       { value: "all" as const, label: "All files" },
       { value: "compressed" as const, label: "Compressed only" },
-      { value: "original" as const, label: "Original only" }
+      { value: "original" as const, label: "Original only" },
     ],
-    []
+    [],
   );
 
-  const debouncedSearch = useCallback((value: string) => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    debounceRef.current = setTimeout(() => {
-      const trimmed = value.trim();
-      onSearchChange(trimmed || undefined);
-    }, 1000);
-  }, [onSearchChange]);
+  const debouncedSearch = useCallback(
+    (value: string) => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+      debounceRef.current = setTimeout(() => {
+        const trimmed = value.trim();
+        onSearchChange(trimmed || undefined);
+      }, 1000);
+    },
+    [onSearchChange],
+  );
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchValue(value);
-    debouncedSearch(value);
-  }, [debouncedSearch]);
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchValue(value);
+      debouncedSearch(value);
+    },
+    [debouncedSearch],
+  );
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -79,13 +85,17 @@ export function ObjectsToolbar({
                   type="button"
                   onClick={() => onBreadcrumbNavigate(crumb.value)}
                   className={`rounded-md px-2 py-1 text-sm transition hover:bg-slate-100 dark:hover:bg-slate-800 ${
-                    isActive ? "font-semibold text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"
+                    isActive
+                      ? "font-semibold text-slate-900 dark:text-slate-100"
+                      : "text-slate-600 dark:text-slate-300"
                   }`}
                 >
                   {crumb.label}
                 </button>
               ) : (
-                <span className="px-2 py-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{crumb.label}</span>
+                <span className="px-2 py-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  {crumb.label}
+                </span>
               )}
               {index < breadcrumbs.length - 1 ? (
                 <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />

@@ -47,11 +47,17 @@ interface BucketFilterProps {
 function BucketFilter({ filter, onFilterChange }: BucketFilterProps) {
   return (
     <div className="space-y-2">
-      <label htmlFor="sidebar-filter" className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <label
+        htmlFor="sidebar-filter"
+        className="text-xs font-semibold uppercase tracking-wide text-slate-400"
+      >
         Filter Buckets
       </label>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+          aria-hidden="true"
+        />
         <Input
           id="sidebar-filter"
           type="search"
@@ -80,12 +86,17 @@ function CreateBucketForm({
   isSubmitting,
   onValueChange,
   onSubmit,
-  onCancel
+  onCancel,
 }: CreateBucketFormProps) {
   return (
-    <form onSubmit={onSubmit} className="space-y-3 rounded-lg border border-slate-700/50 bg-slate-800/30 p-4 backdrop-blur-sm">
+    <form
+      onSubmit={onSubmit}
+      className="space-y-3 rounded-lg border border-slate-700/50 bg-slate-800/30 p-4 backdrop-blur-sm"
+    >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">New bucket</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">
+          New bucket
+        </span>
         <button
           type="button"
           onClick={onCancel}
@@ -96,7 +107,10 @@ function CreateBucketForm({
         </button>
       </div>
       <div className="space-y-2">
-        <label htmlFor="sidebar-bucket-name" className="text-xs font-medium uppercase tracking-wide text-slate-300">
+        <label
+          htmlFor="sidebar-bucket-name"
+          className="text-xs font-medium uppercase tracking-wide text-slate-300"
+        >
           Bucket name
         </label>
         <Input
@@ -108,7 +122,9 @@ function CreateBucketForm({
           disabled={isSubmitting}
           autoFocus
         />
-        {validationError ? <p className="text-xs text-red-300 font-medium">{validationError}</p> : null}
+        {validationError ? (
+          <p className="text-xs text-red-300 font-medium">{validationError}</p>
+        ) : null}
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -116,7 +132,11 @@ function CreateBucketForm({
           className="flex-1 h-9 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-200"
           disabled={isSubmitting}
         >
-          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4" />
+          )}
           Create
         </Button>
         <Button
@@ -142,7 +162,14 @@ interface BucketListProps {
   onCreateClick: () => void;
 }
 
-function BucketList({ buckets, isLoading, error, filter, activeBucket, onCreateClick }: BucketListProps) {
+function BucketList({
+  buckets,
+  isLoading,
+  error,
+  filter,
+  activeBucket,
+  onCreateClick,
+}: BucketListProps) {
   const filteredBuckets = useMemo(() => {
     if (!buckets) {
       return [];
@@ -209,7 +236,9 @@ function BucketList({ buckets, isLoading, error, filter, activeBucket, onCreateC
               <span className="truncate font-medium">{bucket.name}</span>
             </span>
             {bucket.pending ? (
-              <Badge className="border-amber-400/30 bg-amber-400/20 text-[10px] uppercase text-amber-200 font-medium">Pending</Badge>
+              <Badge className="border-amber-400/30 bg-amber-400/20 text-[10px] uppercase text-amber-200 font-medium">
+                Pending
+              </Badge>
             ) : null}
           </Link>
         );
@@ -247,7 +276,7 @@ function SidebarActions({
   onSubmitCreate,
   onBucketNameChange,
   filter,
-  onFilterChange
+  onFilterChange,
 }: SidebarActionsProps) {
   return (
     <div className="space-y-4">
@@ -272,7 +301,9 @@ interface SidebarFooterProps {
 
 function SidebarFooter({ className }: SidebarFooterProps) {
   return (
-    <div className={`space-y-1 border-t border-slate-700/50 pt-4 text-sm text-slate-300 ${className ?? ""}`}>
+    <div
+      className={`space-y-1 border-t border-slate-700/50 pt-4 text-sm text-slate-300 ${className ?? ""}`}
+    >
       <a
         href="https://delta-glider.dev/docs"
         target="_blank"
@@ -327,7 +358,11 @@ export function Sidebar() {
       setBucketName("");
       setShowCreateForm(false);
       setFilter("");
-      navigate({ to: "/b/$bucket", params: { bucket: trimmed }, search: { ...DEFAULT_OBJECTS_SEARCH_STATE } });
+      navigate({
+        to: "/b/$bucket",
+        params: { bucket: trimmed },
+        search: { ...DEFAULT_OBJECTS_SEARCH_STATE },
+      });
     } catch (error) {
       console.error("Create bucket failed", error);
     }
@@ -363,7 +398,9 @@ export function Sidebar() {
         />
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Buckets</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Buckets
+            </span>
             <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>
           </div>
           <BucketList

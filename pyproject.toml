@@ -105,6 +105,7 @@ module = [
     "dgcommander.scripts.*",
     "dgcommander.jobs.*",
     "dgcommander.deps",
+    "dgcommander.sdk.adapters.*",  # SDK adapters interact with third-party APIs
     "dgcommander.domain.*",
     "dgcommander.infrastructure.*",
     "dgcommander.application.*",

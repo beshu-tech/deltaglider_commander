@@ -37,19 +37,16 @@ def ensure_bucket(client, bucket: str) -> None:
             # Create bucket with region configuration if needed
             region = os.getenv("AWS_DEFAULT_REGION")
             if region and region != "us-east-1":
-                client.create_bucket(
-                    Bucket=bucket,
-                    CreateBucketConfiguration={"LocationConstraint": region}
-                )
+                client.create_bucket(Bucket=bucket, CreateBucketConfiguration={"LocationConstraint": region})
             else:
                 client.create_bucket(Bucket=bucket)
     except Exception:
         # If any error occurs, try to create the bucket anyway
         try:
             client.create_bucket(Bucket=bucket)
-        except Exception:
+        except Exception as e:
             # Bucket might already exist or creation failed
-            pass
+            print(f"Warning: Could not create bucket: {e}")
 
 
 def object_exists(client, bucket: str, key_candidates: list[str]) -> bool:
@@ -60,7 +57,9 @@ def object_exists(client, bucket: str, key_candidates: list[str]) -> bool:
             response = client.list_objects(Bucket=bucket, Prefix=key, MaxKeys=1)
             if response.get("Contents"):
                 return True
-        except Exception:
+        except Exception as e:
+            # Object doesn't exist or error accessing it, try next candidate
+            print(f"Warning: Could not check object {key}: {e}")
             continue
     return False
 
@@ -68,7 +67,6 @@ def object_exists(client, bucket: str, key_candidates: list[str]) -> bool:
 def main() -> int:
     bucket = os.getenv("DGCOMM_SEED_BUCKET", "dg-demo")
     endpoint = os.getenv("DGCOMM_S3_ENDPOINT")
-    verify_ssl = _bool_env("DGCOMM_S3_VERIFY_SSL", True)
     cache_dir = os.getenv("DGCOMM_CACHE_DIR", "/tmp/dgcommander-cache")
 
     # Use deltaglider client for all S3 operations including bucket management

@@ -6,6 +6,6 @@ export function useFile(bucket: string | null, key: string | null) {
     queryKey: ["meta", bucket, key] as const,
     queryFn: () => fetchObjectMetadata(bucket as string, key as string),
     enabled: Boolean(bucket && key),
-    staleTime: 300_000
+    staleTime: 300_000,
   });
 }

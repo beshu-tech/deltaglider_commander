@@ -15,13 +15,20 @@ export default {
           600: "#0085c7",
           700: "#0069a1",
           800: "#005584",
-          900: "#003a5c"
-        }
+          900: "#003a5c",
+        },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"]
-      }
-    }
+        sans: [
+          "Inter",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "sans-serif",
+        ],
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };
