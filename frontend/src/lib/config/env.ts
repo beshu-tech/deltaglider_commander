@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  VITE_API_URL: z.string().url(),
+  VITE_API_URL: z.string().min(1),
   VITE_APP_NAME: z.string().min(1),
   VITE_POLL_MS: z.coerce.number().int().min(1000).max(60000).default(5000),
   VITE_ENABLE_UPLOADS: z
