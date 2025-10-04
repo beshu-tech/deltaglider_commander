@@ -193,11 +193,11 @@ jobs:
       run: |
         docker run --rm dgcommander:test python -c "from dgcommander.app import create_app; print('App imports successfully')"
 
-  docker-publish:
-    name: Publish Docker Image
+  docker-publish-amd64:
+    name: Publish Docker Image (amd64)
     runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: [backend, frontend, integration, docker, quality-gates]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
 
     steps:
     - uses: actions/checkout@v4
@@ -239,23 +239,119 @@ jobs:
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
           type=raw,value=latest,enable={{is_default_branch}}
+        flavor: |
+          suffix=-amd64,onlatest=true
 
-    - name: Verify frontend build
-      run: ls -la frontend/dist || echo "frontend/dist not found!"
-
-    - name: Build and push Docker image
+    - name: Build and push amd64 image
       uses: docker/build-push-action@v5
       with:
         context: .
-        # Build multi-arch only on tags, amd64-only on regular pushes for speed
-        platforms: ${{ startsWith(github.ref, 'refs/tags/') && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+        platforms: linux/amd64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        # Use max provenance mode for better caching
-        provenance: mode=max
+        provenance: false
+
+  docker-publish-arm64:
+    name: Publish Docker Image (arm64)
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
+    needs: [backend, frontend, integration, docker, quality-gates]
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+        cache-dependency-path: frontend/pnpm-lock.yaml
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        pnpm install --frozen-lockfile
+        pnpm build
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: beshultd/deltaglider_commander
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest
+        flavor: |
+          suffix=-arm64,onlatest=true
+
+    - name: Build and push arm64 image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        provenance: false
+
+  docker-publish-manifest:
+    name: Create Multi-Arch Manifest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs: [docker-publish-amd64, docker-publish-arm64]
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Extract version from tag
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        MAJOR_MINOR=$(echo $VERSION | cut -d. -f1-2)
+        echo "major_minor=$MAJOR_MINOR" >> $GITHUB_OUTPUT
+
+    - name: Create and push manifest for version tag
+      run: |
+        docker buildx imagetools create -t beshultd/deltaglider_commander:${{ steps.version.outputs.version }} \
+          beshultd/deltaglider_commander:${{ steps.version.outputs.version }}-amd64 \
+          beshultd/deltaglider_commander:${{ steps.version.outputs.version }}-arm64
+
+    - name: Create and push manifest for major.minor tag
+      run: |
+        docker buildx imagetools create -t beshultd/deltaglider_commander:${{ steps.version.outputs.major_minor }} \
+          beshultd/deltaglider_commander:${{ steps.version.outputs.version }}-amd64 \
+          beshultd/deltaglider_commander:${{ steps.version.outputs.version }}-arm64
+
+    - name: Create and push manifest for latest tag
+      run: |
+        docker buildx imagetools create -t beshultd/deltaglider_commander:latest \
+          beshultd/deltaglider_commander:${{ steps.version.outputs.version }}-amd64 \
+          beshultd/deltaglider_commander:${{ steps.version.outputs.version }}-arm64
 
   quality-gates:
     name: Quality Gates
