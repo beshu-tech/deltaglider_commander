@@ -9,7 +9,7 @@ on:
 jobs:
   backend:
     name: Backend Tests
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ['3.11', '3.12']
@@ -58,7 +58,7 @@ jobs:
 
   frontend:
     name: Frontend Tests
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
@@ -98,7 +98,7 @@ jobs:
 
   integration:
     name: Integration Tests
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     needs: [backend, frontend]
 
     steps:
@@ -149,7 +149,7 @@ jobs:
 
   docker:
     name: Docker Build
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     needs: [backend, frontend]
 
     steps:
@@ -195,7 +195,7 @@ jobs:
 
   docker-publish-amd64:
     name: Publish Docker Image (amd64)
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     needs: [backend, frontend, integration, docker, quality-gates]
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
 
@@ -316,7 +316,7 @@ jobs:
 
   docker-publish-manifest:
     name: Create Multi-Arch Manifest
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     needs: [docker-publish-amd64, docker-publish-arm64]
     if: startsWith(github.ref, 'refs/tags/')
 
@@ -355,7 +355,7 @@ jobs:
 
   quality-gates:
     name: Quality Gates
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     needs: [backend, frontend, integration]
 
     steps:
