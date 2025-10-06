@@ -1,12 +1,13 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Link, useMatch, useNavigate } from "@tanstack/react-router";
-import { Archive, BookOpen, LifeBuoy, Loader2, LogOut, Plus, Search, X } from "lucide-react";
+import { Archive, BookOpen, LifeBuoy, Loader2, LogOut, Plus, Search, Settings, X } from "lucide-react";
 import { DEFAULT_OBJECTS_SEARCH_STATE } from "../../features/objects/types";
 import { useBuckets } from "../../features/buckets/useBuckets";
 import { useCreateBucket } from "../../features/buckets/useBucketManagement";
 import { Badge } from "../../lib/ui/Badge";
 import { Button } from "../../lib/ui/Button";
 import { Input } from "../../lib/ui/Input";
+import { SessionManager } from "../../services/sessionManager";
 
 interface SidebarHeaderProps {
   onNavigateHome: () => void;
@@ -297,15 +298,23 @@ function SidebarActions({
 
 interface SidebarFooterProps {
   className?: string;
+  onSignOut: () => void;
 }
 
-function SidebarFooter({ className }: SidebarFooterProps) {
+function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
   return (
     <div
       className={`space-y-1 border-t border-slate-700/50 pt-4 text-sm text-slate-300 ${className ?? ""}`}
     >
+      <Link
+        to="/settings"
+        className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+      >
+        <Settings className="h-4 w-4" />
+        <span className="font-medium">Settings</span>
+      </Link>
       <a
-        href="https://delta-glider.dev/docs"
+        href="https://github.com/beshu-tech/deltaglider_commander/"
         target="_blank"
         rel="noreferrer"
         className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
@@ -314,7 +323,7 @@ function SidebarFooter({ className }: SidebarFooterProps) {
         <span className="font-medium">Documentation</span>
       </a>
       <a
-        href="https://delta-glider.dev/support"
+        href="https://github.com/beshu-tech/deltaglider_commander/issues"
         target="_blank"
         rel="noreferrer"
         className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
@@ -324,6 +333,7 @@ function SidebarFooter({ className }: SidebarFooterProps) {
       </a>
       <button
         type="button"
+        onClick={onSignOut}
         className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
       >
         <LogOut className="h-4 w-4" />
@@ -374,6 +384,18 @@ export function Sidebar() {
     setValidationError(null);
   };
 
+  const handleSignOut = async () => {
+    try {
+      await SessionManager.destroySession();
+      // Redirect to settings page
+      window.location.href = "/settings";
+    } catch (error) {
+      console.error("Sign out failed", error);
+      // Even if the request fails, redirect to settings
+      window.location.href = "/settings";
+    }
+  };
+
   return (
     <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 px-5 py-6 text-slate-100 border-r border-slate-800/50">
       <div className="space-y-6">
@@ -416,7 +438,7 @@ export function Sidebar() {
           />
         </div>
       </div>
-      <SidebarFooter />
+      <SidebarFooter onSignOut={handleSignOut} />
     </aside>
   );
 }

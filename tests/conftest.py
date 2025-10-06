@@ -8,7 +8,7 @@ import pytest
 import werkzeug
 
 if not hasattr(werkzeug, "__version__"):
-    werkzeug.__version__ = "3"
+    werkzeug.__version__ = "3"  # type: ignore[attr-defined]
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"

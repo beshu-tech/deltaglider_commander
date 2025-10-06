@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Type
+from typing import Any
 
 from pydantic import BaseModel
-from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 
 # Import all contracts
 from src.dgcommander.contracts.base import (
@@ -37,7 +36,6 @@ from src.dgcommander.contracts.objects import (
     ObjectListRequest,
     ObjectListResponse,
     ObjectMetadataUpdate,
-    ObjectSortOrder,
 )
 from src.dgcommander.contracts.uploads import (
     BatchUploadRequest,
@@ -54,7 +52,7 @@ class TypeScriptGenerator:
     """Generate TypeScript types from Pydantic models."""
 
     def __init__(self):
-        self.models: List[Type[BaseModel]] = []
+        self.models: list[type[BaseModel]] = []
         self.type_mapping = {
             "string": "string",
             "integer": "number",
@@ -65,11 +63,11 @@ class TypeScriptGenerator:
             "null": "null",
         }
 
-    def add_model(self, model: Type[BaseModel]) -> None:
+    def add_model(self, model: type[BaseModel]) -> None:
         """Add a model to generate types for."""
         self.models.append(model)
 
-    def generate_schema(self) -> Dict[str, Any]:
+    def generate_schema(self) -> dict[str, Any]:
         """Generate JSON schema for all models."""
         schema = {"definitions": {}}
 
@@ -79,7 +77,7 @@ class TypeScriptGenerator:
 
         return schema
 
-    def json_schema_to_typescript(self, schema: Dict[str, Any]) -> str:
+    def json_schema_to_typescript(self, schema: dict[str, Any]) -> str:
         """Convert JSON schema to TypeScript definitions."""
         output = []
         output.append("// Auto-generated TypeScript types from Pydantic models")
@@ -114,7 +112,7 @@ class TypeScriptGenerator:
 
         return "\n".join(output)
 
-    def _extract_enums(self, schema: Dict[str, Any]) -> Dict[str, List[str]]:
+    def _extract_enums(self, schema: dict[str, Any]) -> dict[str, list[str]]:
         """Extract enum definitions from schema."""
         enums = {}
         for name, definition in schema.get("definitions", {}).items():
@@ -122,7 +120,7 @@ class TypeScriptGenerator:
                 enums[name] = definition["enum"]
         return enums
 
-    def _get_typescript_type(self, prop_def: Dict[str, Any]) -> str:
+    def _get_typescript_type(self, prop_def: dict[str, Any]) -> str:
         """Convert JSON schema type to TypeScript type."""
         if "$ref" in prop_def:
             # Reference to another type

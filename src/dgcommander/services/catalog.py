@@ -183,6 +183,9 @@ class CatalogService:
         return metadata
 
     def delete_object(self, bucket: str, key: str) -> None:
+        import logging
+        logger = logging.getLogger(__name__)
+
         try:
             self.sdk.delete_object(bucket, key)
         except APIError:
@@ -193,10 +196,12 @@ class CatalogService:
             error_code = exc.response.get("Error", {}).get("Code", "")
             if error_code in {"NoSuchKey", "404"}:
                 raise NotFoundError("object", "key_not_found") from exc
+            logger.error(f"ClientError deleting {bucket}/{key}: {exc}", exc_info=True)
             details = {"reason": _summarize_exception(exc)}
             raise SDKError("Unable to delete object", details=details) from exc
         except Exception as exc:
-            details = {"reason": _summarize_exception(exc)}
+            logger.error(f"Exception deleting {bucket}/{key}: {type(exc).__name__}: {exc}", exc_info=True)
+            details = {"reason": f"{type(exc).__name__}: {_summarize_exception(exc)}"}
             raise SDKError("Unable to delete object", details=details) from exc
 
         self.invalidate_object(bucket, key)

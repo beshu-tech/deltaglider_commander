@@ -17,6 +17,19 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 let nextToastId = 1;
 
+// Singleton toast instance for use outside React components
+let globalToastPush: ((toast: Omit<ToastMessage, "id">) => void) | null = null;
+
+export const toast = {
+  push: (message: Omit<ToastMessage, "id">) => {
+    if (globalToastPush) {
+      globalToastPush(message);
+    } else {
+      console.warn("Toast not initialized yet, message:", message);
+    }
+  },
+};
+
 export function useToast(): ToastContextValue {
   const context = useContext(ToastContext);
   if (!context) {
@@ -66,6 +79,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     },
     [remove],
   );
+
+  // Initialize global toast instance
+  globalToastPush = push;
 
   const value = useMemo(() => ({ push }), [push]);
 

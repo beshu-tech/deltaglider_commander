@@ -1,89 +1,115 @@
 /**
- * Authentication interceptor for automatic 401 handling with session refresh
+ * Simplified authentication wrapper for API calls
+ *
+ * The backend handles sessions via HTTP-only cookies, so we only need to:
+ * 1. Ensure cookies are included in requests (already done in client.ts)
+ * 2. Handle 401 errors by redirecting to settings page
+ * 3. Optionally attempt to recreate session if we have stored credentials
  */
 
 import { api, ApiError, ApiRequestOptions } from './client';
 import { CredentialStorage } from '../../services/credentialStorage';
 import { SessionManager } from '../../services/sessionManager';
+import { toast } from '../../app/toast';
 
-let isRefreshing = false;
-let refreshSubscribers: Array<(error?: Error) => void> = [];
-
-function subscribeToRefresh(callback: (error?: Error) => void) {
-  refreshSubscribers.push(callback);
-}
-
-function notifyRefreshSubscribers(error?: Error) {
-  refreshSubscribers.forEach((callback) => callback(error));
-  refreshSubscribers = [];
-}
+// Track if we're already handling an auth error to prevent loops
+let isHandlingAuthError = false;
 
 /**
- * Wrapper around api() that handles 401 errors with automatic session refresh
+ * Simple wrapper around api() that handles authentication errors
+ *
+ * Strategy:
+ * 1. Make the API call normally (cookies are already included)
+ * 2. If 401 with session error, try to recreate session once
+ * 3. If still fails, redirect to settings page
  */
 export async function apiWithAuth<T>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
   try {
+    // First, try the request normally
     return await api<T>(path, options);
   } catch (error) {
+    // Only handle 401 authentication errors
     if (!(error instanceof ApiError) || error.status !== 401) {
       throw error;
     }
 
-    // Check error code to determine if we should auto-refresh
-    const errorCode = error.code;
+    // Check if this is a session-related error
+    const isSessionError = error.code === 'session_not_found' ||
+                          error.code === 'session_expired' ||
+                          error.code === 'no_session';
 
-    if (errorCode !== 'session_not_found' && errorCode !== 'session_expired') {
-      // Not a session error, don't auto-refresh
+    if (!isSessionError) {
+      // Not a session error (might be insufficient permissions, etc.)
       throw error;
     }
 
-    // Handle session refresh
-    if (isRefreshing) {
-      // Another request is already refreshing, wait for it
-      return new Promise<T>((resolve, reject) => {
-        subscribeToRefresh((refreshError) => {
-          if (refreshError) {
-            reject(refreshError);
-          } else {
-            // Retry original request after refresh
-            api<T>(path, options).then(resolve).catch(reject);
-          }
-        });
-      });
+    // Prevent infinite loops
+    if (isHandlingAuthError) {
+      throw error;
     }
 
-    // Start refresh process
-    isRefreshing = true;
+    // Check if we have stored credentials to try recreating the session
+    const storedCredentials = CredentialStorage.load();
+
+    if (!storedCredentials) {
+      // No stored credentials, user needs to log in
+      handleAuthFailure('Please log in with your AWS credentials');
+      throw new Error('Authentication required. Redirecting to settings...');
+    }
+
+    // Try to recreate the session once
+    isHandlingAuthError = true;
 
     try {
-      await SessionManager.refreshSession();
-      isRefreshing = false;
-      notifyRefreshSubscribers(); // Notify success
+      // Attempt to create a new session with stored credentials
+      await SessionManager.createSession(storedCredentials);
 
-      // Retry original request
-      return await api<T>(path, options);
+      // Session recreated, retry the original request
+      const result = await api<T>(path, options);
+
+      // Success! Notify user their session was refreshed
+      toast.push({
+        title: 'Session restored',
+        description: 'Your session has been automatically renewed',
+        level: 'info',
+      });
+
+      return result;
     } catch (refreshError) {
-      isRefreshing = false;
+      // Failed to recreate session, credentials might be invalid
+      CredentialStorage.clear();
 
-      // If refresh failed due to invalid credentials or session errors, clear and redirect
-      if (
-        refreshError instanceof ApiError &&
-        (refreshError.status === 403 || refreshError.status === 401) &&
-        (refreshError.code === 'invalid_credentials' ||
-         refreshError.code === 'session_expired' ||
-         refreshError.code === 'session_not_found')
-      ) {
-        CredentialStorage.clear();
-        notifyRefreshSubscribers(refreshError); // Notify failure
-        window.location.href = '/settings'; // Redirect to settings page
-        throw new Error('Session expired. Please log in again.');
+      if (refreshError instanceof ApiError &&
+          (refreshError.code === 'invalid_credentials' || refreshError.status === 403)) {
+        handleAuthFailure('Your stored credentials are no longer valid. Please log in again.');
+      } else {
+        handleAuthFailure('Could not restore session. Please log in again.');
       }
 
-      notifyRefreshSubscribers(refreshError as Error); // Notify failure
-      throw refreshError;
+      throw new Error('Session refresh failed. Redirecting to settings...');
+    } finally {
+      isHandlingAuthError = false;
     }
   }
+}
+
+/**
+ * Handle authentication failure by showing error and redirecting
+ */
+function handleAuthFailure(message: string) {
+  // Show error toast
+  toast.push({
+    title: 'Authentication Required',
+    description: message,
+    level: 'error',
+  });
+
+  // Redirect to settings page after a brief delay
+  setTimeout(() => {
+    // Use location.replace to prevent back button issues
+    window.location.replace('/settings');
+  }, 1500);
 }
