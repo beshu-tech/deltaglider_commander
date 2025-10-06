@@ -44,7 +44,9 @@ class DownloadService:
         token = self._serializer.dumps(token_data)
         return DownloadPreparation(bucket=bucket, key=key, download_token=token, estimated_bytes=estimated)
 
-    def resolve_token(self, token: str, sdk_override: DeltaGliderSDK | None = None) -> tuple[str, str, io.BufferedReader]:
+    def resolve_token(
+        self, token: str, sdk_override: DeltaGliderSDK | None = None
+    ) -> tuple[str, str, io.BufferedReader]:
         try:
             payload = self._serializer.loads(token)
         except BadSignature as exc:
@@ -81,6 +83,7 @@ class DownloadService:
             return None
 
         import logging
+
         logger = logging.getLogger(__name__)
 
         from .deltaglider import S3DeltaGliderSDK, S3Settings
@@ -88,7 +91,11 @@ class DownloadService:
         logger.info(f"Building SDK from credentials: {credentials.keys()}")
         logger.info(f"Endpoint from credentials: {credentials.get('endpoint')}")
         logger.info(f"Region from credentials: {credentials.get('region')}")
-        logger.info(f"Access key from credentials: {credentials.get('access_key_id', '')[:10]}..." if credentials.get('access_key_id') else "No access key")
+        logger.info(
+            f"Access key from credentials: {credentials.get('access_key_id', '')[:10]}..."
+            if credentials.get("access_key_id")
+            else "No access key"
+        )
 
         settings = S3Settings(
             endpoint_url=credentials.get("endpoint"),

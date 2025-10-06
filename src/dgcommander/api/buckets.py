@@ -23,17 +23,17 @@ def list_buckets():
 
     # Debug: Check what's in g
     logger.info(f"g has sdk_client: {hasattr(g, 'sdk_client')}")
-    if hasattr(g, 'sdk_client'):
+    if hasattr(g, "sdk_client"):
         logger.info(f"g.sdk_client type: {type(g.sdk_client).__name__}")
         logger.info(f"g.sdk_client is None: {g.sdk_client is None}")
-        if hasattr(g.sdk_client, '_settings'):
+        if hasattr(g.sdk_client, "_settings"):
             logger.info(f"SDK endpoint: {g.sdk_client._settings.endpoint_url}")
 
     # Use session SDK if available, otherwise fallback to container SDK
-    sdk = g.sdk_client if hasattr(g, 'sdk_client') and g.sdk_client is not None else get_container().catalog.sdk
+    sdk = g.sdk_client if hasattr(g, "sdk_client") and g.sdk_client is not None else get_container().catalog.sdk
 
     logger.info(f"Using SDK type: {type(sdk).__name__}")
-    if hasattr(sdk, '_settings'):
+    if hasattr(sdk, "_settings"):
         logger.info(f"SDK endpoint: {sdk._settings.endpoint_url}")
 
     payload = []

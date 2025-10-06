@@ -23,6 +23,7 @@ class S3Config:
     in session storage. This config is retained for backward compatibility and
     for utility scripts (like seed_minio.py) that may still use environment variables.
     """
+
     endpoint_url: str | None = None
     region_name: str | None = None
     access_key_id: str | None = None

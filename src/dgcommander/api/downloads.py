@@ -20,6 +20,7 @@ bp = Blueprint("downloads", __name__, url_prefix="/api/download")
 @require_session_or_env
 def prepare_download():
     import logging
+
     logger = logging.getLogger(__name__)
 
     payload = request.get_json(silent=True) or {}
@@ -37,7 +38,9 @@ def prepare_download():
     logger.info(f"Prepare download - region: {credentials.get('region') if credentials else 'None'}")
 
     container = get_container()
-    downloads = DownloadService(sdk=sdk, secret_key=container.downloads.secret_key, ttl_seconds=container.downloads.ttl_seconds)
+    downloads = DownloadService(
+        sdk=sdk, secret_key=container.downloads.secret_key, ttl_seconds=container.downloads.ttl_seconds
+    )
 
     preparation = downloads.prepare(bucket, key, credentials=credentials)
     return json_response(preparation.to_dict())

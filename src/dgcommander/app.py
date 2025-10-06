@@ -39,10 +39,7 @@ def create_app(
     )
 
     # Configure logging
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     app.logger.setLevel(logging.DEBUG)
 
     cfg = config or load_config()
@@ -71,8 +68,7 @@ def create_app(
     # CORS configuration
     # Note: supports_credentials requires specific origins, not "*"
     cors_origins = os.environ.get(
-        "CORS_ORIGINS",
-        "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:3000"
+        "CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:3000"
     ).split(",")
 
     CORS(
