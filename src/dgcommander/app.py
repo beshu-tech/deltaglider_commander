@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+import logging
+import os
 from pathlib import Path
 
-from flask import Flask, send_from_directory
+from flask import Flask, g, send_from_directory
 from flask_cors import CORS
 
+from .api.auth import auth_bp
 from .api.buckets import bp as buckets_bp
 from .api.downloads import bp as downloads_bp
 from .api.objects import bp as objects_bp
 from .api.uploads import bp as uploads_bp
+from .auth import SessionStore
 from .deps import (
     DGCommanderConfig,
     ServiceContainer,
@@ -34,6 +38,13 @@ def create_app(
         static_url_path="/",
     )
 
+    # Configure logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    app.logger.setLevel(logging.DEBUG)
+
     cfg = config or load_config()
     app.config["DGCOMM_CONFIG"] = cfg
 
@@ -41,20 +52,44 @@ def create_app(
         if sdk is None:
             sdk = build_default_sdk(cfg)
         services = build_services(cfg, sdk)
+    else:
+        # When services are provided directly (e.g., in tests), extract SDK if available
+        if sdk is None and hasattr(services, "catalog") and hasattr(services.catalog, "sdk"):
+            sdk = services.catalog.sdk
 
     app.extensions["dgcommander"] = services
 
+    # Initialize session store for client-side credentials
+    session_store = SessionStore(
+        max_size=cfg.session_max_size,
+        ttl_seconds=cfg.session_idle_ttl,
+    )
+    app.extensions["session_store"] = session_store
+
     register_error_handlers(app)
+
+    # CORS configuration
+    # Note: supports_credentials requires specific origins, not "*"
+    cors_origins = os.environ.get(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:3000"
+    ).split(",")
 
     CORS(
         app,
-        resources={r"/*": {"origins": "*"}},
-        allow_headers="*",
+        resources={r"/*": {"origins": cors_origins}},
+        allow_headers=["Content-Type", "Authorization"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        send_wildcard=True,
-        supports_credentials=False,
+        supports_credentials=True,  # Enable credentials for session cookies
     )
 
+    # Before request hook to inject config and session store into g
+    @app.before_request
+    def inject_dependencies():
+        g.config = cfg
+        g.session_store = app.extensions["session_store"]
+
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(buckets_bp)
     app.register_blueprint(objects_bp)
     app.register_blueprint(downloads_bp)

@@ -96,8 +96,10 @@ React SPA with modern tooling:
    - Delta compression for storage optimization
    - Physical vs logical object distinction
 
-2. **API Authentication**
-   - HMAC-signed tokens for download URLs (5-minute TTL by default)
+2. **Session-Based Authentication**
+   - S3 credentials stored in browser sessionStorage, passed via HTTP-only session cookies
+   - Session middleware (`require_session_or_env`) injects `g.sdk_client` and `g.credentials`
+   - HMAC-signed tokens for download URLs with embedded credentials (5-minute TTL)
    - Rate limiting on object listing endpoints
 
 3. **Caching Strategy**
@@ -108,11 +110,10 @@ React SPA with modern tooling:
 
 Backend uses `DGCOMM_` prefixed environment variables:
 
-- `DGCOMM_S3_ENDPOINT`: S3 endpoint URL (e.g., MinIO)
-- `DGCOMM_S3_ADDRESSING_STYLE`: `path` or `virtual` (default: path)
-- `DGCOMM_HMAC_SECRET`: Secret for download token signing
-- `DGCOMM_CACHE_DIR`: Directory for delta cache operations
-- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`: S3 credentials
+- `DGCOMM_HMAC_SECRET`: Secret for download token signing (required)
+- `DGCOMM_CACHE_DIR`: Directory for delta cache operations (optional)
+
+**Note**: S3 credentials are configured through the web UI at runtime (`/settings` page), not via environment variables. Credentials are stored in browser sessionStorage and passed securely to the backend via session cookies.
 
 Frontend uses `VITE_` prefixed variables in `.env.local`:
 

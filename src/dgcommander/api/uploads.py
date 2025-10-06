@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from flask import Blueprint, Request, request
+from flask import Blueprint, Request, g, request
 from werkzeug.datastructures import FileStorage
 
+from ..auth.middleware import require_session_or_env
+from ..services.catalog import CatalogService
 from ..util.errors import APIError, NotFoundError
 from ..util.json import json_response
 from . import get_container
@@ -58,16 +60,28 @@ def _join_key(prefix: str, relative_path: str) -> str:
 
 
 @bp.post("/")
+@require_session_or_env
 def upload_objects():
+    import logging
+    logger = logging.getLogger(__name__)
+
     _enforce_rate_limit(request)
-    container = get_container()
+
+    # Use session SDK
+    sdk = g.sdk_client
+    logger.info(f"Upload using SDK type: {type(sdk).__name__}")
+    if hasattr(sdk, '_settings'):
+        logger.info(f"Upload SDK endpoint: {sdk._settings.endpoint_url}")
+        logger.info(f"Upload SDK access_key: {sdk._settings.access_key_id[:10]}..." if sdk._settings.access_key_id else "No access key")
+
+    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
 
     bucket = request.form.get("bucket", "").strip()
     if not bucket:
         raise APIError(code="invalid_bucket", message="bucket form field is required", http_status=400)
 
     # Use efficient bucket existence check
-    if not container.catalog.bucket_exists(bucket):
+    if not catalog.bucket_exists(bucket):
         raise NotFoundError("bucket", "bucket_not_found")
 
     prefix = _normalize_prefix(request.form.get("prefix"))
@@ -90,7 +104,7 @@ def upload_objects():
             except (OSError, AttributeError):
                 pass
 
-        summary = container.catalog.upload_object(
+        summary = catalog.upload_object(
             bucket=bucket,
             key=key,
             file_obj=file_storage.stream,

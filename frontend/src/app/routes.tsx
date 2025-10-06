@@ -9,6 +9,7 @@ import { AppLayout } from "./layout/AppLayout";
 import { BucketObjectsPage } from "../pages/BucketObjectsPage";
 import { BucketsPage } from "../pages/BucketsPage";
 import { ObjectDetailsPage } from "../pages/ObjectDetailsPage";
+import { SettingsPage } from "../pages/SettingsPage";
 import { UploadPage } from "../pages/UploadPage";
 import { normalizeObjectsSearch } from "../features/objects/search";
 
@@ -57,11 +58,18 @@ const uploadRoute = createRoute({
   validateSearch: searchValidator,
 });
 
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/settings",
+  component: SettingsPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   bucketsRoute,
   bucketObjectsRoute.addChildren([objectDetailsRoute]),
   uploadRoute,
+  settingsRoute,
 ]);
 
 export const router = createRouter({

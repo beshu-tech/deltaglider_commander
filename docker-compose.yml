@@ -23,12 +23,13 @@ services:
   backend:
     build: .
     environment:
-      AWS_ACCESS_KEY_ID: deltadmin
-      AWS_SECRET_ACCESS_KEY: deltasecret
-      AWS_DEFAULT_REGION: us-east-1
-      DGCOMM_S3_ENDPOINT: http://minio:9000
-      DGCOMM_S3_ADDRESSING_STYLE: path
+      # Required: HMAC secret for signing download tokens
       DGCOMM_HMAC_SECRET: dev-secret
+      # Optional: CORS origins for frontend development
+      CORS_ORIGINS: http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:3000
+      # NOTE: S3 credentials are now configured via the web UI at runtime.
+      # For local development testing with MinIO, navigate to http://localhost:8000/settings
+      # and enter: Access Key: deltadmin, Secret: deltasecret, Endpoint: http://minio:9000
     depends_on:
       - minio-setup
     ports:

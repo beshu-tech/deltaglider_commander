@@ -16,6 +16,13 @@ from .util.cache import CacheRegistry, build_cache_registry
 
 @dataclass(slots=True)
 class S3Config:
+    """
+    S3 configuration (legacy).
+
+    Note: S3 credentials are now primarily configured via the web UI and stored
+    in session storage. This config is retained for backward compatibility and
+    for utility scripts (like seed_minio.py) that may still use environment variables.
+    """
     endpoint_url: str | None = None
     region_name: str | None = None
     access_key_id: str | None = None
@@ -32,6 +39,8 @@ class DGCommanderConfig:
     download_token_ttl: int = 300
     objects_rate_limit: int = 10
     objects_rate_window: float = 1.0
+    session_max_size: int = 20
+    session_idle_ttl: int = 1800
     s3: S3Config = field(default_factory=S3Config)
 
 
@@ -50,6 +59,8 @@ def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
     ttl = int(env.get("DGCOMM_DOWNLOAD_TTL", "300"))
     limit = int(env.get("DGCOMM_OBJECT_RATE_LIMIT", "10"))
     window = float(env.get("DGCOMM_OBJECT_RATE_WINDOW", "1.0"))
+    session_max = int(env.get("DGCOMM_SESSION_MAX_SIZE", "20"))
+    session_ttl = int(env.get("DGCOMM_SESSION_IDLE_TTL", "1800"))
     s3 = S3Config(
         endpoint_url=env.get("DGCOMM_S3_ENDPOINT"),
         region_name=env.get("DGCOMM_S3_REGION"),
@@ -65,6 +76,8 @@ def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
         download_token_ttl=ttl,
         objects_rate_limit=limit,
         objects_rate_window=window,
+        session_max_size=session_max,
+        session_idle_ttl=session_ttl,
         s3=s3,
     )
 

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Settings, Sun } from "lucide-react";
 import { getEnv } from "../../lib/config/env";
 import { Button } from "../../lib/ui/Button";
 import { useTheme } from "../theme";
@@ -18,10 +18,18 @@ export function Header() {
           {title}
         </Link>
       </div>
-      <Button variant="ghost" className="gap-2" aria-label="Toggle theme" onClick={toggleTheme}>
-        {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        <span className="text-sm capitalize">{theme} mode</span>
-      </Button>
+      <div className="flex items-center gap-2">
+        <Link to="/settings">
+          <Button variant="ghost" className="gap-2" aria-label="Settings">
+            <Settings className="h-4 w-4" />
+            <span className="text-sm">Settings</span>
+          </Button>
+        </Link>
+        <Button variant="ghost" className="gap-2" aria-label="Toggle theme" onClick={toggleTheme}>
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          <span className="text-sm capitalize">{theme} mode</span>
+        </Button>
+      </div>
     </header>
   );
 }

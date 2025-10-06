@@ -23,9 +23,6 @@ DeltaGlider Commander provides a modern web interface for browsing and managing 
 
 ```bash
 docker run -p 8000:8000 \
-  -e AWS_ACCESS_KEY_ID=your-key \
-  -e AWS_SECRET_ACCESS_KEY=your-secret \
-  -e DGCOMM_S3_ENDPOINT=https://s3.amazonaws.com \
   -e DGCOMM_HMAC_SECRET=$(openssl rand -hex 32) \
   beshultd/deltaglider_commander:latest
 ```
@@ -34,14 +31,13 @@ docker run -p 8000:8000 \
 
 ```bash
 docker run -p 8000:8000 \
-  -e AWS_ACCESS_KEY_ID=your-key \
-  -e AWS_SECRET_ACCESS_KEY=your-secret \
-  -e DGCOMM_S3_ENDPOINT=https://s3.amazonaws.com \
   -e DGCOMM_HMAC_SECRET=$(openssl rand -hex 32) \
   beshultd/deltaglider_commander:0.1.2
 ```
 
-Access the web UI at `http://localhost:8000`
+Access the web UI at `http://localhost:8000` and navigate to Settings to configure your S3/AWS credentials.
+
+**Note**: S3 credentials are now configured through the web UI at runtime, not via environment variables. Your credentials are stored securely in your browser's session storage.
 
 ## Configuration
 
@@ -49,18 +45,26 @@ Access the web UI at `http://localhost:8000`
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `AWS_ACCESS_KEY_ID` | S3 access key | `AKIAIOSFODNN7EXAMPLE` |
-| `AWS_SECRET_ACCESS_KEY` | S3 secret key | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
-| `DGCOMM_S3_ENDPOINT` | S3 endpoint URL | `https://s3.amazonaws.com` |
 | `DGCOMM_HMAC_SECRET` | Secret for signing download tokens | Generate with `openssl rand -hex 32` |
+
+### S3/AWS Credentials
+
+**S3 credentials are configured through the web UI, not environment variables.** After starting the container:
+
+1. Navigate to `http://localhost:8000/settings`
+2. Enter your S3 credentials:
+   - Access Key ID
+   - Secret Access Key
+   - Region (e.g., `us-east-1`)
+   - Endpoint (leave empty for AWS S3, or specify custom endpoint like `https://minio.example.com`)
+   - Addressing Style (`path` or `virtual`)
+
+Your credentials are stored securely in your browser's session storage and are never persisted on the server.
 
 ### Optional Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `AWS_DEFAULT_REGION` | AWS region | `us-east-1` |
-| `DGCOMM_S3_ADDRESSING_STYLE` | `path` or `virtual` | `path` |
-| `DGCOMM_S3_VERIFY_SSL` | Verify SSL certificates | `true` |
 | `DGCOMM_CACHE_DIR` | Directory for delta cache | System temp dir + `/dgcommander-cache` |
 | `DGCOMM_OBJECT_RATE_LIMIT` | Max requests per window | `10` |
 | `DGCOMM_OBJECT_RATE_WINDOW` | Rate limit window (seconds) | `1.0` |
@@ -80,26 +84,23 @@ services:
     ports:
       - "8000:8000"
     environment:
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      DGCOMM_S3_ENDPOINT: ${DGCOMM_S3_ENDPOINT}
       DGCOMM_HMAC_SECRET: ${DGCOMM_HMAC_SECRET}
+      # Optional: Configure cache directory
+      # DGCOMM_CACHE_DIR: /tmp/dgcommander-cache
 ```
 
-## MinIO Configuration
+Then configure your S3 credentials through the web UI at `http://localhost:8000/settings`.
 
-For MinIO or other S3-compatible services:
+## MinIO and S3-Compatible Storage
 
-```bash
-docker run -p 8000:8000 \
-  -e AWS_ACCESS_KEY_ID=minioadmin \
-  -e AWS_SECRET_ACCESS_KEY=minioadmin \
-  -e DGCOMM_S3_ENDPOINT=http://minio:9000 \
-  -e DGCOMM_S3_ADDRESSING_STYLE=path \
-  -e DGCOMM_S3_VERIFY_SSL=false \
-  -e DGCOMM_HMAC_SECRET=$(openssl rand -hex 32) \
-  beshultd/deltaglider_commander
-```
+DeltaGlider Commander works with MinIO and other S3-compatible storage services. After starting the container, configure your credentials through the web UI:
+
+- **Endpoint**: Custom endpoint URL (e.g., `http://minio:9000` or `https://minio.example.com`)
+- **Access Key ID**: Your MinIO/S3-compatible access key
+- **Secret Access Key**: Your MinIO/S3-compatible secret key
+- **Region**: Region name (e.g., `us-east-1` or custom region)
+- **Addressing Style**: `path` (recommended for MinIO) or `virtual`
+- **Verify SSL**: Disable for self-signed certificates if needed
 
 ## Available Tags
 
@@ -120,8 +121,9 @@ docker run -p 8000:8000 \
 
 - Always use a strong, unique `DGCOMM_HMAC_SECRET` in production (generate with `openssl rand -hex 32`)
 - The HMAC secret is used to sign time-limited download tokens (default TTL: 5 minutes)
-- Never expose S3 credentials in client-side code
-- Consider using IAM roles when running on AWS
+- S3 credentials are stored in browser session storage, not on the server
+- Credentials are passed securely via HTTP-only session cookies
+- Session credentials are never persisted to disk on the backend
 - All temporary files use secure system temp directories
 - Security scanning with Bandit is part of the CI/CD pipeline
 

@@ -1,14 +1,16 @@
 # Production Docker Compose example
-# 
+#
 # Usage:
 #   1. Copy this file and create a .env file with your secrets
 #   2. docker compose -f docker-compose.prod.yml up -d
+#   3. Navigate to http://localhost:8000/settings to configure S3 credentials
 #
 # Required .env variables:
-#   AWS_ACCESS_KEY_ID
-#   AWS_SECRET_ACCESS_KEY
-#   DGCOMM_S3_ENDPOINT
-#   DGCOMM_HMAC_SECRET
+#   DGCOMM_HMAC_SECRET  - Secret for signing download tokens (generate with: openssl rand -hex 32)
+#
+# NOTE: S3/AWS credentials are no longer configured via environment variables.
+# After starting the container, configure your S3 credentials through the web UI
+# at http://localhost:8000/settings
 
 version: "3.9"
 
@@ -19,18 +21,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # S3 Configuration
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
-      DGCOMM_S3_ENDPOINT: ${DGCOMM_S3_ENDPOINT}
-      DGCOMM_S3_ADDRESSING_STYLE: ${DGCOMM_S3_ADDRESSING_STYLE:-path}
-      DGCOMM_S3_VERIFY_SSL: ${DGCOMM_S3_VERIFY_SSL:-true}
-      
-      # Security
+      # Security (Required)
       DGCOMM_HMAC_SECRET: ${DGCOMM_HMAC_SECRET}
-      
-      # Optional overrides
+
+      # Optional Configuration
       DGCOMM_CACHE_DIR: ${DGCOMM_CACHE_DIR:-/tmp/dgcommander-cache}
       DGCOMM_OBJECT_RATE_LIMIT: ${DGCOMM_OBJECT_RATE_LIMIT:-10}
       DGCOMM_OBJECT_RATE_WINDOW: ${DGCOMM_OBJECT_RATE_WINDOW:-1.0}

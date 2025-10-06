@@ -1,4 +1,5 @@
-import { api, ApiError } from "./client";
+import { ApiError } from "./client";
+import { apiWithAuth } from "./authInterceptor";
 import {
   Bucket,
   DownloadPrepare,
@@ -28,27 +29,27 @@ export interface ObjectsParams {
 }
 
 export async function fetchBuckets(): Promise<Bucket[]> {
-  const data = await api<{ buckets: unknown }>("/api/buckets/");
+  const data = await apiWithAuth<{ buckets: unknown }>("/api/buckets/");
   const parsed = bucketsResponseSchema.parse(data);
   return parsed.buckets;
 }
 
 export async function createBucket(name: string): Promise<void> {
-  await api("/api/buckets/", {
+  await apiWithAuth("/api/buckets/", {
     method: "POST",
     body: JSON.stringify({ name }),
   });
 }
 
 export async function deleteBucket(name: string): Promise<void> {
-  await api(`/api/buckets/${encodeURIComponent(name)}`, {
+  await apiWithAuth(`/api/buckets/${encodeURIComponent(name)}`, {
     method: "DELETE",
   });
 }
 
 export async function deleteObject(bucket: string, key: string): Promise<void> {
   const encodedKey = key.split("/").map(encodeURIComponent).join("/");
-  await api(`/api/objects/${encodeURIComponent(bucket)}/${encodedKey}`, {
+  await apiWithAuth(`/api/objects/${encodeURIComponent(bucket)}/${encodedKey}`, {
     method: "DELETE",
   });
 }
@@ -65,7 +66,7 @@ export async function bulkDeleteObjects(
   bucket: string,
   keys: string[],
 ): Promise<BulkDeleteResponse> {
-  const data = await api<BulkDeleteResponse>("/api/objects/bulk", {
+  const data = await apiWithAuth<BulkDeleteResponse>("/api/objects/bulk", {
     method: "DELETE",
     body: JSON.stringify({ bucket, keys }),
   });
@@ -84,27 +85,27 @@ export async function fetchObjects(params: ObjectsParams): Promise<ObjectList> {
   if (params.compressed && params.compressed !== "any") {
     query.set("compressed", params.compressed);
   }
-  const data = await api<unknown>(`/api/objects/?${query.toString()}`);
+  const data = await apiWithAuth<unknown>(`/api/objects/?${query.toString()}`);
   return objectListSchema.parse(data);
 }
 
 export async function fetchObjectMetadata(bucket: string, key: string): Promise<FileMetadata> {
   const encodedKey = key.split("/").map(encodeURIComponent).join("/");
-  const data = await api<unknown>(
+  const data = await apiWithAuth<unknown>(
     `/api/objects/${encodeURIComponent(bucket)}/${encodedKey}/metadata`,
   );
   return fileMetadataSchema.parse(data);
 }
 
 export async function triggerSavings(bucket: string): Promise<void> {
-  await api(`/api/buckets/${encodeURIComponent(bucket)}/compute-savings`, {
+  await apiWithAuth(`/api/buckets/${encodeURIComponent(bucket)}/compute-savings`, {
     method: "POST",
     body: JSON.stringify({}),
   });
 }
 
 export async function prepareDownload(bucket: string, key: string): Promise<DownloadPrepare> {
-  const data = await api<unknown>("/api/download/prepare", {
+  const data = await apiWithAuth<unknown>("/api/download/prepare", {
     method: "POST",
     body: JSON.stringify({ bucket, key }),
   });
@@ -112,7 +113,7 @@ export async function prepareDownload(bucket: string, key: string): Promise<Down
 }
 
 export async function fetchDownload(token: string): Promise<ArrayBuffer> {
-  return api<ArrayBuffer>(`/api/download/${encodeURIComponent(token)}`, {
+  return apiWithAuth<ArrayBuffer>(`/api/download/${encodeURIComponent(token)}`, {
     timeoutMs: null,
     parseAs: "arrayBuffer",
   });
@@ -150,7 +151,7 @@ export async function uploadObjects(params: UploadObjectsParams): Promise<Upload
     formData.append("files", item.file, normalized || fallbackName);
   });
 
-  const data = await api<unknown>("/api/upload/", {
+  const data = await apiWithAuth<unknown>("/api/upload/", {
     method: "POST",
     body: formData,
   });

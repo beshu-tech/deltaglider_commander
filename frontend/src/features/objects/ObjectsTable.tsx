@@ -97,6 +97,7 @@ export function ObjectsTable({
               type="checkbox"
               className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
               checked={directorySelected}
+              onClick={(event) => event.stopPropagation()}
               onChange={(event) => {
                 event.stopPropagation();
                 onToggleSelect(target);
@@ -195,6 +196,7 @@ export function ObjectsTable({
                       type="checkbox"
                       className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
                       checked={objectSelected}
+                      onClick={(event) => event.stopPropagation()}
                       onChange={(event) => {
                         event.stopPropagation();
                         onToggleSelect(target);

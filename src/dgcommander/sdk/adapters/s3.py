@@ -54,22 +54,15 @@ class S3DeltaGliderSDK:
         self._settings = settings
         self._region = settings.region_name or "us-east-1"
 
-        # Set AWS credentials in environment if provided in settings
-        # create_client() uses boto3 which reads from environment variables
-        if settings.access_key_id:
-            os.environ["AWS_ACCESS_KEY_ID"] = settings.access_key_id
-        if settings.secret_access_key:
-            os.environ["AWS_SECRET_ACCESS_KEY"] = settings.secret_access_key
-        if settings.session_token:
-            os.environ["AWS_SESSION_TOKEN"] = settings.session_token
-        if settings.region_name:
-            os.environ["AWS_DEFAULT_REGION"] = settings.region_name
-
-        # Create high-level deltaglider client with full bucket management
-        # This replaces the low-level DeltaService + S3StorageAdapter approach
+        # Create deltaglider client with credentials passed directly (deltaglider 4.2.0+)
+        # This avoids environment variable pollution and supports multi-user scenarios
         self._client = create_client(
             endpoint_url=settings.endpoint_url,
             cache_dir=settings.cache_dir or os.path.join(tempfile.gettempdir(), "dgcommander-cache"),
+            aws_access_key_id=settings.access_key_id,
+            aws_secret_access_key=settings.secret_access_key,
+            aws_session_token=settings.session_token,
+            region_name=settings.region_name,
         )
 
     # -- public API -----------------------------------------------------
@@ -184,8 +177,12 @@ class S3DeltaGliderSDK:
                 )
             )
 
-        # Extract common prefixes (folders)
-        common_prefixes = [p["Prefix"] for p in response.common_prefixes]
+        # Extract common prefixes (folders) and filter out empty/root prefixes
+        common_prefixes = [
+            p["Prefix"]
+            for p in response.common_prefixes
+            if p["Prefix"] and p["Prefix"] != "/" and p["Prefix"] != normalized_prefix
+        ]
 
         return ObjectListing(objects=objects, common_prefixes=sorted(common_prefixes))
 

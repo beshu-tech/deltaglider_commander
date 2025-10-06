@@ -334,7 +334,16 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
         };
       });
       setQueue((prev) => [...prev, ...items]);
-      void uploadBatch(items);
+
+      // Upload in batches of 5 files to avoid overwhelming the browser/server
+      const BATCH_SIZE = 5;
+      const uploadInBatches = async () => {
+        for (let i = 0; i < items.length; i += BATCH_SIZE) {
+          const batch = items.slice(i, i + BATCH_SIZE);
+          await uploadBatch(batch);
+        }
+      };
+      void uploadInBatches();
     },
     [uploadBatch],
   );

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, request
+from flask import Blueprint, g, request
 
+from ..auth.middleware import require_session_or_env
 from ..common.decorators import api_endpoint, cached, with_timing
 from ..contracts.objects import (
     BulkDeleteRequest,
@@ -13,6 +14,7 @@ from ..contracts.objects import (
     ObjectListResponse,
     ObjectSortOrder,
 )
+from ..services.catalog import CatalogService
 from ..util.errors import APIError, NotFoundError
 from ..util.json import json_response
 from . import get_container
@@ -22,13 +24,17 @@ bp = Blueprint("objects", __name__, url_prefix="/api/objects")
 
 
 @bp.get("/")
+@require_session_or_env
 @api_endpoint(request_model=ObjectListRequest, response_model=ObjectListResponse, validate_query=True)
 @with_timing("list_objects")
 @cached(ttl_seconds=30)
 def list_objects(query: ObjectListRequest):
     """List objects with automatic validation and serialization."""
-    container = get_container()
-    catalog = container.catalog
+    # Use session SDK
+    sdk = g.sdk_client
+
+    # Create catalog service with session SDK
+    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
 
     # Convert ObjectSortOrder from contracts to util.types
     from ..util.types import ObjectSortOrder as UtilObjectSortOrder
@@ -81,21 +87,25 @@ def list_objects(query: ObjectListRequest):
 
 
 @bp.get("/<bucket>/<path:key>/metadata")
+@require_session_or_env
 def object_metadata(bucket: str, key: str):
-    container = get_container()
+    sdk = g.sdk_client
+    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
     try:
-        metadata = container.catalog.get_metadata(bucket, key)
+        metadata = catalog.get_metadata(bucket, key)
     except KeyError as exc:
         raise NotFoundError("object", "key_not_found") from exc
     return json_response(metadata.to_dict())
 
 
 @bp.delete("/<bucket>/<path:key>")
+@require_session_or_env
 def delete_object(bucket: str, key: str):
     _enforce_rate_limit(request)
-    container = get_container()
+    sdk = g.sdk_client
+    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
     try:
-        container.catalog.delete_object(bucket, key)
+        catalog.delete_object(bucket, key)
     except NotFoundError:
         raise
     except APIError:
@@ -106,18 +116,20 @@ def delete_object(bucket: str, key: str):
 
 
 @bp.delete("/bulk")
+@require_session_or_env
 @api_endpoint(request_model=BulkDeleteRequest, response_model=BulkDeleteResponse)
 @with_timing("bulk_delete_objects")
 def bulk_delete_objects(data: BulkDeleteRequest):
     """Delete multiple objects in bulk."""
     _enforce_rate_limit(request)
-    container = get_container()
+    sdk = g.sdk_client
+    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
 
     # Check if bucket exists efficiently
-    if not container.catalog.bucket_exists(data.bucket):
+    if not catalog.bucket_exists(data.bucket):
         raise NotFoundError("bucket", "bucket_not_found")
 
-    deleted, errors = container.catalog.bulk_delete_objects(data.bucket, data.keys)
+    deleted, errors = catalog.bulk_delete_objects(data.bucket, data.keys)
 
     return BulkDeleteResponse(
         deleted=deleted,

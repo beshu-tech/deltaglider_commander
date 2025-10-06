@@ -83,6 +83,7 @@ export async function api<T>(path: string, options: ApiRequestOptions = {}): Pro
       method,
       headers: finalHeaders,
       signal: controller ? controller.signal : signal,
+      credentials: rest.credentials || "include", // Always send cookies for session support
     });
 
     if (!response.ok) {

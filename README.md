@@ -77,11 +77,10 @@ The API is available at `http://localhost:8000/api` and the MinIO console at `ht
 ### Backend
 Backend uses `DGCOMM_` prefixed environment variables:
 
-- `DGCOMM_S3_ENDPOINT`: S3 endpoint URL (e.g., MinIO)
-- `DGCOMM_S3_ADDRESSING_STYLE`: `path` or `virtual` (default: path)
-- `DGCOMM_HMAC_SECRET`: Secret for download token signing
-- `DGCOMM_CACHE_DIR`: Directory for delta cache operations
-- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`: S3 credentials
+- `DGCOMM_HMAC_SECRET`: Secret for download token signing (required)
+- `DGCOMM_CACHE_DIR`: Directory for delta cache operations (optional)
+
+**Note**: S3 credentials are no longer configured via environment variables. Instead, users provide their AWS/S3 credentials through the web UI at runtime, which are stored in the browser's session storage and passed to the backend via session cookies.
 
 ### Frontend
 Frontend uses `VITE_` prefixed variables in `.env.local`:
@@ -125,13 +124,15 @@ docker pull beshultd/deltaglider_commander:latest
 # Or pull a specific version
 docker pull beshultd/deltaglider_commander:0.1.2
 
-# Copy env.example to .env and configure your S3 credentials
+# Copy env.example to .env and configure required settings
 cp env.example .env
-# Edit .env with your values
+# Edit .env with your HMAC secret and other optional values
 
 # Run with docker-compose
 docker compose -f docker-compose.prod.yml up -d
 ```
+
+After starting the application, navigate to the Settings page in the web UI to configure your S3/AWS credentials. These credentials are stored in your browser's session storage and used for all API requests.
 
 ### Building Your Own Image
 
@@ -141,12 +142,11 @@ docker build -t dgcommander .
 
 # Run with required environment variables
 docker run -p 8000:8000 \
-  -e AWS_ACCESS_KEY_ID=your-key \
-  -e AWS_SECRET_ACCESS_KEY=your-secret \
-  -e DGCOMM_S3_ENDPOINT=https://s3.amazonaws.com \
   -e DGCOMM_HMAC_SECRET=your-hmac-secret \
   dgcommander
 ```
+
+**Note**: S3 credentials are no longer passed as environment variables. Configure them through the web UI after starting the application.
 
 ## Recent Improvements (v0.1.2)
 
