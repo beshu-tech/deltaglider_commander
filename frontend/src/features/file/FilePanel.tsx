@@ -53,7 +53,16 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
       try {
         await navigator.clipboard.writeText(value);
         setCopiedField(field);
-        toast.push({ title: "Copied", description: value, level: "success" });
+        const labels = {
+          key: "Object key copied",
+          uri: "S3 URI copied",
+          link: "Download link copied",
+        };
+        toast.push({
+          title: labels[field],
+          description: field === "link" ? "Link ready to share" : undefined,
+          level: "success"
+        });
         window.setTimeout(() => setCopiedField(null), 1500);
       } catch (error) {
         toast.push({ title: "Copy failed", description: String(error), level: "error" });

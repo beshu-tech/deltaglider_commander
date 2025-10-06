@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import { Check, Info, X, AlertCircle } from "lucide-react";
 
 export type ToastLevel = "info" | "success" | "error";
 
@@ -24,6 +25,30 @@ export function useToast(): ToastContextValue {
   return context;
 }
 
+const levelStyles = {
+  info: {
+    container: "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800",
+    icon: "text-blue-600 dark:text-blue-400",
+    title: "text-blue-900 dark:text-blue-100",
+    description: "text-blue-700 dark:text-blue-300",
+    IconComponent: Info,
+  },
+  success: {
+    container: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800",
+    icon: "text-emerald-600 dark:text-emerald-400",
+    title: "text-emerald-900 dark:text-emerald-100",
+    description: "text-emerald-700 dark:text-emerald-300",
+    IconComponent: Check,
+  },
+  error: {
+    container: "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
+    icon: "text-red-600 dark:text-red-400",
+    title: "text-red-900 dark:text-red-100",
+    description: "text-red-700 dark:text-red-300",
+    IconComponent: AlertCircle,
+  },
+};
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -35,7 +60,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (toast: Omit<ToastMessage, "id">) => {
       const id = nextToastId++;
       setToasts((current) => [...current, { ...toast, id }]);
-      window.setTimeout(() => remove(id), 5000);
+      // Auto-dismiss success toasts faster, errors slower
+      const timeout = toast.level === "success" ? 3000 : toast.level === "error" ? 7000 : 5000;
+      window.setTimeout(() => remove(id), timeout);
     },
     [remove],
   );
@@ -45,23 +72,35 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex flex-col items-center gap-3">
-        {toasts.map((toast) => (
-          <button
-            key={toast.id}
-            type="button"
-            onClick={() => remove(toast.id)}
-            className="pointer-events-auto w-fit min-w-[280px] max-w-[360px] rounded-lg border border-slate-200 bg-white p-4 text-left shadow transition hover:shadow-lg dark:border-slate-700 dark:bg-slate-900"
-          >
-            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {toast.title}
+      <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+        {toasts.map((toast) => {
+          const styles = levelStyles[toast.level];
+          const Icon = styles.IconComponent;
+          return (
+            <div
+              key={toast.id}
+              className={`pointer-events-auto flex min-w-[280px] max-w-[400px] items-start gap-3 rounded-lg border p-3 shadow-lg transition-all hover:shadow-xl ${styles.container}`}
+            >
+              <Icon className={`mt-0.5 h-5 w-5 flex-shrink-0 ${styles.icon}`} />
+              <div className="flex-1 min-w-0">
+                <div className={`text-sm font-semibold ${styles.title}`}>{toast.title}</div>
+                {toast.description && (
+                  <p className={`mt-0.5 text-xs ${styles.description} truncate`} title={toast.description}>
+                    {toast.description}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => remove(toast.id)}
+                className={`flex-shrink-0 rounded p-1 transition hover:bg-white/50 dark:hover:bg-black/20 ${styles.icon}`}
+                aria-label="Dismiss"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            {toast.description ? (
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{toast.description}</p>
-            ) : null}
-            <span className="mt-2 inline-block text-xs text-slate-400">Click to dismiss</span>
-          </button>
-        ))}
+          );
+        })}
       </div>
     </ToastContext.Provider>
   );

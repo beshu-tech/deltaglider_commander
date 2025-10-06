@@ -15,8 +15,9 @@ bp = Blueprint("buckets", __name__, url_prefix="/api/buckets")
 @bp.get("/")
 @require_session_or_env
 def list_buckets():
-    from flask import g
     import logging
+
+    from flask import g
 
     logger = logging.getLogger(__name__)
 
@@ -53,6 +54,7 @@ def list_buckets():
 @require_session_or_env
 def create_bucket():
     from flask import g
+
     from ..services.catalog import CatalogService
 
     # Use session SDK
@@ -89,6 +91,7 @@ def compute_savings(bucket: str):
 @require_session_or_env
 def delete_bucket(bucket: str):
     from flask import g
+
     from ..services.catalog import CatalogService
 
     # Use session SDK
