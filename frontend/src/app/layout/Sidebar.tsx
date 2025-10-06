@@ -1,6 +1,16 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Link, useMatch, useNavigate } from "@tanstack/react-router";
-import { Archive, BookOpen, LifeBuoy, Loader2, LogOut, Plus, Search, Settings, X } from "lucide-react";
+import {
+  Archive,
+  BookOpen,
+  LifeBuoy,
+  Loader2,
+  LogOut,
+  Plus,
+  Search,
+  Settings,
+  X,
+} from "lucide-react";
 import { DEFAULT_OBJECTS_SEARCH_STATE } from "../../features/objects/types";
 import { useBuckets } from "../../features/buckets/useBuckets";
 import { useCreateBucket } from "../../features/buckets/useBucketManagement";

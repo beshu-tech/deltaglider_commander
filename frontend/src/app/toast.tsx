@@ -101,7 +101,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <div className="flex-1 min-w-0">
                 <div className={`text-sm font-semibold ${styles.title}`}>{toast.title}</div>
                 {toast.description && (
-                  <p className={`mt-0.5 text-xs ${styles.description} truncate`} title={toast.description}>
+                  <p
+                    className={`mt-0.5 text-xs ${styles.description} truncate`}
+                    title={toast.description}
+                  >
                     {toast.description}
                   </p>
                 )}

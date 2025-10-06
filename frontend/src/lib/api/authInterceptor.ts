@@ -7,10 +7,10 @@
  * 3. Optionally attempt to recreate session if we have stored credentials
  */
 
-import { api, ApiError, ApiRequestOptions } from './client';
-import { CredentialStorage } from '../../services/credentialStorage';
-import { SessionManager } from '../../services/sessionManager';
-import { toast } from '../../app/toast';
+import { api, ApiError, ApiRequestOptions } from "./client";
+import { CredentialStorage } from "../../services/credentialStorage";
+import { SessionManager } from "../../services/sessionManager";
+import { toast } from "../../app/toast";
 
 // Track if we're already handling an auth error to prevent loops
 let isHandlingAuthError = false;
@@ -23,10 +23,7 @@ let isHandlingAuthError = false;
  * 2. If 401 with session error, try to recreate session once
  * 3. If still fails, redirect to settings page
  */
-export async function apiWithAuth<T>(
-  path: string,
-  options: ApiRequestOptions = {},
-): Promise<T> {
+export async function apiWithAuth<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   try {
     // First, try the request normally
     return await api<T>(path, options);
@@ -37,9 +34,10 @@ export async function apiWithAuth<T>(
     }
 
     // Check if this is a session-related error
-    const isSessionError = error.code === 'session_not_found' ||
-                          error.code === 'session_expired' ||
-                          error.code === 'no_session';
+    const isSessionError =
+      error.code === "session_not_found" ||
+      error.code === "session_expired" ||
+      error.code === "no_session";
 
     if (!isSessionError) {
       // Not a session error (might be insufficient permissions, etc.)
@@ -56,8 +54,8 @@ export async function apiWithAuth<T>(
 
     if (!storedCredentials) {
       // No stored credentials, user needs to log in
-      handleAuthFailure('Please log in with your AWS credentials');
-      throw new Error('Authentication required. Redirecting to settings...');
+      handleAuthFailure("Please log in with your AWS credentials");
+      throw new Error("Authentication required. Redirecting to settings...");
     }
 
     // Try to recreate the session once
@@ -72,9 +70,9 @@ export async function apiWithAuth<T>(
 
       // Success! Notify user their session was refreshed
       toast.push({
-        title: 'Session restored',
-        description: 'Your session has been automatically renewed',
-        level: 'info',
+        title: "Session restored",
+        description: "Your session has been automatically renewed",
+        level: "info",
       });
 
       return result;
@@ -82,14 +80,16 @@ export async function apiWithAuth<T>(
       // Failed to recreate session, credentials might be invalid
       CredentialStorage.clear();
 
-      if (refreshError instanceof ApiError &&
-          (refreshError.code === 'invalid_credentials' || refreshError.status === 403)) {
-        handleAuthFailure('Your stored credentials are no longer valid. Please log in again.');
+      if (
+        refreshError instanceof ApiError &&
+        (refreshError.code === "invalid_credentials" || refreshError.status === 403)
+      ) {
+        handleAuthFailure("Your stored credentials are no longer valid. Please log in again.");
       } else {
-        handleAuthFailure('Could not restore session. Please log in again.');
+        handleAuthFailure("Could not restore session. Please log in again.");
       }
 
-      throw new Error('Session refresh failed. Redirecting to settings...');
+      throw new Error("Session refresh failed. Redirecting to settings...");
     } finally {
       isHandlingAuthError = false;
     }
@@ -102,14 +102,14 @@ export async function apiWithAuth<T>(
 function handleAuthFailure(message: string) {
   // Show error toast
   toast.push({
-    title: 'Authentication Required',
+    title: "Authentication Required",
     description: message,
-    level: 'error',
+    level: "error",
   });
 
   // Redirect to settings page after a brief delay
   setTimeout(() => {
     // Use location.replace to prevent back button issues
-    window.location.replace('/settings');
+    window.location.replace("/settings");
   }, 1500);
 }

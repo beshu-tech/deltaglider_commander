@@ -61,7 +61,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
         toast.push({
           title: labels[field],
           description: field === "link" ? "Link ready to share" : undefined,
-          level: "success"
+          level: "success",
         });
         window.setTimeout(() => setCopiedField(null), 1500);
       } catch (error) {

@@ -126,7 +126,9 @@ describe("FilePanel", () => {
     // Wait for clipboard to be called with the result
     await waitFor(
       () => {
-        expect(clipboardWriteMock).toHaveBeenCalledWith(["https://api.test/api/download/token-123"]);
+        expect(clipboardWriteMock).toHaveBeenCalledWith([
+          "https://api.test/api/download/token-123",
+        ]);
       },
       { timeout: 3000 },
     );
