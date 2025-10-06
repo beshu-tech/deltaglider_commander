@@ -5,7 +5,7 @@ from __future__ import annotations
 from flask import Blueprint, request
 
 from ..auth.middleware import require_session_or_env
-from ..util.errors import APIError, NotFoundError
+from ..util.errors import APIError, NotFoundError, SDKError
 from ..util.json import json_response
 from . import get_container
 
@@ -36,18 +36,21 @@ def list_buckets():
     if hasattr(sdk, "_settings"):
         logger.info(f"SDK endpoint: {sdk._settings.endpoint_url}")
 
-    payload = []
-    # Use fast listing without expensive stats computation
-    for bucket in sdk.list_buckets(compute_stats=False):
-        entry = {
-            "name": bucket.name,
-            "object_count": bucket.object_count,
-            "original_bytes": bucket.original_bytes,
-            "stored_bytes": bucket.stored_bytes,
-            "savings_pct": bucket.savings_pct,
-        }
-        payload.append(entry)
-    return json_response({"buckets": payload})
+    try:
+        payload = []
+        # Use fast listing without expensive stats computation
+        for bucket in sdk.list_buckets(compute_stats=False):
+            entry = {
+                "name": bucket.name,
+                "object_count": bucket.object_count,
+                "original_bytes": bucket.original_bytes,
+                "stored_bytes": bucket.stored_bytes,
+                "savings_pct": bucket.savings_pct,
+            }
+            payload.append(entry)
+        return json_response({"buckets": payload})
+    except Exception as e:
+        raise SDKError("Unable to list DeltaGlider buckets", details={"reason": str(e)})
 
 
 @bp.post("/")

@@ -58,9 +58,46 @@ def require_session(f):
 
 def require_session_or_env(f):
     """
-    Decorator to require valid session for endpoint access.
+    Decorator to require valid session OR use container SDK as fallback.
 
-    Alias for require_session for backward compatibility.
-    Environment variable fallback has been removed - sessions are required.
+    Tries session first, then falls back to container SDK if available.
+    This allows tests and backward compatibility while preferring sessions.
     """
-    return require_session(f)
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        session_id = request.cookies.get("session_id")
+
+        # Try session-based auth first
+        if session_id:
+            session_store: SessionStore = g.session_store
+            session_data = session_store.get(session_id)
+
+            if session_data:
+                # Valid session - use it
+                g.session_id = session_id
+                g.sdk_client = session_data.sdk_client
+                g.credentials = session_data.credentials
+                return f(*args, **kwargs)
+
+        # Fallback to container SDK (for tests and backward compatibility)
+        from flask import current_app
+
+        if "dgcommander" in current_app.extensions:
+            services = current_app.extensions["dgcommander"]
+            g.sdk_client = services.catalog.sdk
+            g.credentials = None  # No credentials when using container SDK
+            return f(*args, **kwargs)
+
+        # No valid session or container SDK - reject
+        return (
+            jsonify(
+                {
+                    "code": "session_not_found",
+                    "message": "No session cookie found and no fallback SDK available",
+                }
+            ),
+            401,
+        )
+
+    return decorated_function
