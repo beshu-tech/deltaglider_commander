@@ -58,10 +58,10 @@ def require_session(f):
 
 def require_session_or_env(f):
     """
-    Decorator to require valid session OR use container SDK as fallback.
+    Decorator to require valid session OR use container SDK as fallback (test mode only).
 
-    Tries session first, then falls back to container SDK if available.
-    This allows tests and backward compatibility while preferring sessions.
+    Tries session first, then falls back to container SDK if TEST_MODE is enabled.
+    Production code MUST use session-based authentication.
     """
 
     @wraps(f)
@@ -80,21 +80,23 @@ def require_session_or_env(f):
                 g.credentials = session_data.credentials
                 return f(*args, **kwargs)
 
-        # Fallback to container SDK (for tests and backward compatibility)
+        # Fallback to container SDK ONLY in test mode
         from flask import current_app
 
-        if "dgcommander" in current_app.extensions:
+        # Check if test_mode is enabled
+        config = g.get("config")
+        if config and config.test_mode and "dgcommander" in current_app.extensions:
             services = current_app.extensions["dgcommander"]
             g.sdk_client = services.catalog.sdk
             g.credentials = None  # No credentials when using container SDK
             return f(*args, **kwargs)
 
-        # No valid session or container SDK - reject
+        # No valid session and not in test mode - reject
         return (
             jsonify(
                 {
                     "code": "session_not_found",
-                    "message": "No session cookie found and no fallback SDK available",
+                    "message": "No session cookie found. Please configure S3 credentials in settings.",
                 }
             ),
             401,

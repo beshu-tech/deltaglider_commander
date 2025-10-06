@@ -32,7 +32,8 @@ DeltaGlider Commander uses a session-based authentication system with AWS creden
    - Sessions expire after configured timeout
 
 2. **Middleware** (`src/dgcommander/auth/middleware.py`)
-   - `require_session_or_env`: Validates session or falls back to environment variables
+   - `require_session`: Strict session validation (no fallback)
+   - `require_session_or_env`: Validates session or falls back to container SDK **only in test mode**
    - Injects `g.sdk_client` and `g.credentials` into request context
 
 ## Authentication Flow
@@ -105,5 +106,39 @@ DeltaGlider Commander uses a session-based authentication system with AWS creden
 
 ### Automated Testing
 - Unit tests mock localStorage and session endpoints
-- Integration tests use in-memory session store
+- Integration tests use in-memory session store with `test_mode=True`
 - E2E tests validate full authentication flow
+
+## Test Mode Configuration
+
+For automated testing, DeltaGlider Commander supports a **TEST_MODE** that enables container-level SDK fallback when no session is present.
+
+### Production vs Test Behavior
+
+**Production** (`test_mode=False`, default):
+- All API endpoints require valid session credentials
+- No fallback to container SDK
+- Returns 401 if no session cookie present
+
+**Test Mode** (`test_mode=True`):
+- Session credentials preferred
+- Falls back to container SDK if no session present
+- Allows tests to run without session management
+
+### Configuration
+
+```python
+# tests/conftest.py
+config = DGCommanderConfig(hmac_secret="test-secret", test_mode=True)
+```
+
+Or via environment variables:
+```bash
+export DGCOMM_TEST_MODE=true
+# or
+export TEST_MODE=true
+```
+
+### Security
+
+**CRITICAL**: Production deployments MUST NOT set `test_mode=True` or `TEST_MODE=true`. This would allow unauthenticated access if container SDK is configured.

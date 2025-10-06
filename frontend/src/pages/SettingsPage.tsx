@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { CredentialConfigForm } from "../features/auth/CredentialConfigForm";
 import { CredentialStorage } from "../services/credentialStorage";
-import { SessionManager } from "../services/sessionManager";
 
 export function SettingsPage() {
   const navigate = useNavigate();

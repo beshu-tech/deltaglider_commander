@@ -87,7 +87,7 @@ def sample_sdk() -> InMemoryDeltaGliderSDK:
 
 @pytest.fixture(scope="session")
 def app(sample_sdk: InMemoryDeltaGliderSDK):
-    config = DGCommanderConfig(hmac_secret="test-secret")
+    config = DGCommanderConfig(hmac_secret="test-secret", test_mode=True)
     services = build_services(config, sample_sdk)
     flask_app = create_app(config=config, services=services)
     flask_app.config.update(TESTING=True)

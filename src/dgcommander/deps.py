@@ -42,6 +42,7 @@ class DGCommanderConfig:
     objects_rate_window: float = 1.0
     session_max_size: int = 20
     session_idle_ttl: int = 1800
+    test_mode: bool = False
     s3: S3Config = field(default_factory=S3Config)
 
 
@@ -62,6 +63,7 @@ def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
     window = float(env.get("DGCOMM_OBJECT_RATE_WINDOW", "1.0"))
     session_max = int(env.get("DGCOMM_SESSION_MAX_SIZE", "20"))
     session_ttl = int(env.get("DGCOMM_SESSION_IDLE_TTL", "1800"))
+    test_mode = _coerce_bool(env.get("DGCOMM_TEST_MODE") or env.get("TEST_MODE"), default=False)
     s3 = S3Config(
         endpoint_url=env.get("DGCOMM_S3_ENDPOINT"),
         region_name=env.get("DGCOMM_S3_REGION"),
@@ -79,6 +81,7 @@ def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
         objects_rate_window=window,
         session_max_size=session_max,
         session_idle_ttl=session_ttl,
+        test_mode=test_mode,
         s3=s3,
     )
 

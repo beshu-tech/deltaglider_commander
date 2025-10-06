@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Moon, Settings, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { getEnv } from "../../lib/config/env";
 import { Button } from "../../lib/ui/Button";
 import { useTheme } from "../theme";
