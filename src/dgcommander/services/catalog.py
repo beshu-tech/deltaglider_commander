@@ -184,6 +184,7 @@ class CatalogService:
 
     def delete_object(self, bucket: str, key: str) -> None:
         import logging
+
         logger = logging.getLogger(__name__)
 
         try:
