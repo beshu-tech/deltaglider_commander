@@ -120,9 +120,6 @@ def create_app(
     # This ensures API routes are checked first before falling back to SPA routing
     @app.errorhandler(404)
     def spa_fallback(e):
-        # Get the request path
-        path = getattr(e, "description", "") or ""
-
         # If the request is for an API endpoint that doesn't exist, return JSON 404
         from flask import request as flask_request
 
