@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  VITE_API_URL: z.string().default(""),
   VITE_APP_NAME: z.string().min(1),
   VITE_POLL_MS: z.coerce.number().int().min(1000).max(60000).default(5000),
   VITE_ENABLE_UPLOADS: z
@@ -29,8 +28,28 @@ export function getEnv(): Env {
   return cachedEnv;
 }
 
+/**
+ * Get the API base URL based on runtime detection.
+ *
+ * - Development (localhost/127.0.0.1 on port 5173): Returns http://localhost:8000
+ * - Production (any other host): Returns empty string (relative URLs)
+ *
+ * This allows the same build to work in both development and production
+ * without environment-specific configuration.
+ */
 export function getApiUrl(): string {
-  return getEnv().VITE_API_URL.replace(/\/$/, "");
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+
+  // Development: Vite dev server on localhost:5173
+  const isLocalDevelopment =
+    (hostname === "localhost" || hostname === "127.0.0.1") && port === "5173";
+
+  return isLocalDevelopment ? "http://localhost:8000" : "";
 }
 
 export function getPollMs(): number {

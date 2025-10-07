@@ -22,17 +22,17 @@ DeltaGlider Commander provides a modern web interface for browsing and managing 
 ### Latest Version (Recommended)
 
 ```bash
-docker run -p 8000:8000 \
-  -e DGCOMM_HMAC_SECRET=$(openssl rand -hex 32) \
+docker run -d -p 8000:8000 \
+  -e DGCOMM_HMAC_SECRET=beshutech \
   beshultd/deltaglider_commander:latest
 ```
 
 ### Specific Version
 
 ```bash
-docker run -p 8000:8000 \
-  -e DGCOMM_HMAC_SECRET=$(openssl rand -hex 32) \
-  beshultd/deltaglider_commander:0.1.2
+docker run -d -p 8000:8000 \
+  -e DGCOMM_HMAC_SECRET=beshutech \
+  beshultd/deltaglider_commander:1.0.1
 ```
 
 Access the web UI at `http://localhost:8000` and navigate to Settings to configure your S3/AWS credentials.
@@ -105,7 +105,8 @@ DeltaGlider Commander works with MinIO and other S3-compatible storage services.
 ## Available Tags
 
 - `latest` - Most recent stable release
-- `0.1.2`, `0.1` - Specific version tags
+- `1.0.1`, `1.0` - Latest stable version with environment config improvements
+- `0.1.8`, `0.1` - Previous stable versions
 - Semantic versioning follows `MAJOR.MINOR.PATCH`
 
 ## API Endpoints
@@ -127,23 +128,27 @@ DeltaGlider Commander works with MinIO and other S3-compatible storage services.
 - All temporary files use secure system temp directories
 - Security scanning with Bandit is part of the CI/CD pipeline
 
-## What's New in v0.1.2
+## What's New in v1.0.1
 
-### Performance Improvements
-- ⚡ Optimized metadata retrieval using `list_objects` instead of `get_object`
-- 🚀 Quick-mode listing for faster bucket browsing
-- 📊 Better error handling and navigation edge cases
+### Smart Runtime Configuration
+- 🎯 **Runtime API URL Detection** - Frontend automatically detects localhost:5173 vs production environment
+- ✨ **No Build-Time Configuration** - Same build works everywhere, no environment-specific builds needed
+- 🚀 **Zero Configuration Deployment** - Build once, deploy anywhere - frontend adapts automatically
 
-### Security & Quality
-- 🛡️ Security hardening with Bandit scanning
-- 🔒 Secure temporary directory handling
-- ✅ Comprehensive CI/CD pipeline with quality gates
-- 📝 Full type checking with mypy
+### Backend Enhancements
+- 🔒 **TEST_MODE Gating** - Container SDK initialization properly gated for test environments only
+- ✅ **Fixed SDK Credential Passing** - Proper boto3 client configuration with explicit credentials
+- 🧹 **Code Cleanup** - Removed unused imports and Docker environment variables
 
-### Infrastructure
-- 🐳 Multi-stage Docker builds with optimized caching
-- 🔄 Automated Docker Hub publishing on version tags
-- 🧪 Integration testing with MinIO in CI pipeline
+### Frontend Improvements
+- 🧠 **Smart Environment Detection** - Uses `window.location.hostname` and `port` to determine API URL at runtime
+- ⚡ **Universal Build** - One build works in development (localhost:5173) and production (any host)
+- 🗑️ **Simplified Configuration** - Removed `.env` complexity, minimal `.env.local` for optional overrides
+
+### Documentation
+- 📚 **Updated Development Guide** - Clear explanation of runtime detection approach
+- 🔍 **Simplified Setup** - No more environment-specific configuration hassles
+- 🚀 **Deployment Clarity** - Build once, works everywhere philosophy
 
 ## Links
 

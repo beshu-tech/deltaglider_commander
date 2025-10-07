@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from .jobs.indexer import SavingsJobRunner
 from .middleware.rate_limit import FixedWindowRateLimiter, RateLimiterMiddleware
+from .sdk.adapters.memory import InMemoryDeltaGliderSDK
 from .services.catalog import CatalogService
 from .services.deltaglider import DeltaGliderSDK, S3DeltaGliderSDK, S3Settings
 from .services.downloads import DownloadService
@@ -88,7 +89,9 @@ def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
 
 def build_services(config: DGCommanderConfig, sdk: DeltaGliderSDK | None = None) -> ServiceContainer:
     if sdk is None:
-        sdk = build_default_sdk(config)
+        # In production (non-TEST_MODE), use an empty stub SDK
+        # The actual SDK is created per-request from session credentials
+        sdk = InMemoryDeltaGliderSDK(buckets=[], objects={}, blobs={})
     caches = build_cache_registry()
     catalog = CatalogService(sdk=sdk, caches=caches)
     downloads = DownloadService(sdk=sdk, secret_key=config.hmac_secret, ttl_seconds=config.download_token_ttl)

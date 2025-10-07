@@ -47,7 +47,10 @@ def create_app(
 
     if services is None:
         if sdk is None:
-            sdk = build_default_sdk(cfg)
+            # Only initialize container-level SDK in TEST_MODE
+            # In production, SDK is created per-session from user credentials
+            if cfg.test_mode:
+                sdk = build_default_sdk(cfg)
         services = build_services(cfg, sdk)
     else:
         # When services are provided directly (e.g., in tests), extract SDK if available

@@ -10,7 +10,7 @@
 #   make run          Run development servers
 #   make clean        Clean build artifacts
 
-.PHONY: help install test lint format ci run clean backend-test frontend-test types docker
+.PHONY: help install test lint format ci run clean backend-test frontend-test build-static types docker
 
 # Default target
 help:
@@ -20,6 +20,7 @@ help:
 	@echo "make test         - Run all tests"
 	@echo "make lint         - Run all linters"
 	@echo "make format       - Format all code"
+	@echo "make build-static - Build frontend and copy to Flask static"
 	@echo "make ci           - Run full CI suite"
 	@echo "make run          - Run development servers"
 	@echo "make docker       - Build and run with Docker"
@@ -43,6 +44,15 @@ backend-test:
 frontend-test:
 	@echo "🧪 Running frontend tests..."
 	cd frontend && pnpm test --run
+
+# Build frontend and copy to static folder
+build-static:
+	@echo "🏗️  Building frontend..."
+	cd frontend && pnpm build
+	@echo "📦 Copying frontend build to Flask static folder..."
+	rm -rf src/dgcommander/static/*
+	cp -r frontend/dist/* src/dgcommander/static/
+	@echo "✅ Frontend files copied to static folder"
 
 # Run linters
 lint:

@@ -10,8 +10,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import BinaryIO
 
-from deltaglider.client import create_client
-
 from ...util.types import FileMetadata, UploadSummary
 from ..models import BucketSnapshot, LogicalObject, ObjectListing
 
@@ -54,22 +52,68 @@ class S3DeltaGliderSDK:
         self._settings = settings
         self._region = settings.region_name or "us-east-1"
 
-        # Create deltaglider client with credentials passed directly (deltaglider 4.2.0+)
+        # Create boto3 S3 client with explicit credentials
         # This avoids environment variable pollution and supports multi-user scenarios
-        self._client = create_client(
+        import boto3
+
+        self._boto3_client = boto3.client(
+            "s3",
             endpoint_url=settings.endpoint_url,
-            cache_dir=settings.cache_dir or os.path.join(tempfile.gettempdir(), "dgcommander-cache"),
             aws_access_key_id=settings.access_key_id,
             aws_secret_access_key=settings.secret_access_key,
             aws_session_token=settings.session_token,
             region_name=settings.region_name,
+            config=boto3.session.Config(s3={"addressing_style": settings.addressing_style}),
+            verify=settings.verify,
         )
+
+        # Create DeltaGlider storage adapter with pre-configured boto3 client
+        from deltaglider.adapters import S3StorageAdapter
+
+        storage_adapter = S3StorageAdapter(client=self._boto3_client, endpoint_url=settings.endpoint_url)
+
+        # Create DeltaGlider client using the custom storage adapter
+        from pathlib import Path
+
+        from deltaglider.adapters import (
+            FsCacheAdapter,
+            NoopMetricsAdapter,
+            Sha256Adapter,
+            StdLoggerAdapter,
+            UtcClockAdapter,
+            XdeltaAdapter,
+        )
+        from deltaglider.client import DeltaGliderClient
+        from deltaglider.core.service import DeltaService
+
+        cache_dir = settings.cache_dir or os.path.join(tempfile.gettempdir(), "dgcommander-cache")
+
+        hasher = Sha256Adapter()
+        diff = XdeltaAdapter()
+        cache = FsCacheAdapter(Path(cache_dir), hasher)
+        clock = UtcClockAdapter()
+        logger = StdLoggerAdapter(level="INFO")
+        metrics = NoopMetricsAdapter()
+
+        service = DeltaService(
+            storage=storage_adapter,
+            diff=diff,
+            hasher=hasher,
+            cache=cache,
+            clock=clock,
+            logger=logger,
+            metrics=metrics,
+            tool_version="dgcommander/0.1.0",
+            max_ratio=0.5,
+        )
+
+        self._client = DeltaGliderClient(service, settings.endpoint_url)
 
     # -- public API -----------------------------------------------------
 
     def list_buckets(self, compute_stats: bool = False) -> Iterable[BucketSnapshot]:
-        # Use deltaglider client's list_buckets method
-        response = self._client.list_buckets()  # type: ignore[attr-defined]
+        # Use boto3 client for bucket listing
+        response = self._boto3_client.list_buckets()
         buckets: list[BucketSnapshot] = []
         for bucket in response.get("Buckets", []):
             name = bucket["Name"]

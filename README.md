@@ -32,29 +32,93 @@ DeltaGlider Commander is a Flask-based backend service with a React frontend tha
 ### Prerequisites
 - Python 3.8+
 - Node.js 18+
+- pnpm (for frontend package management)
 - Docker and Docker Compose (for local development)
 
-### Backend Development
+### Development Setup
 
-Create a virtual environment, install dependencies, and run tests:
+#### Backend Development
+
+Create a virtual environment and install dependencies:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .[dev]
-pytest
 ```
 
-### Frontend Development
+Start the Flask development server:
+
+```bash
+# With TEST_MODE for using test SDK
+DGCOMM_HMAC_SECRET=beshutech TEST_MODE=true flask --app src/dgcommander/app.py run --debug --host 0.0.0.0 --port 8000
+
+# Production mode (requires session credentials)
+DGCOMM_HMAC_SECRET=beshutech flask --app src/dgcommander/app.py run --debug --host 0.0.0.0 --port 8000
+```
+
+Run tests:
+
+```bash
+pytest
+pytest tests/test_buckets_api.py  # Run specific test file
+pytest -k test_name               # Run specific test
+```
+
+#### Frontend Development
+
+The frontend uses **runtime API URL detection** - no environment-specific configuration needed!
 
 ```bash
 cd frontend
 pnpm install
-pnpm dev          # Start dev server (http://localhost:5173)
+
+# Development server
+pnpm dev          # Start dev server at http://localhost:5173
+
+# Production build
 pnpm build        # Build for production
+pnpm preview      # Preview production build
+
+# Code quality
 pnpm typecheck    # TypeScript type checking
 pnpm lint         # Run ESLint
+pnpm test         # Run tests with Vitest
+pnpm format       # Check Prettier formatting
 ```
+
+#### Smart API URL Detection
+
+The frontend automatically detects its environment at **runtime**:
+- **Development** (localhost:5173): API calls go to `http://localhost:8000`
+- **Production** (any other host): API calls use relative URLs (`/api/*`)
+
+This means:
+- ✅ **Same build works everywhere** - no environment-specific builds needed
+- ✅ **No configuration hassle** - works in dev and production automatically
+- ✅ **Simple deployment** - just build once and deploy anywhere
+
+The magic happens in `src/lib/config/env.ts` which detects `window.location.hostname` and `window.location.port` at runtime.
+
+#### Full Stack Development
+
+Start both backend and frontend for local development:
+
+```bash
+# Terminal 1: Backend
+source .venv/bin/activate
+DGCOMM_HMAC_SECRET=beshutech flask --app src/dgcommander/app.py run --debug --host 0.0.0.0 --port 8000
+
+# Terminal 2: Frontend
+cd frontend
+pnpm dev
+```
+
+Then:
+1. Open http://localhost:5173 in your browser
+2. Navigate to Settings
+3. Enter your S3/AWS credentials
+4. Start browsing your S3 buckets!
 
 ### Local Development with Docker
 
@@ -79,15 +143,18 @@ Backend uses `DGCOMM_` prefixed environment variables:
 
 - `DGCOMM_HMAC_SECRET`: Secret for download token signing (required)
 - `DGCOMM_CACHE_DIR`: Directory for delta cache operations (optional)
+- `TEST_MODE`: Enable test SDK initialization (development only)
 
 **Note**: S3 credentials are no longer configured via environment variables. Instead, users provide their AWS/S3 credentials through the web UI at runtime, which are stored in the browser's session storage and passed to the backend via session cookies.
 
 ### Frontend
-Frontend uses `VITE_` prefixed variables in `.env.local`:
+Frontend uses `VITE_` prefixed variables (optional, with sensible defaults):
 
-- `VITE_API_URL`: Backend API URL
-- `VITE_ENABLE_UPLOADS`: Enable upload functionality
-- `VITE_POLL_MS`: Polling interval for updates
+- `VITE_APP_NAME`: Application name (default: "DeltaGlider UI")
+- `VITE_ENABLE_UPLOADS`: Enable upload functionality (default: false)
+- `VITE_POLL_MS`: Polling interval for updates (default: 5000ms)
+
+**Note**: API URL is automatically detected at runtime - no configuration needed!
 
 ## API Endpoints
 
@@ -118,21 +185,16 @@ Frontend uses `VITE_` prefixed variables in `.env.local`:
 Pre-built Docker images are available on Docker Hub:
 
 ```bash
-# Pull the latest version
-docker pull beshultd/deltaglider_commander:latest
+# Run with Docker (recommended for quick start)
+docker run -d -p 8000:8000 \
+  -e DGCOMM_HMAC_SECRET=beshutech \
+  beshultd/deltaglider_commander
 
-# Or pull a specific version
-docker pull beshultd/deltaglider_commander:0.1.2
-
-# Copy env.example to .env and configure required settings
-cp env.example .env
-# Edit .env with your HMAC secret and other optional values
-
-# Run with docker-compose
+# Or with docker-compose for production
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-After starting the application, navigate to the Settings page in the web UI to configure your S3/AWS credentials. These credentials are stored in your browser's session storage and used for all API requests.
+Access the web UI at `http://localhost:8000` and navigate to Settings to configure your S3/AWS credentials. These credentials are stored in your browser's session storage and used for all API requests.
 
 ### Building Your Own Image
 
@@ -141,14 +203,19 @@ After starting the application, navigate to the Settings page in the web UI to c
 docker build -t dgcommander .
 
 # Run with required environment variables
-docker run -p 8000:8000 \
-  -e DGCOMM_HMAC_SECRET=your-hmac-secret \
+docker run -d -p 8000:8000 \
+  -e DGCOMM_HMAC_SECRET=beshutech \
   dgcommander
 ```
 
 **Note**: S3 credentials are no longer passed as environment variables. Configure them through the web UI after starting the application.
 
-## Recent Improvements (v0.1.2)
+## Recent Improvements (v0.1.0)
+
+### Security Enhancements
+- **TEST_MODE Gating**: Container SDK fallback now properly gated for test environments only
+- **Production Security**: Strict session-based authentication enforcement in production
+- **Session Authentication**: All API endpoints require valid session credentials in production
 
 ### Performance Enhancements
 - **Fast Metadata Retrieval**: Optimized `get_metadata` endpoint using `list_objects` instead of `get_object`
