@@ -143,6 +143,7 @@ Backend uses `DGCOMM_` prefixed environment variables:
 
 - `DGCOMM_HMAC_SECRET`: Secret for download token signing (required)
 - `DGCOMM_CACHE_DIR`: Directory for delta cache operations (optional)
+- `CACHE_ENABLED`: Toggle in-process request caches (default: `true`; set to `false` to disable caching)
 - `TEST_MODE`: Enable test SDK initialization (development only)
 
 **Note**: S3 credentials are no longer configured via environment variables. Instead, users provide their AWS/S3 credentials through the web UI at runtime, which are stored in the browser's session storage and passed to the backend via session cookies.

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import functools
+import os
 import time
 from collections.abc import Callable
 from typing import TypeVar
 
-from flask import jsonify, request
+from flask import g, has_request_context, jsonify, request
 from pydantic import BaseModel, ValidationError
 
 from ..contracts.base import ErrorDetail, ErrorResponse
@@ -139,12 +140,22 @@ def with_timing(metric_name: str):
 def cached(ttl_seconds: int = 300):
     """Simple caching decorator for functions."""
 
+    def _is_cache_enabled() -> bool:
+        if has_request_context():
+            config = getattr(g, "config", None)
+            if config is not None and hasattr(config, "cache_enabled"):
+                return bool(config.cache_enabled)
+        env_value = os.getenv("CACHE_ENABLED", "true").strip().lower()
+        return env_value not in {"0", "false", "no", "off"}
+
     def decorator(func: Callable) -> Callable:
         cache = {}
         cache_times = {}
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            if not _is_cache_enabled():
+                return func(*args, **kwargs)
             # Create cache key from args and kwargs
             cache_key = str(args) + str(sorted(kwargs.items()))
 

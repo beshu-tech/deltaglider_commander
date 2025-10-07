@@ -3,6 +3,8 @@
 #
 # Required environment variables (must be provided at runtime):
 #   DGCOMM_HMAC_SECRET - Secret for signing download tokens (required)
+# Optional environment variables:
+#   CACHE_ENABLED - Set to "false" to bypass in-process caches during debugging
 #
 # S3/AWS credentials are configured through the web UI at runtime,
 # not via environment variables. See /settings in the application.
@@ -40,5 +42,6 @@ ENV DGCOMM_CACHE_DIR="/tmp/dgcommander-cache"
 ENV DGCOMM_OBJECT_RATE_LIMIT="10"
 ENV DGCOMM_OBJECT_RATE_WINDOW="1.0"
 ENV DGCOMM_DOWNLOAD_TTL="300"
+ENV CACHE_ENABLED="true"
 
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "dgcommander.app:create_app()", "--worker-class", "gthread", "--threads", "4"]
