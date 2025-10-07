@@ -34,8 +34,7 @@ def create_app(
 ) -> Flask:
     app = Flask(
         "dgcommander",
-        static_folder=str(Path(__file__).parent / "static"),
-        static_url_path="/",
+        static_folder=None,  # Disable automatic static file handling
     )
 
     # Configure logging
@@ -98,7 +97,13 @@ def create_app(
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    static_dir = Path(app.static_folder or "")
+    # Define static directory explicitly
+    static_dir = Path(__file__).parent / "static"
+
+    # Serve static assets (CSS, JS, etc.)
+    @app.route("/assets/<path:filename>")
+    def serve_assets(filename):
+        return send_from_directory(static_dir / "assets", filename)
 
     @app.get("/")
     def root():
@@ -107,6 +112,34 @@ def create_app(
             return send_from_directory(static_dir, "index.html")
         return app.response_class(
             response='{"status":  "ok", "message": "Deltaglider Commander backend"}',
+            status=200,
+            mimetype="application/json",
+        )
+
+    # SPA fallback using 404 error handler
+    # This ensures API routes are checked first before falling back to SPA routing
+    @app.errorhandler(404)
+    def spa_fallback(e):
+        # Get the request path
+        path = getattr(e, 'description', '') or ''
+
+        # If the request is for an API endpoint that doesn't exist, return JSON 404
+        from flask import request as flask_request
+        if flask_request.path.startswith('/api/'):
+            return app.response_class(
+                response='{"error": {"code": "not_found", "message": "Route not found"}}',
+                status=404,
+                mimetype="application/json",
+            )
+
+        # For all other 404s (SPA routes), serve index.html for client-side routing
+        index_path = static_dir / "index.html"
+        if index_path.exists():
+            return send_from_directory(static_dir, "index.html")
+
+        # Fallback if no index.html
+        return app.response_class(
+            response='{"status": "ok", "message": "Deltaglider Commander backend"}',
             status=200,
             mimetype="application/json",
         )
