@@ -32,7 +32,7 @@ docker run -d -p 8000:8000 \
 ```bash
 docker run -d -p 8000:8000 \
   -e DGCOMM_HMAC_SECRET=beshutech \
-  beshultd/deltaglider_commander:1.0.1
+  beshultd/deltaglider_commander:1.0.2
 ```
 
 Access the web UI at `http://localhost:8000` and navigate to Settings to configure your S3/AWS credentials.
@@ -105,7 +105,7 @@ DeltaGlider Commander works with MinIO and other S3-compatible storage services.
 ## Available Tags
 
 - `latest` - Most recent stable release
-- `1.0.1`, `1.0` - Latest stable version with environment config improvements
+- `1.0.2`, `1.0` - Latest stable version with runtime API URL detection
 - `0.1.8`, `0.1` - Previous stable versions
 - Semantic versioning follows `MAJOR.MINOR.PATCH`
 
@@ -128,7 +128,7 @@ DeltaGlider Commander works with MinIO and other S3-compatible storage services.
 - All temporary files use secure system temp directories
 - Security scanning with Bandit is part of the CI/CD pipeline
 
-## What's New in v1.0.1
+## What's New in v1.0.2
 
 ### Smart Runtime Configuration
 - 🎯 **Runtime API URL Detection** - Frontend automatically detects localhost:5173 vs production environment
