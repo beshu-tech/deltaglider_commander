@@ -25,6 +25,40 @@ class S3AccessDeniedError(Exception):
     pass
 
 
+def _is_secure_request(req) -> bool:
+    """Return True when the originating request should be treated as HTTPS."""
+
+    if req.is_secure:
+        return True
+
+    forwarded_proto = req.headers.get("X-Forwarded-Proto")
+    if forwarded_proto:
+        proto = forwarded_proto.split(",")[0].strip().lower()
+        if proto == "https":
+            return True
+
+    forwarded_ssl = req.headers.get("X-Forwarded-Ssl")
+    if forwarded_ssl and forwarded_ssl.strip().lower() in {"on", "1", "true"}:
+        return True
+
+    forwarded_scheme = req.headers.get("X-Forwarded-Scheme")
+    if forwarded_scheme:
+        scheme = forwarded_scheme.split(",")[0].strip().lower()
+        if scheme == "https":
+            return True
+
+    forwarded = req.headers.get("Forwarded")
+    if forwarded:
+        for part in forwarded.split(","):
+            for segment in part.split(";"):
+                segment = segment.strip()
+                if segment.lower().startswith("proto="):
+                    if segment.split("=", 1)[1].strip().lower() == "https":
+                        return True
+
+    return False
+
+
 def validate_credentials(credentials: dict) -> None:
     """
     Validate AWS credentials by attempting to list buckets.
@@ -165,7 +199,7 @@ def create_session():
             "session_id",
             session_id,
             httponly=True,
-            secure=True,  # HTTPS only in production
+            secure=_is_secure_request(request),
             samesite="Lax",
             max_age=g.config.session_idle_ttl if hasattr(g.config, "session_idle_ttl") else 1800,
         )
@@ -209,7 +243,14 @@ def destroy_session():
     session_store.delete(session_id)
 
     response = jsonify({"message": "Session destroyed"})
-    response.set_cookie("session_id", "", expires=0)  # Clear cookie
+    response.set_cookie(
+        "session_id",
+        "",
+        expires=0,
+        httponly=True,
+        secure=_is_secure_request(request),
+        samesite="Lax",
+    )
 
     return response, 204
 
