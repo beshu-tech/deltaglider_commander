@@ -32,7 +32,7 @@ docker run -d -p 8000:8000 \
 ```bash
 docker run -d -p 8000:8000 \
   -e DGCOMM_HMAC_SECRET=beshutech \
-  beshultd/deltaglider_commander:1.0.2
+  beshultd/deltaglider_commander:1.0.3
 ```
 
 Access the web UI at `http://localhost:8000` and navigate to Settings to configure your S3/AWS credentials.
@@ -127,6 +127,23 @@ DeltaGlider Commander works with MinIO and other S3-compatible storage services.
 - Session credentials are never persisted to disk on the backend
 - All temporary files use secure system temp directories
 - Security scanning with Bandit is part of the CI/CD pipeline
+
+## What's New in v1.0.3
+
+### Critical Flask Routing Fix
+- 🐛 **Fixed API Routing Conflict** - Resolved Flask static file handler intercepting `/api/objects/` requests
+- 🔧 **Improved Static File Handling** - Disabled automatic static file handling to prevent API route conflicts
+- ✨ **Explicit Asset Routing** - Added dedicated `/assets/` route for serving frontend assets
+- 🚀 **SPA Routing Enhancement** - Replaced catch-all route with 404 error handler for proper SPA fallback
+
+### Technical Improvements
+- **Root Cause Resolution** - Flask's `static_url_path="/"` was causing all routes to be intercepted by static handler
+- **API Blueprint Priority** - Ensures API blueprints are processed before static file handling
+- **Better Error Handling** - Proper 404 responses for missing API endpoints vs SPA routes
+
+### Developer Experience
+- 🎯 **VSCode Debug Configuration** - Added `launch.json` for easy debugging with breakpoints
+- 📝 **Improved Documentation** - Clear explanation of Flask routing architecture
 
 ## What's New in v1.0.2
 

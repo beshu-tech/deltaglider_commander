@@ -1,0 +1,67 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Flask Backend",
+      "type": "python",
+      "request": "launch",
+      "module": "flask",
+      "env": {
+        "FLASK_APP": "src/dgcommander/app.py",
+        "FLASK_DEBUG": "1",
+        "DGCOMM_HMAC_SECRET": "beshutech"
+      },
+      "args": [
+        "run",
+        "--debug",
+        "--host", "0.0.0.0",
+        "--port", "8000"
+      ],
+      "jinja": true,
+      "justMyCode": false,
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python"
+    },
+    {
+      "name": "Debug Flask Backend (with debugpy)",
+      "type": "python",
+      "request": "launch",
+      "module": "debugpy",
+      "env": {
+        "FLASK_APP": "src/dgcommander/app.py",
+        "FLASK_DEBUG": "0",
+        "DGCOMM_HMAC_SECRET": "beshutech"
+      },
+      "args": [
+        "--listen", "0.0.0.0:5678",
+        "--wait-for-client",
+        "-m", "flask",
+        "run",
+        "--host", "0.0.0.0",
+        "--port", "8000"
+      ],
+      "jinja": true,
+      "justMyCode": false,
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python"
+    },
+    {
+      "name": "Attach to Flask",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "."
+        }
+      ],
+      "justMyCode": false
+    }
+  ]
+}
