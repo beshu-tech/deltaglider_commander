@@ -51,6 +51,10 @@ class DeltaGliderSDK(Protocol):
         """Delete a specific object."""
         ...
 
+    def delete_objects(self, bucket: str, keys: list[str]) -> None:
+        """Delete multiple objects."""
+        ...
+
     def upload(self, bucket: str, key: str, file_obj: BinaryIO) -> UploadSummary:
         """Upload a file to a bucket."""
         ...

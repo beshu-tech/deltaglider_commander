@@ -82,6 +82,63 @@ class InMemoryDeltaGliderSDK:
                 return
         raise KeyError(normalized)
 
+    def delete_objects(self, bucket: str, keys: list[str]) -> None:
+        """Delete multiple objects."""
+        objects = self._objects.get(bucket)
+        if objects is None:
+            return  # No objects to delete
+
+        # Track deleted bytes for bucket stats update
+        deleted_original_bytes = 0
+        deleted_stored_bytes = 0
+        deleted_count = 0
+
+        # Normalize all keys
+        normalized_keys = {key.lstrip("/") for key in keys}
+
+        # Delete objects and collect stats
+        remaining_objects = []
+        for obj in objects:
+            if obj.key in normalized_keys:
+                # Remove blob data
+                self._blobs.pop((bucket, obj.physical_key), None)
+                # Also check for the normalized key as physical key
+                self._blobs.pop((bucket, obj.key), None)
+
+                # Track stats
+                deleted_original_bytes += obj.original_bytes
+                deleted_stored_bytes += obj.stored_bytes
+                deleted_count += 1
+            else:
+                remaining_objects.append(obj)
+
+        # Update objects list
+        self._objects[bucket] = remaining_objects
+
+        # Update bucket stats if any objects were deleted
+        if deleted_count > 0:
+            for i, snapshot in enumerate(self._buckets):
+                if snapshot.name == bucket:
+                    # Recalculate savings percentage
+                    new_object_count = max(snapshot.object_count - deleted_count, 0)
+                    new_original_bytes = max(snapshot.original_bytes - deleted_original_bytes, 0)
+                    new_stored_bytes = max(snapshot.stored_bytes - deleted_stored_bytes, 0)
+
+                    savings_pct = 0.0
+                    if new_original_bytes > 0:
+                        savings_pct = (1.0 - (new_stored_bytes / new_original_bytes)) * 100.0
+
+                    updated = BucketSnapshot(
+                        name=snapshot.name,
+                        object_count=new_object_count,
+                        original_bytes=new_original_bytes,
+                        stored_bytes=new_stored_bytes,
+                        savings_pct=savings_pct,
+                        computed_at=datetime.now(UTC),
+                    )
+                    self._buckets[i] = updated
+                    break
+
     def upload(self, bucket: str, key: str, file_obj: BinaryIO) -> UploadSummary:
         normalized = key.lstrip("/")
         data = file_obj.read()

@@ -4,3 +4,4 @@
 /.vite
 coverage
 .DS_Store
+*.tsbuildinfo

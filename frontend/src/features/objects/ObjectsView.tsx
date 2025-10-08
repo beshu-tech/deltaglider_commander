@@ -1,7 +1,11 @@
 import { useCallback, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "../../app/toast";
-import { bulkDeleteObjects, fetchObjects } from "../../lib/api/endpoints";
+import {
+  bulkDeleteObjects,
+  BULK_DELETE_BATCH_SIZE,
+  fetchObjects,
+} from "../../lib/api/endpoints";
 import { Button } from "../../lib/ui/Button";
 import { EmptyState } from "../../lib/ui/EmptyState";
 import { downloadObject } from "../../lib/utils/download";
@@ -284,20 +288,52 @@ export function ObjectsView({
       return;
     }
 
-    toast.push({
+    const totalBatches = Math.ceil(keys.length / BULK_DELETE_BATCH_SIZE);
+
+    const progressToastId = toast.push({
       title: `Deleting ${keys.length} object${keys.length === 1 ? "" : "s"}...`,
+      description:
+        totalBatches > 1
+          ? `0/${keys.length} deleted · processing ${totalBatches} batch${
+              totalBatches === 1 ? "" : "es"
+            }`
+          : `0/${keys.length} deleted`,
       level: "info",
+      autoDismissMs: null,
     });
 
     try {
-      const result = await bulkDeleteObjects(bucket, keys);
+      let deletedSoFar = 0;
+      let errorsSoFar = 0;
+
+      const result = await bulkDeleteObjects(bucket, keys, {
+        onBatchComplete: ({ batchIndex, batchCount, deleted, errors }) => {
+          deletedSoFar += deleted.length;
+          errorsSoFar += errors.length;
+
+          const details = [
+            `${deletedSoFar}/${keys.length} deleted`,
+            `batch ${batchIndex + 1}/${batchCount}`,
+          ];
+          if (errorsSoFar > 0) {
+            details.push(`${errorsSoFar} failed`);
+          }
+
+          toast.update(progressToastId, {
+            description: details.join(" · "),
+            level: errorsSoFar > 0 ? "error" : "info",
+            autoDismissMs: null,
+          });
+        },
+      });
 
       if (result.total_errors > 0) {
         // Show summary of partial success
-        toast.push({
+        toast.update(progressToastId, {
           title: "Delete completed with errors",
           description: `${result.total_deleted} deleted, ${result.total_errors} failed`,
           level: "error",
+          autoDismissMs: 7000,
         });
 
         // Show first few error details
@@ -309,17 +345,21 @@ export function ObjectsView({
           });
         });
       } else {
-        toast.push({
+        toast.update(progressToastId, {
           title: "Delete successful",
-          description: `${result.total_deleted} object${result.total_deleted === 1 ? "" : "s"} deleted`,
+          description: `${result.total_deleted} object${
+            result.total_deleted === 1 ? "" : "s"
+          } deleted`,
           level: "success",
+          autoDismissMs: 3000,
         });
       }
     } catch (error) {
-      toast.push({
+      toast.update(progressToastId, {
         title: "Delete failed",
         description: error instanceof Error ? error.message : String(error),
         level: "error",
+        autoDismissMs: 7000,
       });
     }
 

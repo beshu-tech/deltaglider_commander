@@ -272,6 +272,10 @@ class S3DeltaGliderSDK:
         # Use deltaglider client's delete_object - it handles physical file cleanup
         self._client.delete_object(Bucket=bucket, Key=normalized)
 
+    def delete_objects(self, bucket: str, keys: list[str]) -> None:
+        normalized_keys = [self._normalize_key(key) for key in keys]
+        self._client.delete_objects(Bucket=bucket, Delete={"Objects": [{"Key": key} for key in normalized_keys]})
+
     def upload(self, bucket: str, key: str, file_obj: BinaryIO) -> UploadSummary:
         normalized = self._normalize_key(key)
         if not normalized:

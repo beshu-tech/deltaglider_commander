@@ -28,28 +28,32 @@ class ThreadSafeTTLCache(Generic[K, V]):
         if not self._enabled:
             return None
         with self._lock:
-            assert self._cache is not None
+            if self._cache is None:
+                raise RuntimeError("Cache is enabled but not initialized")
             return self._cache.get(key)
 
     def set(self, key: K, value: V) -> None:
         if not self._enabled:
             return
         with self._lock:
-            assert self._cache is not None
+            if self._cache is None:
+                raise RuntimeError("Cache is enabled but not initialized")
             self._cache[key] = value
 
     def pop(self, key: K) -> V | None:
         if not self._enabled:
             return None
         with self._lock:
-            assert self._cache is not None
+            if self._cache is None:
+                raise RuntimeError("Cache is enabled but not initialized")
             return self._cache.pop(key, None)
 
     def clear(self) -> None:
         if not self._enabled:
             return
         with self._lock:
-            assert self._cache is not None
+            if self._cache is None:
+                raise RuntimeError("Cache is enabled but not initialized")
             self._cache.clear()
 
     def expire(self) -> None:
@@ -57,14 +61,16 @@ class ThreadSafeTTLCache(Generic[K, V]):
         if not self._enabled:
             return
         with self._lock:
-            assert self._cache is not None
+            if self._cache is None:
+                raise RuntimeError("Cache is enabled but not initialized")
             self._cache.expire()
 
     def keys(self) -> Iterable[K]:
         if not self._enabled:
             return []
         with self._lock:
-            assert self._cache is not None
+            if self._cache is None:
+                raise RuntimeError("Cache is enabled but not initialized")
             return list(self._cache.keys())
 
     def stats(self) -> dict[str, Any]:
@@ -72,7 +78,8 @@ class ThreadSafeTTLCache(Generic[K, V]):
         if not self._enabled:
             return {"currsize": 0, "maxsize": self._maxsize, "ttl": self._ttl, "enabled": False}
         with self._lock:
-            assert self._cache is not None
+            if self._cache is None:
+                raise RuntimeError("Cache is enabled but not initialized")
             return {
                 "currsize": self._cache.currsize,
                 "maxsize": self._cache.maxsize,

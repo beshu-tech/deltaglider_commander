@@ -62,15 +62,68 @@ export interface BulkDeleteResponse {
   total_errors: number;
 }
 
+export const BULK_DELETE_BATCH_SIZE = 5;
+
+export interface BulkDeleteBatchEvent {
+  batchIndex: number;
+  batchCount: number;
+  keys: string[];
+  deleted: string[];
+  errors: Array<{ key: string; error: string }>;
+}
+
+export interface BulkDeleteOptions {
+  onBatchComplete?: (event: BulkDeleteBatchEvent) => void;
+}
+
 export async function bulkDeleteObjects(
   bucket: string,
   keys: string[],
+  options: BulkDeleteOptions = {},
 ): Promise<BulkDeleteResponse> {
-  const data = await apiWithAuth<BulkDeleteResponse>("/api/objects/bulk", {
-    method: "DELETE",
-    body: JSON.stringify({ bucket, keys }),
-  });
-  return data;
+  if (keys.length === 0) {
+    return {
+      deleted: [],
+      errors: [],
+      total_requested: 0,
+      total_deleted: 0,
+      total_errors: 0,
+    };
+  }
+
+  const aggregated: BulkDeleteResponse = {
+    deleted: [],
+    errors: [],
+    total_requested: keys.length,
+    total_deleted: 0,
+    total_errors: 0,
+  };
+
+  const batchCount = Math.ceil(keys.length / BULK_DELETE_BATCH_SIZE);
+
+  for (let index = 0; index < keys.length; index += BULK_DELETE_BATCH_SIZE) {
+    const batchKeys = keys.slice(index, index + BULK_DELETE_BATCH_SIZE);
+    const result = await apiWithAuth<BulkDeleteResponse>("/api/objects/bulk", {
+      method: "DELETE",
+      body: JSON.stringify({ bucket, keys: batchKeys }),
+    });
+
+    aggregated.deleted.push(...result.deleted);
+    aggregated.errors.push(...result.errors);
+
+    options.onBatchComplete?.({
+      batchIndex: Math.floor(index / BULK_DELETE_BATCH_SIZE),
+      batchCount,
+      keys: batchKeys,
+      deleted: result.deleted,
+      errors: result.errors,
+    });
+  }
+
+  aggregated.total_deleted = aggregated.deleted.length;
+  aggregated.total_errors = aggregated.errors.length;
+
+  return aggregated;
 }
 
 export async function fetchObjects(params: ObjectsParams): Promise<ObjectList> {

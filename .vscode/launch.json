@@ -62,6 +62,21 @@
         }
       ],
       "justMyCode": false
+    },
+    {
+      "name": "Check All (Ruff + Mypy)",
+      "type": "python",
+      "request": "launch",
+      "module": "ruff",
+      "args": [
+        "format",
+        "src",
+        "tests"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "postDebugTask": "mypy"
     }
   ]
 }

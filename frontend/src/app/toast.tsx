@@ -1,4 +1,13 @@
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Check, Info, X, AlertCircle } from "lucide-react";
 
 export type ToastLevel = "info" | "success" | "error";
@@ -8,24 +17,43 @@ export interface ToastMessage {
   title: string;
   description?: string;
   level: ToastLevel;
+  autoDismissMs?: number | null;
 }
 
 interface ToastContextValue {
-  push: (toast: Omit<ToastMessage, "id">) => void;
+  push: (toast: Omit<ToastMessage, "id">) => number;
+  update: (id: number, toast: Partial<Omit<ToastMessage, "id">>) => void;
+  remove: (id: number) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 let nextToastId = 1;
 
 // Singleton toast instance for use outside React components
-let globalToastPush: ((toast: Omit<ToastMessage, "id">) => void) | null = null;
+let globalToastPush: ((toast: Omit<ToastMessage, "id">) => number) | null = null;
+let globalToastUpdate: ToastContextValue["update"] | null = null;
+let globalToastRemove: ToastContextValue["remove"] | null = null;
 
 export const toast = {
-  push: (message: Omit<ToastMessage, "id">) => {
+  push: (message: Omit<ToastMessage, "id">): number => {
     if (globalToastPush) {
-      globalToastPush(message);
+      return globalToastPush(message);
+    }
+    console.warn("Toast not initialized yet, message:", message);
+    return -1;
+  },
+  update: (id: number, message: Partial<Omit<ToastMessage, "id">>) => {
+    if (globalToastUpdate) {
+      globalToastUpdate(id, message);
     } else {
-      console.warn("Toast not initialized yet, message:", message);
+      console.warn("Toast not initialized yet, update:", id, message);
+    }
+  },
+  remove: (id: number) => {
+    if (globalToastRemove) {
+      globalToastRemove(id);
+    } else {
+      console.warn("Toast not initialized yet, remove:", id);
     }
   },
 };
@@ -64,26 +92,90 @@ const levelStyles = {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const timersRef = useRef<Map<number, number>>(new Map());
 
   const remove = useCallback((id: number) => {
     setToasts((current) => current.filter((toast) => toast.id !== id));
+    const timers = timersRef.current;
+    const existing = timers.get(id);
+    if (existing !== undefined) {
+      window.clearTimeout(existing);
+      timers.delete(id);
+    }
   }, []);
 
-  const push = useCallback(
-    (toast: Omit<ToastMessage, "id">) => {
-      const id = nextToastId++;
-      setToasts((current) => [...current, { ...toast, id }]);
-      // Auto-dismiss success toasts faster, errors slower
-      const timeout = toast.level === "success" ? 3000 : toast.level === "error" ? 7000 : 5000;
-      window.setTimeout(() => remove(id), timeout);
+  const scheduleTimeout = useCallback(
+    (toastMessage: ToastMessage) => {
+      const timers = timersRef.current;
+      const currentTimeout = timers.get(toastMessage.id);
+      if (currentTimeout !== undefined) {
+        window.clearTimeout(currentTimeout);
+        timers.delete(toastMessage.id);
+      }
+
+      const defaultTimeout =
+        toastMessage.level === "success"
+          ? 3000
+          : toastMessage.level === "error"
+            ? 7000
+            : 5000;
+      const timeout =
+        toastMessage.autoDismissMs === undefined ? defaultTimeout : toastMessage.autoDismissMs;
+
+      if (timeout === null) {
+        return;
+      }
+
+      const handle = window.setTimeout(() => remove(toastMessage.id), timeout);
+      timers.set(toastMessage.id, handle);
     },
     [remove],
   );
 
-  // Initialize global toast instance
-  globalToastPush = push;
+  const push = useCallback(
+    (toast: Omit<ToastMessage, "id">) => {
+      const id = nextToastId++;
+      const toastWithId: ToastMessage = { ...toast, id };
+      setToasts((current) => [...current, toastWithId]);
+      scheduleTimeout(toastWithId);
+      return id;
+    },
+    [scheduleTimeout],
+  );
 
-  const value = useMemo(() => ({ push }), [push]);
+  const update = useCallback(
+    (id: number, updates: Partial<Omit<ToastMessage, "id">>) => {
+      let nextToast: ToastMessage | null = null;
+      setToasts((current) =>
+        current.map((existing) => {
+          if (existing.id !== id) {
+            return existing;
+          }
+          nextToast = { ...existing, ...updates, id };
+          return nextToast;
+        }),
+      );
+      if (nextToast) {
+        scheduleTimeout(nextToast);
+      }
+    },
+    [scheduleTimeout],
+  );
+
+  // Initialize global toast instance
+  useEffect(() => {
+    globalToastPush = push;
+    globalToastUpdate = update;
+    globalToastRemove = remove;
+    return () => {
+      globalToastPush = null;
+      globalToastUpdate = null;
+      globalToastRemove = null;
+    };
+  }, [push, update, remove]);
+
+  // Initialize global toast instance
+  const value = useMemo(() => ({ push, update, remove }), [push, update, remove]);
 
   return (
     <ToastContext.Provider value={value}>

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import BinaryIO
@@ -20,6 +21,8 @@ from ..util.types import (
     UploadSummary,
 )
 from .deltaglider import BucketSnapshot, DeltaGliderSDK, LogicalObject
+
+logger = logging.getLogger(__name__)
 
 
 def _sort_objects(objects: Iterable[LogicalObject], sort_order: ObjectSortOrder) -> list[LogicalObject]:
@@ -183,10 +186,6 @@ class CatalogService:
         return metadata
 
     def delete_object(self, bucket: str, key: str) -> None:
-        import logging
-
-        logger = logging.getLogger(__name__)
-
         try:
             self.sdk.delete_object(bucket, key)
         except APIError:
@@ -213,16 +212,25 @@ class CatalogService:
         deleted = []
         errors = []
 
-        for key in keys:
-            try:
-                self.delete_object(bucket, key)
-                deleted.append(key)
-            except NotFoundError:
+        try:
+            self.sdk.delete_objects(bucket, keys)
+            deleted = list(keys)
+        except NotFoundError:
+            # If NotFoundError is raised, we don't know which key(s) failed, so mark all as not found
+            for key in keys:
                 errors.append({"key": key, "error": "Object not found"})
-            except APIError as exc:
+        except APIError as exc:
+            for key in keys:
                 errors.append({"key": key, "error": str(exc)})
-            except Exception as exc:
+        except Exception as exc:
+            for key in keys:
+                logger.error(f"Exception deleting {bucket}/{key}: {type(exc).__name__}: {exc}", exc_info=True)
                 errors.append({"key": key, "error": _summarize_exception(exc)})
+
+        # Invalidate caches for all deleted keys
+        for key in deleted:
+            self.invalidate_object(bucket, key)
+        self.caches.savings_cache.pop(bucket)
 
         return deleted, errors
 
