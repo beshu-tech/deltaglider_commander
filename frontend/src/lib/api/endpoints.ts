@@ -207,6 +207,7 @@ export async function uploadObjects(params: UploadObjectsParams): Promise<Upload
   const data = await apiWithAuth<unknown>("/api/upload/", {
     method: "POST",
     body: formData,
+    timeoutMs: null, // Disable timeout for uploads (files can be large)
   });
   return uploadResponseSchema.parse(data);
 }
