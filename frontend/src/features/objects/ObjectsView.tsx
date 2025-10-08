@@ -1,11 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "../../app/toast";
-import {
-  bulkDeleteObjects,
-  BULK_DELETE_BATCH_SIZE,
-  fetchObjects,
-} from "../../lib/api/endpoints";
+import { bulkDeleteObjects, BULK_DELETE_BATCH_SIZE, fetchObjects } from "../../lib/api/endpoints";
 import { Button } from "../../lib/ui/Button";
 import { EmptyState } from "../../lib/ui/EmptyState";
 import { downloadObject } from "../../lib/utils/download";

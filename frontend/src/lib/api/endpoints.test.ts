@@ -6,11 +6,7 @@ vi.mock("./authInterceptor", () => ({
   apiWithAuth: (...args: unknown[]) => apiWithAuthMock(...args),
 }));
 
-import {
-  bulkDeleteObjects,
-  BULK_DELETE_BATCH_SIZE,
-  type BulkDeleteResponse,
-} from "./endpoints";
+import { bulkDeleteObjects, BULK_DELETE_BATCH_SIZE, type BulkDeleteResponse } from "./endpoints";
 
 describe("bulkDeleteObjects", () => {
   beforeEach(() => {

@@ -114,11 +114,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       }
 
       const defaultTimeout =
-        toastMessage.level === "success"
-          ? 3000
-          : toastMessage.level === "error"
-            ? 7000
-            : 5000;
+        toastMessage.level === "success" ? 3000 : toastMessage.level === "error" ? 7000 : 5000;
       const timeout =
         toastMessage.autoDismissMs === undefined ? defaultTimeout : toastMessage.autoDismissMs;
 
