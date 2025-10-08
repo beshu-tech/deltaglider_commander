@@ -41,6 +41,40 @@ def create_app(
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     app.logger.setLevel(logging.DEBUG)
 
+    # IMPORTANT: Unset AWS_* environment variables to prevent boto3/deltaglider from using them
+    # The app should ONLY use credentials provided via UI (passed as DGCOMM_S3_* or per-session)
+    aws_vars_to_clear = [
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_SESSION_TOKEN",
+        "AWS_DEFAULT_REGION",
+        "AWS_REGION",
+        "AWS_ENDPOINT_URL",
+        "AWS_PROFILE",
+    ]
+
+    print("=" * 80)
+    print("DGCOMMANDER STARTUP - ENVIRONMENT CLEANUP")
+    print("=" * 80)
+
+    # Show and clear AWS_* variables
+    for key in aws_vars_to_clear:
+        if key in os.environ:
+            print(f"  WARNING: Removing {key} from environment (value: {os.environ[key][:10]}...)")
+            del os.environ[key]
+
+    # Print DGCOMM_* variables (these are OK to use)
+    print("\nDGCOMM Configuration:")
+    for key, value in sorted(os.environ.items()):
+        if key.startswith("DGCOMM_") or key in ["FLASK_ENV", "FLASK_DEBUG", "PORT"]:
+            # Mask sensitive values
+            if "SECRET" in key or "PASSWORD" in key or "KEY" in key.upper():
+                display_value = f"{value[:8]}..." if value and len(value) > 8 else "***"
+            else:
+                display_value = value
+            print(f"  {key}={display_value}")
+    print("=" * 80)
+
     cfg = config or load_config()
     app.config["DGCOMM_CONFIG"] = cfg
 
