@@ -77,6 +77,17 @@
       "cwd": "${workspaceFolder}",
       "python": "${workspaceFolder}/.venv/bin/python",
       "postDebugTask": "mypy"
+    },
+    {
+      "name": "Check Frontend Format (pnpm)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "format"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/frontend"
     }
   ]
 }

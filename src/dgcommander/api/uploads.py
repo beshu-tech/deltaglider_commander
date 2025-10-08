@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import BinaryIO, cast
 
 from flask import Blueprint, Request, g, request
 from werkzeug.datastructures import FileStorage
@@ -112,7 +113,7 @@ def upload_objects():
         summary = catalog.upload_object(
             bucket=bucket,
             key=key,
-            file_obj=file_storage.stream,
+            file_obj=cast(BinaryIO, file_storage.stream),
             relative_path=relative_path,
         )
 

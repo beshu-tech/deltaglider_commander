@@ -93,7 +93,7 @@ no_implicit_optional = false
 warn_redundant_casts = true
 warn_unused_ignores = false
 warn_no_return = false
-check_untyped_defs = false
+check_untyped_defs = true
 ignore_missing_imports = true
 
 # Ignore files with known issues that don't affect core functionality
