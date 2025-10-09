@@ -91,7 +91,8 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
     try {
       setIsCopyingLink(true);
       const { download_token } = await prepareDownload(bucket, metadata.key);
-      const link = `${getApiUrl()}/api/download/${download_token}`;
+      const apiUrl = getApiUrl() || window.location.origin;
+      const link = `${apiUrl}/api/download/${download_token}`;
       await handleCopy(link, "link");
     } catch (error) {
       toast.push({ title: "Copy failed", description: String(error), level: "error" });
