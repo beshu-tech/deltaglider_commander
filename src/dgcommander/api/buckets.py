@@ -5,7 +5,7 @@ from __future__ import annotations
 from flask import Blueprint, request
 
 from ..auth.middleware import require_session_or_env
-from ..util.errors import APIError, NotFoundError, SDKError
+from ..util.errors import APIError, NotFoundError
 from ..util.json import json_response
 from . import get_container
 
@@ -16,27 +16,26 @@ bp = Blueprint("buckets", __name__, url_prefix="/api/buckets")
 @require_session_or_env
 def list_buckets():
     from flask import g
+
     from ..services.catalog import CatalogService
 
     # Use session SDK with catalog service that has cached stats
     sdk = g.sdk_client
     catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
 
-    try:
-        payload = []
-        # Use catalog service which checks cache for computed stats
-        for bucket_stats in catalog.list_buckets(compute_stats=False):
-            entry = {
-                "name": bucket_stats.name,
-                "object_count": bucket_stats.object_count,
-                "original_bytes": bucket_stats.original_bytes,
-                "stored_bytes": bucket_stats.stored_bytes,
-                "savings_pct": bucket_stats.savings_pct,
-            }
-            payload.append(entry)
-        return json_response({"buckets": payload})
-    except Exception as e:
-        raise SDKError("Unable to list DeltaGlider buckets", details={"reason": str(e)})
+    payload = []
+    # Use catalog service which checks cache for computed stats
+    # catalog.list_buckets() already handles exceptions and raises SDKError
+    for bucket_stats in catalog.list_buckets(compute_stats=False):
+        entry = {
+            "name": bucket_stats.name,
+            "object_count": bucket_stats.object_count,
+            "original_bytes": bucket_stats.original_bytes,
+            "stored_bytes": bucket_stats.stored_bytes,
+            "savings_pct": bucket_stats.savings_pct,
+        }
+        payload.append(entry)
+    return json_response({"buckets": payload})
 
 
 @bp.post("/")
@@ -63,6 +62,7 @@ def create_bucket():
 @require_session_or_env
 def compute_savings(bucket: str):
     import logging
+
     from flask import g
 
     logger = logging.getLogger(__name__)

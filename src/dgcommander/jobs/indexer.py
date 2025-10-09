@@ -5,10 +5,9 @@ from __future__ import annotations
 import threading
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
-from datetime import UTC, datetime
 
 from ..services.catalog import CatalogService
-from ..services.deltaglider import BucketSnapshot, DeltaGliderSDK
+from ..services.deltaglider import DeltaGliderSDK
 
 
 class SavingsJobRunner:
@@ -60,35 +59,17 @@ class SavingsJobRunner:
         logger.info(f"[JOB {task_id}] SDK type: {type(sdk).__name__}")
 
         try:
-            # Use recursive listing to get ALL objects (not just folders)
-            # Check if SDK has the recursive method (S3DeltaGliderSDK)
-            if hasattr(sdk, '_list_all_objects_recursive'):
-                logger.info(f"[JOB {task_id}] Using recursive listing method")
-                all_objects = list(sdk._list_all_objects_recursive(bucket))
-            else:
-                # Fallback for InMemoryDeltaGliderSDK in tests
-                logger.info(f"[JOB {task_id}] Using standard listing method (test mode)")
-                listing = sdk.list_objects(bucket, prefix="")
-                all_objects = listing.objects
+            # Use list_buckets with compute_stats=True to leverage get_bucket_stats API
+            logger.info(f"[JOB {task_id}] Computing bucket stats")
+            snapshots = list(sdk.list_buckets(compute_stats=True))
 
-            logger.info(f"[JOB {task_id}] Found {len(all_objects)} objects in bucket {bucket}")
+            # Find the snapshot for our bucket
+            snapshot = next((s for s in snapshots if s.name == bucket), None)
+            if not snapshot:
+                raise ValueError(f"Bucket {bucket} not found in list_buckets result")
 
-            original = sum(obj.original_bytes for obj in all_objects)
-            stored = sum(obj.stored_bytes for obj in all_objects)
-            object_count = len(all_objects)
-            computed_at = datetime.now(UTC)
-            savings_pct = 0.0 if original == 0 else (1.0 - (stored / original)) * 100.0
+            logger.info(f"[JOB {task_id}] Stats: objects={snapshot.object_count}, original={snapshot.original_bytes}, stored={snapshot.stored_bytes}, savings={snapshot.savings_pct:.2f}%")
 
-            logger.info(f"[JOB {task_id}] Stats: objects={object_count}, original={original}, stored={stored}, savings={savings_pct:.2f}%")
-
-            snapshot = BucketSnapshot(
-                name=bucket,
-                object_count=object_count,
-                original_bytes=original,
-                stored_bytes=stored,
-                savings_pct=savings_pct,
-                computed_at=computed_at,
-            )
             self._catalog.update_savings(bucket, snapshot)
             logger.info(f"[JOB {task_id}] Successfully updated cache for bucket {bucket}")
             return task_id

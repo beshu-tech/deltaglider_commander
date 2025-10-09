@@ -91,15 +91,15 @@ class S3DeltaGliderSDK:
         for bucket in response.get("Buckets", []):
             name = bucket["Name"]
             if compute_stats:
-                # Only compute expensive stats if explicitly requested
-                # List ALL objects recursively (no delimiter) to count everything
-                all_objects = list(self._list_all_objects_recursive(name))
-                original_total = sum(obj.original_bytes for obj in all_objects)
-                stored_total = sum(obj.stored_bytes for obj in all_objects)
+                # Use DeltaGlider's get_bucket_stats API with detailed_stats=True
+                # for accurate compression metrics (slower, adds HEAD calls)
+                stats = self._client.get_bucket_stats(name, detailed_stats=True)
+                original_total = stats.original_size
+                stored_total = stats.stored_size
                 savings_pct = 0.0
                 if original_total:
                     savings_pct = (1.0 - (stored_total / original_total)) * 100.0
-                object_count = len(all_objects)
+                object_count = stats.object_count
             else:
                 # Return placeholder stats for quick listing
                 original_total = 0
@@ -118,56 +118,6 @@ class S3DeltaGliderSDK:
                 )
             )
         return buckets
-
-    def _list_all_objects_recursive(self, bucket: str) -> Iterator[LogicalObject]:
-        """Recursively list all objects in a bucket (no delimiter, pagination-aware)."""
-        continuation_token = None
-        while True:
-            params = {
-                "Bucket": bucket,
-                "Prefix": "",
-                "MaxKeys": 1000,
-                "FetchMetadata": True,
-            }
-            if continuation_token:
-                params["ContinuationToken"] = continuation_token
-
-            response = self._client.list_objects(**params)
-
-            for item in response.get("Contents", []):
-                key = item["Key"]
-                size = item["Size"]
-                last_modified = item["LastModified"]
-                metadata = item.get("Metadata", {})
-
-                # DeltaGlider 5.0 provides delta metadata in Metadata dict as strings
-                is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
-                original_size = int(metadata.get("deltaglider-original-size", size))
-                stored_size = size
-
-                # Parse last_modified
-                if isinstance(last_modified, str):
-                    last_modified = datetime.fromisoformat(last_modified)
-                elif last_modified and last_modified.tzinfo is None:
-                    last_modified = last_modified.replace(tzinfo=UTC)
-                elif last_modified:
-                    last_modified = last_modified.astimezone(UTC)
-                else:
-                    last_modified = datetime.now(UTC)
-
-                yield LogicalObject(
-                    key=key,
-                    original_bytes=original_size,
-                    stored_bytes=stored_size,
-                    compressed=is_delta,
-                    modified=last_modified,
-                    physical_key=key,
-                )
-
-            # Check for pagination
-            if not response.get("IsTruncated", False):
-                break
-            continuation_token = response.get("NextContinuationToken")
 
     def create_bucket(self, name: str) -> None:
         # Use deltaglider client's create_bucket method
