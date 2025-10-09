@@ -15,6 +15,8 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: "../src/dgcommander/static",
+    emptyOutDir: true,
     sourcemap: true,
     target: "es2020",
   },

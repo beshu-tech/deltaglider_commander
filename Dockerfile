@@ -14,6 +14,27 @@
 #     -e DGCOMM_HMAC_SECRET=your-hmac-secret \
 #     beshultd/deltaglider_commander
 
+# Stage 1: Build frontend
+FROM node:20-slim AS frontend-builder
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /frontend
+
+# Copy frontend package files
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build frontend
+RUN pnpm build
+
+# Stage 2: Build Python backend
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -27,7 +48,9 @@ WORKDIR /app
 
 COPY pyproject.toml README.md /app/
 COPY src /app/src
-COPY frontend/dist /app/src/dgcommander/static
+
+# Copy built frontend from previous stage
+COPY --from=frontend-builder /frontend/dist /app/src/dgcommander/static
 
 RUN pip install --upgrade pip \
     && pip install .[server]

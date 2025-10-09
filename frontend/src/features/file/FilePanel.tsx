@@ -26,6 +26,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
 
   useEffect(() => {
     if (query.error) {
+      console.error("Could not load file", query.error);
       toast.push({
         title: "Could not load file",
         description: String(query.error),

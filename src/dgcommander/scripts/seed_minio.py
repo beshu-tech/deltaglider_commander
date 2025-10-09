@@ -92,9 +92,10 @@ def main() -> int:
             continue
         s3_url = f"s3://{bucket}/releases/"
         summary = client.upload(source_path, s3_url)
+        savings_percent = (1.0 - summary.delta_ratio) * 100.0 if summary.is_delta else 0.0
         print(
             f"Uploaded {name}: stored={summary.stored_size} original={summary.original_size} "
-            f"savings={summary.savings_percent:.2f}%",
+            f"savings={savings_percent:.2f}%",
         )
 
     return 0

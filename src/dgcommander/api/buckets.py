@@ -15,37 +15,23 @@ bp = Blueprint("buckets", __name__, url_prefix="/api/buckets")
 @bp.get("/")
 @require_session_or_env
 def list_buckets():
-    import logging
-
     from flask import g
+    from ..services.catalog import CatalogService
 
-    logger = logging.getLogger(__name__)
-
-    # Debug: Check what's in g
-    logger.info(f"g has sdk_client: {hasattr(g, 'sdk_client')}")
-    if hasattr(g, "sdk_client"):
-        logger.info(f"g.sdk_client type: {type(g.sdk_client).__name__}")
-        logger.info(f"g.sdk_client is None: {g.sdk_client is None}")
-        if hasattr(g.sdk_client, "_settings"):
-            logger.info(f"SDK endpoint: {g.sdk_client._settings.endpoint_url}")
-
-    # Use session SDK if available, otherwise fallback to container SDK
-    sdk = g.sdk_client if hasattr(g, "sdk_client") and g.sdk_client is not None else get_container().catalog.sdk
-
-    logger.info(f"Using SDK type: {type(sdk).__name__}")
-    if hasattr(sdk, "_settings"):
-        logger.info(f"SDK endpoint: {sdk._settings.endpoint_url}")
+    # Use session SDK with catalog service that has cached stats
+    sdk = g.sdk_client
+    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
 
     try:
         payload = []
-        # Use fast listing without expensive stats computation
-        for bucket in sdk.list_buckets(compute_stats=False):
+        # Use catalog service which checks cache for computed stats
+        for bucket_stats in catalog.list_buckets(compute_stats=False):
             entry = {
-                "name": bucket.name,
-                "object_count": bucket.object_count,
-                "original_bytes": bucket.original_bytes,
-                "stored_bytes": bucket.stored_bytes,
-                "savings_pct": bucket.savings_pct,
+                "name": bucket_stats.name,
+                "object_count": bucket_stats.object_count,
+                "original_bytes": bucket_stats.original_bytes,
+                "stored_bytes": bucket_stats.stored_bytes,
+                "savings_pct": bucket_stats.savings_pct,
             }
             payload.append(entry)
         return json_response({"buckets": payload})
@@ -76,17 +62,25 @@ def create_bucket():
 @bp.post("/<bucket>/compute-savings")
 @require_session_or_env
 def compute_savings(bucket: str):
+    import logging
     from flask import g
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"[COMPUTE-SAVINGS] Endpoint called for bucket: {bucket}")
 
     # Always use session SDK - no fallback to container
     sdk = g.sdk_client
+    logger.info(f"[COMPUTE-SAVINGS] SDK type: {type(sdk).__name__}")
 
     if not sdk.bucket_exists(bucket):
+        logger.error(f"[COMPUTE-SAVINGS] Bucket not found: {bucket}")
         raise NotFoundError("bucket", "bucket_not_found")
 
-    # Jobs still use container for now (could be refactored to use session SDK)
+    # Pass session SDK to job so it uses the correct credentials
     container = get_container()
-    task_id = container.jobs.enqueue(bucket)
+    logger.info(f"[COMPUTE-SAVINGS] Container jobs type: {type(container.jobs).__name__}")
+    task_id = container.jobs.enqueue(bucket, sdk=sdk)
+    logger.info(f"[COMPUTE-SAVINGS] Job enqueued with task_id: {task_id}")
     return json_response({"status": "accepted", "bucket": bucket, "task_id": task_id}, status=202)
 
 

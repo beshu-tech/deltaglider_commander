@@ -17,12 +17,11 @@ __pycache__/
 coverage.xml
 .venv/
 frontend/node_modules/
-frontend/src/
 frontend/test/
-frontend/*.json
-frontend/*.config.*
-frontend/*.html
-frontend/pnpm-lock.yaml
+frontend/.env.local
+frontend/.gitignore
+frontend/.prettierrc
+frontend/.eslintrc.cjs
 .DS_Store
 docker-compose.yml
 Dockerfile

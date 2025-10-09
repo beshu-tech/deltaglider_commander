@@ -52,8 +52,8 @@ class S3DeltaGliderSDK:
         self._settings = settings
         self._region = settings.region_name or "us-east-1"
 
-        # Create boto3 S3 client with explicit credentials
-        # This avoids environment variable pollution and supports multi-user scenarios
+        # Create boto3 S3 client with explicit credentials for bucket operations
+        # that are not yet fully abstracted by deltaglider
         import boto3
 
         self._boto3_client = boto3.client(
@@ -67,47 +67,20 @@ class S3DeltaGliderSDK:
             verify=settings.verify,
         )
 
-        # Create DeltaGlider storage adapter with pre-configured boto3 client
-        from deltaglider.adapters import S3StorageAdapter
-
-        storage_adapter = S3StorageAdapter(client=self._boto3_client, endpoint_url=settings.endpoint_url)
-
-        # Create DeltaGlider client using the custom storage adapter
-        from pathlib import Path
-
-        from deltaglider.adapters import (
-            FsCacheAdapter,
-            NoopMetricsAdapter,
-            Sha256Adapter,
-            StdLoggerAdapter,
-            UtcClockAdapter,
-            XdeltaAdapter,
-        )
-        from deltaglider.client import DeltaGliderClient
-        from deltaglider.core.service import DeltaService
+        # Create DeltaGlider client using the factory function (DeltaGlider 5.0+)
+        from deltaglider.client import create_client
 
         cache_dir = settings.cache_dir or os.path.join(tempfile.gettempdir(), "dgcommander-cache")
 
-        hasher = Sha256Adapter()
-        diff = XdeltaAdapter()
-        cache = FsCacheAdapter(Path(cache_dir), hasher)
-        clock = UtcClockAdapter()
-        logger = StdLoggerAdapter(level="INFO")
-        metrics = NoopMetricsAdapter()
-
-        service = DeltaService(
-            storage=storage_adapter,
-            diff=diff,
-            hasher=hasher,
-            cache=cache,
-            clock=clock,
-            logger=logger,
-            metrics=metrics,
-            tool_version="dgcommander/0.1.0",
-            max_ratio=0.5,
+        self._client = create_client(
+            endpoint_url=settings.endpoint_url,
+            aws_access_key_id=settings.access_key_id,
+            aws_secret_access_key=settings.secret_access_key,
+            aws_session_token=settings.session_token,
+            region_name=settings.region_name,
+            cache_dir=cache_dir,
+            log_level="INFO",
         )
-
-        self._client = DeltaGliderClient(service, settings.endpoint_url)
 
     # -- public API -----------------------------------------------------
 
@@ -119,13 +92,14 @@ class S3DeltaGliderSDK:
             name = bucket["Name"]
             if compute_stats:
                 # Only compute expensive stats if explicitly requested
-                listing = self.list_objects(name, prefix="")
-                original_total = sum(obj.original_bytes for obj in listing.objects)
-                stored_total = sum(obj.stored_bytes for obj in listing.objects)
+                # List ALL objects recursively (no delimiter) to count everything
+                all_objects = list(self._list_all_objects_recursive(name))
+                original_total = sum(obj.original_bytes for obj in all_objects)
+                stored_total = sum(obj.stored_bytes for obj in all_objects)
                 savings_pct = 0.0
                 if original_total:
                     savings_pct = (1.0 - (stored_total / original_total)) * 100.0
-                object_count = len(listing.objects)
+                object_count = len(all_objects)
             else:
                 # Return placeholder stats for quick listing
                 original_total = 0
@@ -144,6 +118,56 @@ class S3DeltaGliderSDK:
                 )
             )
         return buckets
+
+    def _list_all_objects_recursive(self, bucket: str) -> Iterator[LogicalObject]:
+        """Recursively list all objects in a bucket (no delimiter, pagination-aware)."""
+        continuation_token = None
+        while True:
+            params = {
+                "Bucket": bucket,
+                "Prefix": "",
+                "MaxKeys": 1000,
+                "FetchMetadata": True,
+            }
+            if continuation_token:
+                params["ContinuationToken"] = continuation_token
+
+            response = self._client.list_objects(**params)
+
+            for item in response.get("Contents", []):
+                key = item["Key"]
+                size = item["Size"]
+                last_modified = item["LastModified"]
+                metadata = item.get("Metadata", {})
+
+                # DeltaGlider 5.0 provides delta metadata in Metadata dict as strings
+                is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
+                original_size = int(metadata.get("deltaglider-original-size", size))
+                stored_size = size
+
+                # Parse last_modified
+                if isinstance(last_modified, str):
+                    last_modified = datetime.fromisoformat(last_modified)
+                elif last_modified and last_modified.tzinfo is None:
+                    last_modified = last_modified.replace(tzinfo=UTC)
+                elif last_modified:
+                    last_modified = last_modified.astimezone(UTC)
+                else:
+                    last_modified = datetime.now(UTC)
+
+                yield LogicalObject(
+                    key=key,
+                    original_bytes=original_size,
+                    stored_bytes=stored_size,
+                    compressed=is_delta,
+                    modified=last_modified,
+                    physical_key=key,
+                )
+
+            # Check for pagination
+            if not response.get("IsTruncated", False):
+                break
+            continuation_token = response.get("NextContinuationToken")
 
     def create_bucket(self, name: str) -> None:
         # Use deltaglider client's create_bucket method
@@ -190,15 +214,16 @@ class S3DeltaGliderSDK:
         )
 
         objects: list[LogicalObject] = []
-        for item in response.contents:
-            key = item.key
-            size = item.size
-            last_modified = item.last_modified
+        for item in response.get("Contents", []):
+            key = item["Key"]
+            size = item["Size"]
+            last_modified = item["LastModified"]
+            metadata = item.get("Metadata", {})
 
-            # deltaglider 4.1.0 provides delta metadata directly as attributes
-            original_size = item.original_size
-            stored_size = item.compressed_size if item.is_delta else size
-            compressed = item.is_delta
+            # DeltaGlider 5.0 provides delta metadata in Metadata dict as strings
+            is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
+            original_size = int(metadata.get("deltaglider-original-size", size))
+            stored_size = size  # Size is already the stored size
 
             # Parse last_modified from ISO string to datetime
             if isinstance(last_modified, str):
@@ -215,16 +240,16 @@ class S3DeltaGliderSDK:
                     key=key,
                     original_bytes=original_size,
                     stored_bytes=stored_size,
-                    compressed=compressed,
+                    compressed=is_delta,
                     modified=last_modified,
-                    physical_key=key,  # deltaglider 4.1.0 abstracts physical keys
+                    physical_key=key,  # deltaglider abstracts physical keys
                 )
             )
 
         # Extract common prefixes (folders) and filter out empty/root prefixes
         common_prefixes = [
             p["Prefix"]
-            for p in response.common_prefixes
+            for p in response.get("CommonPrefixes", [])
             if p["Prefix"] and p["Prefix"] != "/" and p["Prefix"] != normalized_prefix
         ]
 
