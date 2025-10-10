@@ -80,7 +80,7 @@ def upload_objects():
             else "No access key"
         )
 
-    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
+    catalog = CatalogService(sdk=sdk)
 
     bucket = request.form.get("bucket", "").strip()
     if not bucket:

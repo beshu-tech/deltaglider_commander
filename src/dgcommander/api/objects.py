@@ -5,7 +5,7 @@ from __future__ import annotations
 from flask import Blueprint, g, request
 
 from ..auth.middleware import require_session_or_env
-from ..common.decorators import api_endpoint, cached, with_timing
+from ..common.decorators import api_endpoint, with_timing
 from ..contracts.objects import (
     BulkDeleteRequest,
     BulkDeleteResponse,
@@ -27,14 +27,13 @@ bp = Blueprint("objects", __name__, url_prefix="/api/objects")
 @require_session_or_env
 @api_endpoint(request_model=ObjectListRequest, response_model=ObjectListResponse, validate_query=True)
 @with_timing("list_objects")
-@cached(ttl_seconds=30)
 def list_objects(query: ObjectListRequest):
     """List objects with automatic validation and serialization."""
     # Use session SDK
     sdk = g.sdk_client
 
     # Create catalog service with session SDK
-    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
+    catalog = CatalogService(sdk=sdk)
 
     # Convert ObjectSortOrder from contracts to util.types
     from ..util.types import ObjectSortOrder as UtilObjectSortOrder
@@ -90,7 +89,7 @@ def list_objects(query: ObjectListRequest):
 @require_session_or_env
 def object_metadata(bucket: str, key: str):
     sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
+    catalog = CatalogService(sdk=sdk)
     try:
         metadata = catalog.get_metadata(bucket, key)
     except KeyError as exc:
@@ -103,7 +102,7 @@ def object_metadata(bucket: str, key: str):
 def delete_object(bucket: str, key: str):
     _enforce_rate_limit(request)
     sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
+    catalog = CatalogService(sdk=sdk)
     try:
         catalog.delete_object(bucket, key)
     except NotFoundError:
@@ -123,7 +122,7 @@ def bulk_delete_objects(data: BulkDeleteRequest):
     """Delete multiple objects in bulk."""
     _enforce_rate_limit(request)
     sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
+    catalog = CatalogService(sdk=sdk)
 
     # Check if bucket exists efficiently
     if not catalog.bucket_exists(data.bucket):

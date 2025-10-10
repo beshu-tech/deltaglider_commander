@@ -137,48 +137,6 @@ def with_timing(metric_name: str):
     return decorator
 
 
-def cached(ttl_seconds: int = 300):
-    """Simple caching decorator for functions."""
-
-    def _is_cache_enabled() -> bool:
-        if has_request_context():
-            config = getattr(g, "config", None)
-            if config is not None and hasattr(config, "cache_enabled"):
-                return bool(config.cache_enabled)
-        env_value = os.getenv("CACHE_ENABLED", "true").strip().lower()
-        return env_value not in {"0", "false", "no", "off"}
-
-    def decorator(func: Callable) -> Callable:
-        cache = {}
-        cache_times = {}
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            if not _is_cache_enabled():
-                return func(*args, **kwargs)
-            # Create cache key from args and kwargs
-            cache_key = str(args) + str(sorted(kwargs.items()))
-
-            # Check if cached value exists and is still valid
-            if cache_key in cache:
-                cached_time = cache_times.get(cache_key, 0)
-                if time.time() - cached_time < ttl_seconds:
-                    return cache[cache_key]
-
-            # Call function and cache result
-            result = func(*args, **kwargs)
-            cache[cache_key] = result
-            cache_times[cache_key] = time.time()
-
-            return result
-
-        # Add cache management methods
-        wrapper.clear_cache = lambda: cache.clear() or cache_times.clear()
-        wrapper.cache_info = lambda: {"size": len(cache), "ttl": ttl_seconds}
-
-        return wrapper
-
-    return decorator
 
 
 def require_auth(permission: str | None = None):

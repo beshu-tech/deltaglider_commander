@@ -21,6 +21,7 @@ class SavingsJobRunner:
     def enqueue(self, bucket: str, sdk: DeltaGliderSDK | None = None) -> str:
         """Enqueue a job with optional session-specific SDK."""
         import logging
+
         logger = logging.getLogger(__name__)
 
         logger.info(f"[ENQUEUE] Called for bucket: {bucket}, SDK provided: {sdk is not None}")
@@ -31,7 +32,6 @@ class SavingsJobRunner:
                 logger.info(f"[ENQUEUE] Job already exists and running for bucket: {bucket}")
                 return getattr(existing, "job_id", "")
 
-            self._catalog.mark_pending(bucket)
             task_id = uuid.uuid4().hex
             # Use provided SDK (from session) or fallback to container SDK
             effective_sdk = sdk if sdk is not None else self._sdk
@@ -53,6 +53,7 @@ class SavingsJobRunner:
 
     def _run_job(self, bucket: str, task_id: str, sdk: DeltaGliderSDK) -> str:
         import logging
+
         logger = logging.getLogger(__name__)
 
         logger.info(f"[JOB {task_id}] Starting compute-savings job for bucket: {bucket}")
@@ -68,14 +69,15 @@ class SavingsJobRunner:
             if not snapshot:
                 raise ValueError(f"Bucket {bucket} not found in list_buckets result")
 
-            logger.info(f"[JOB {task_id}] Stats: objects={snapshot.object_count}, original={snapshot.original_bytes}, stored={snapshot.stored_bytes}, savings={snapshot.savings_pct:.2f}%")
+            logger.info(
+                f"[JOB {task_id}] Stats: objects={snapshot.object_count}, original={snapshot.original_bytes}, stored={snapshot.stored_bytes}, savings={snapshot.savings_pct:.2f}%"
+            )
 
             self._catalog.update_savings(bucket, snapshot)
-            logger.info(f"[JOB {task_id}] Successfully updated cache for bucket {bucket}")
+            logger.info(f"[JOB {task_id}] Successfully updated bucket stats for {bucket}")
             return task_id
         except Exception as e:
             logger.error(f"[JOB {task_id}] Error processing bucket {bucket}: {e}", exc_info=True)
-            self._catalog.caches.clear_pending(bucket)
             raise
 
     def pending(self, bucket: str) -> bool:

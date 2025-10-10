@@ -19,12 +19,11 @@ def list_buckets():
 
     from ..services.catalog import CatalogService
 
-    # Use session SDK with catalog service that has cached stats
+    # Use session SDK with catalog service
     sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
+    catalog = CatalogService(sdk=sdk)
 
     payload = []
-    # Use catalog service which checks cache for computed stats
     # catalog.list_buckets() already handles exceptions and raises SDKError
     for bucket_stats in catalog.list_buckets(compute_stats=False):
         entry = {
@@ -47,7 +46,7 @@ def create_bucket():
 
     # Use session SDK
     sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
+    catalog = CatalogService(sdk=sdk)
 
     data = request.get_json(silent=True) or {}
     name = data.get("name")
@@ -93,7 +92,7 @@ def delete_bucket(bucket: str):
 
     # Use session SDK
     sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk, caches=get_container().catalog.caches)
+    catalog = CatalogService(sdk=sdk)
 
     catalog.delete_bucket(bucket)
     return json_response({"status": "deleted", "bucket": bucket})
