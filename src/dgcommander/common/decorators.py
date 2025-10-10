@@ -137,8 +137,6 @@ def with_timing(metric_name: str):
     return decorator
 
 
-
-
 def require_auth(permission: str | None = None):
     """Decorator to require authentication and optionally check permissions."""
 

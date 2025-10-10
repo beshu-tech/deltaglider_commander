@@ -67,10 +67,9 @@ class S3DeltaGliderSDK:
             verify=settings.verify,
         )
 
-        # Create DeltaGlider client using the factory function (DeltaGlider 5.0+)
+        # Create DeltaGlider client using the factory function (DeltaGlider 5.0.3+)
+        # Note: DeltaGlider 5.0.3 manages cache internally with credential-aware keys
         from deltaglider.client import create_client
-
-        cache_dir = settings.cache_dir or os.path.join(tempfile.gettempdir(), "dgcommander-cache")
 
         self._client = create_client(
             endpoint_url=settings.endpoint_url,
@@ -78,7 +77,6 @@ class S3DeltaGliderSDK:
             aws_secret_access_key=settings.secret_access_key,
             aws_session_token=settings.session_token,
             region_name=settings.region_name,
-            cache_dir=cache_dir,
             log_level="INFO",
         )
 
