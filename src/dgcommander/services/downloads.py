@@ -97,8 +97,13 @@ class DownloadService:
             else "No access key"
         )
 
+        # Handle empty string endpoints - treat as None for default AWS endpoints
+        endpoint_url = credentials.get("endpoint")
+        if endpoint_url == "":
+            endpoint_url = None
+
         settings = S3Settings(
-            endpoint_url=credentials.get("endpoint"),
+            endpoint_url=endpoint_url,
             region_name=credentials.get("region"),
             access_key_id=credentials.get("access_key_id"),
             secret_access_key=credentials.get("secret_access_key"),
