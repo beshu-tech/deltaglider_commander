@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import io
 import logging
-import os
-import tempfile
 import threading
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass

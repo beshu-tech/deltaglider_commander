@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import functools
-import os
 import time
 from collections.abc import Callable
 from typing import TypeVar
 
-from flask import g, has_request_context, jsonify, request
+from flask import jsonify, request
 from pydantic import BaseModel, ValidationError
 
 from ..contracts.base import ErrorDetail, ErrorResponse

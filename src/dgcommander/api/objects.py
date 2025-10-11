@@ -17,7 +17,6 @@ from ..contracts.objects import (
 from ..services.catalog import CatalogService
 from ..util.errors import APIError, NotFoundError
 from ..util.json import json_response
-from . import get_container
 from .uploads import _enforce_rate_limit
 
 bp = Blueprint("objects", __name__, url_prefix="/api/objects")
