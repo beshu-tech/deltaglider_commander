@@ -33,16 +33,9 @@ export async function apiWithAuth<T>(path: string, options: ApiRequestOptions = 
       throw error;
     }
 
-    // Check if this is a session-related error
-    const isSessionError =
-      error.code === "session_not_found" ||
-      error.code === "session_expired" ||
-      error.code === "no_session";
-
-    if (!isSessionError) {
-      // Not a session error (might be insufficient permissions, etc.)
-      throw error;
-    }
+    // For any 401 error, we'll attempt to restore the session
+    // This includes session errors and cases where the backend returns invalid error payload
+    // (which happens when credentials are not configured)
 
     // Prevent infinite loops
     if (isHandlingAuthError) {
@@ -54,7 +47,7 @@ export async function apiWithAuth<T>(path: string, options: ApiRequestOptions = 
 
     if (!storedCredentials) {
       // No stored credentials, user needs to log in
-      handleAuthFailure("Please log in with your AWS credentials");
+      handleAuthFailure("Please configure your AWS credentials");
       throw new Error("Authentication required. Redirecting to settings...");
     }
 
@@ -100,6 +93,9 @@ export async function apiWithAuth<T>(path: string, options: ApiRequestOptions = 
  * Handle authentication failure by showing error and redirecting
  */
 function handleAuthFailure(message: string) {
+  // Clear any stored credentials that might be invalid
+  CredentialStorage.clear();
+
   // Show error toast
   toast.push({
     title: "Authentication Required",

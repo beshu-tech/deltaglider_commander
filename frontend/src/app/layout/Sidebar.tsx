@@ -26,25 +26,28 @@ interface SidebarHeaderProps {
 function SidebarHeader({ onNavigateHome }: SidebarHeaderProps) {
   return (
     <Link to="/buckets" className="block focus-visible:outline-none group" onClick={onNavigateHome}>
-      <div className="flex items-center gap-3 mb-2">
-        {/* Deltaglider Logo - Compact Design */}
-        <div className="relative">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-red-600 shadow-lg ring-1 ring-red-400/20">
-            {/* Delta symbol inspired by the logo */}
-            <div className="relative">
-              <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-white"></div>
-              <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[3px] border-r-[3px] border-b-[6px] border-l-transparent border-r-transparent border-b-red-500"></div>
+      <div className="space-y-4 pb-2">
+        {/* Enhanced Logo and Branding Section */}
+        <div className="flex items-center gap-4">
+          {/* Larger, More Professional Logo */}
+          <div className="relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 via-red-600 to-red-700 shadow-xl ring-1 ring-red-400/30 ring-offset-2 ring-offset-slate-950">
+              {/* Enhanced Delta Symbol */}
+              <div className="relative">
+                <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[14px] border-l-transparent border-r-transparent border-b-white"></div>
+                <div className="absolute top-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-b-[8px] border-l-transparent border-r-transparent border-b-red-600"></div>
+              </div>
+            </div>
+            {/* Professional Badge */}
+            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-2 border-slate-950 shadow-lg">
+              <div className="w-full h-full rounded-full bg-green-400 animate-pulse"></div>
             </div>
           </div>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-white tracking-tight">DeltaGlider</span>
+            <span className="text-sm text-slate-300 font-semibold tracking-wide">Commander</span>
+          </div>
         </div>
-        <div className="flex flex-col leading-tight">
-          <span className="text-sm font-bold text-white tracking-tight">Deltaglider</span>
-          <span className="text-xs text-slate-300 font-medium">Commander</span>
-        </div>
-      </div>
-      <div className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/8 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-slate-200 backdrop-blur-sm group-hover:bg-white/12 transition-colors">
-        <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-        <span>Object Console</span>
       </div>
     </Link>
   );
@@ -221,12 +224,22 @@ function BucketList({
     <nav className="flex flex-col gap-1 text-sm">
       <Link
         to="/buckets"
-        className="flex items-center gap-3 rounded-md px-3 py-2 text-slate-400 text-xs uppercase tracking-wide font-semibold transition-all duration-200 hover:bg-slate-800/30 hover:text-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
-        activeProps={{ className: "bg-slate-800/50 text-slate-200" }}
+        className="flex items-center gap-3 rounded-lg px-3 py-3 mb-3 bg-gradient-to-r from-slate-800/50 to-slate-800/30 border border-slate-700/50 text-slate-200 transition-all duration-200 hover:from-slate-800/70 hover:to-slate-800/50 hover:border-slate-600/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+        activeProps={{ className: "from-blue-600/20 to-blue-700/20 border-blue-500/40 text-white shadow-lg shadow-blue-500/10" }}
       >
-        <Archive className="h-3.5 w-3.5 flex-shrink-0" />
-        <span>Overview</span>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 shadow-inner">
+          <svg className="h-4 w-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm font-bold text-white">Dashboard</span>
+          <span className="text-xs text-slate-400">All Buckets Overview</span>
+        </div>
       </Link>
+      <div className="mb-2 px-3">
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+      </div>
       {filteredBuckets.map((bucket) => {
         const isActive = activeBucket === bucket.name;
         return (
@@ -407,8 +420,8 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 px-5 py-6 text-slate-100 border-r border-slate-800/50">
-      <div className="space-y-6">
+    <aside className="flex h-full w-80 min-w-[20rem] flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 px-6 py-8 text-slate-100 border-r border-slate-800/50">
+      <div className="space-y-8">
         <SidebarHeader onNavigateHome={() => setFilter("")} />
         <SidebarActions
           creating={createBucketMutation.isPending}
@@ -429,9 +442,12 @@ export function Sidebar() {
           onFilterChange={setFilter}
         />
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 px-2">
+            <svg className="h-3 w-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Buckets
+              Your Buckets
             </span>
             <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>
           </div>
