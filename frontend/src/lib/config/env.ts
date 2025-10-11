@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  VITE_APP_NAME: z.string().min(1),
-  VITE_POLL_MS: z.coerce.number().int().min(1000).max(60000).default(5000),
+  VITE_APP_NAME: z.string().min(1).optional().default("DeltaGlider Commander"),
+  VITE_POLL_MS: z.coerce.number().int().min(1000).max(60000).optional().default(5000),
   VITE_ENABLE_UPLOADS: z
     .union([z.literal("true"), z.literal("false"), z.boolean()])
     .optional()
