@@ -22,6 +22,8 @@ def list_buckets():
     # Use session SDK with catalog service
     sdk = g.sdk_client
     catalog = CatalogService(sdk=sdk)
+    container = get_container()
+    jobs = getattr(container, "jobs", None)
 
     payload = []
     # catalog.list_buckets() already handles exceptions and raises SDKError
@@ -33,6 +35,8 @@ def list_buckets():
             "stored_bytes": bucket_stats.stored_bytes,
             "savings_pct": bucket_stats.savings_pct,
         }
+        if jobs and jobs.pending(bucket_stats.name):
+            entry["pending"] = True
         payload.append(entry)
     return json_response({"buckets": payload})
 

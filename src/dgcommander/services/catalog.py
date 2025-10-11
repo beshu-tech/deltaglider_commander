@@ -224,6 +224,12 @@ class CatalogService:
 
     def update_savings(self, bucket: str, snapshot: BucketSnapshot) -> BucketStats:
         """Update bucket statistics after a savings computation job."""
+        updater = getattr(self.sdk, "update_cached_bucket_stats", None)
+        if callable(updater):
+            try:
+                updater(snapshot)
+            except Exception:  # pragma: no cover - defensive
+                logger.debug("Failed to push snapshot to SDK cache", exc_info=True)
         bucket_stats = BucketStats(
             name=snapshot.name,
             object_count=snapshot.object_count,

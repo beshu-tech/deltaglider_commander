@@ -59,5 +59,9 @@ class DeltaGliderSDK(Protocol):
         """Upload a file to a bucket."""
         ...
 
+    def compute_bucket_stats(self, bucket: str) -> BucketSnapshot:
+        """Compute and return up-to-date statistics for a bucket."""
+        ...
+
 
 __all__ = ["DeltaGliderSDK"]

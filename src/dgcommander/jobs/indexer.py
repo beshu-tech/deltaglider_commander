@@ -60,18 +60,28 @@ class SavingsJobRunner:
         logger.info(f"[JOB {task_id}] SDK type: {type(sdk).__name__}")
 
         try:
-            # Use list_buckets with compute_stats=True to leverage get_bucket_stats API
             logger.info(f"[JOB {task_id}] Computing bucket stats")
-            snapshots = list(sdk.list_buckets(compute_stats=True))
-
-            # Find the snapshot for our bucket
-            snapshot = next((s for s in snapshots if s.name == bucket), None)
-            if not snapshot:
-                raise ValueError(f"Bucket {bucket} not found in list_buckets result")
+            snapshot = None
+            if hasattr(sdk, "compute_bucket_stats"):
+                try:
+                    snapshot = sdk.compute_bucket_stats(bucket)
+                except Exception as exc:
+                    logger.debug(f"[JOB {task_id}] compute_bucket_stats failed for {bucket}: {exc}", exc_info=True)
+            if snapshot is None:
+                snapshots = list(sdk.list_buckets(compute_stats=True))
+                snapshot = next((s for s in snapshots if s.name == bucket), None)
+                if not snapshot:
+                    raise ValueError(f"Bucket {bucket} not found in list_buckets result")
 
             logger.info(
                 f"[JOB {task_id}] Stats: objects={snapshot.object_count}, original={snapshot.original_bytes}, stored={snapshot.stored_bytes}, savings={snapshot.savings_pct:.2f}%"
             )
+
+            if hasattr(sdk, "update_cached_bucket_stats"):
+                try:
+                    sdk.update_cached_bucket_stats(snapshot)
+                except Exception:  # pragma: no cover - defensive
+                    logger.debug(f"[JOB {task_id}] Failed to update SDK cache for {bucket}", exc_info=True)
 
             self._catalog.update_savings(bucket, snapshot)
             logger.info(f"[JOB {task_id}] Successfully updated bucket stats for {bucket}")

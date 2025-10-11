@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import io
+import logging
 import os
 import tempfile
+import threading
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -51,6 +53,8 @@ class S3DeltaGliderSDK:
     def __init__(self, settings: S3Settings) -> None:
         self._settings = settings
         self._region = settings.region_name or "us-east-1"
+        self._bucket_stats_cache: dict[str, BucketSnapshot] = {}
+        self._bucket_cache_lock = threading.RLock()
 
         # Create boto3 S3 client with explicit credentials for bucket operations
         # that are not yet fully abstracted by deltaglider
@@ -83,39 +87,28 @@ class S3DeltaGliderSDK:
     # -- public API -----------------------------------------------------
 
     def list_buckets(self, compute_stats: bool = False) -> Iterable[BucketSnapshot]:
-        # Use boto3 client for bucket listing
-        response = self._boto3_client.list_buckets()
-        buckets: list[BucketSnapshot] = []
-        for bucket in response.get("Buckets", []):
-            name = bucket["Name"]
-            if compute_stats:
-                # Use DeltaGlider's get_bucket_stats API with detailed_stats=True
-                # for accurate compression metrics (slower, adds HEAD calls)
-                stats = self._client.get_bucket_stats(name, detailed_stats=True)
-                original_total = stats.original_size
-                stored_total = stats.stored_size
-                savings_pct = 0.0
-                if original_total:
-                    savings_pct = (1.0 - (stored_total / original_total)) * 100.0
-                object_count = stats.object_count
-            else:
-                # Return placeholder stats for quick listing
-                original_total = 0
-                stored_total = 0
-                savings_pct = 0.0
-                object_count = 0
+        """List buckets using cached statistics when available."""
 
-            buckets.append(
-                BucketSnapshot(
-                    name=name,
-                    object_count=object_count,
-                    original_bytes=original_total,
-                    stored_bytes=stored_total,
-                    savings_pct=savings_pct,
-                    computed_at=datetime.now(UTC) if compute_stats else None,
-                )
-            )
-        return buckets
+        response = self._boto3_client.list_buckets()
+        bucket_names = [bucket["Name"] for bucket in response.get("Buckets", [])]
+
+        # Drop cache entries for buckets that are gone
+        with self._bucket_cache_lock:
+            removed = set(self._bucket_stats_cache) - set(bucket_names)
+            for name in removed:
+                self._bucket_stats_cache.pop(name, None)
+
+        snapshots: list[BucketSnapshot] = []
+        for name in bucket_names:
+            if compute_stats:
+                snapshot = self._refresh_bucket_stats(name)
+            else:
+                snapshot = self._get_cached_snapshot(name)
+                if snapshot is None:
+                    snapshot = self._placeholder_snapshot(name)
+            snapshots.append(snapshot)
+
+        return snapshots
 
     def create_bucket(self, name: str) -> None:
         # Use deltaglider client's create_bucket method
@@ -124,10 +117,20 @@ class S3DeltaGliderSDK:
             self._client.create_bucket(Bucket=name, CreateBucketConfiguration={"LocationConstraint": region})
         else:
             self._client.create_bucket(Bucket=name)
+        self._update_cache(self._placeholder_snapshot(name))
 
     def delete_bucket(self, name: str) -> None:
         # Use deltaglider client's delete_bucket method
         self._client.delete_bucket(Bucket=name)
+        with self._bucket_cache_lock:
+            self._bucket_stats_cache.pop(name, None)
+
+    def compute_bucket_stats(self, name: str) -> BucketSnapshot:
+        response = self._boto3_client.list_buckets()
+        bucket_names = [bucket["Name"] for bucket in response.get("Buckets", [])]
+        if name not in bucket_names:
+            raise ValueError(f"Bucket {name} not found")
+        return self._refresh_bucket_stats(name)
 
     def bucket_exists(self, name: str) -> bool:
         """Check if a bucket exists without listing all objects."""
@@ -244,10 +247,12 @@ class S3DeltaGliderSDK:
         normalized = self._normalize_key(key)
         # Use deltaglider client's delete_object - it handles physical file cleanup
         self._client.delete_object(Bucket=bucket, Key=normalized)
+        self._refresh_bucket_stats(bucket)
 
     def delete_objects(self, bucket: str, keys: list[str]) -> None:
         normalized_keys = [self._normalize_key(key) for key in keys]
         self._client.delete_objects(Bucket=bucket, Delete={"Objects": [{"Key": key} for key in normalized_keys]})
+        self._refresh_bucket_stats(bucket)
 
     def upload(self, bucket: str, key: str, file_obj: BinaryIO) -> UploadSummary:
         normalized = self._normalize_key(key)
@@ -279,6 +284,7 @@ class S3DeltaGliderSDK:
             operation="put",  # deltaglider 4.1.0 abstracts operation details
             physical_key=normalized,  # physical key is abstracted away
         )
+        self._refresh_bucket_stats(bucket)
         return upload_summary
 
     def upload_batch(
@@ -299,14 +305,17 @@ class S3DeltaGliderSDK:
                 future = executor.submit(self.upload, bucket, full_key, file_obj)
                 future_to_key[future] = key
 
-            for future in as_completed(future_to_key):
-                try:
-                    result = future.result()
-                    results.append(result)
-                except Exception as e:
-                    # Log error but continue with other files
-                    key = future_to_key[future]
-                    print(f"Failed to upload {key}: {e}")
+        for future in as_completed(future_to_key):
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as e:
+                # Log error but continue with other files
+                key = future_to_key[future]
+                print(f"Failed to upload {key}: {e}")
+
+        if results:
+            self._refresh_bucket_stats(bucket)
 
         return results
 
@@ -360,6 +369,61 @@ class S3DeltaGliderSDK:
         stats["top_compressions"] = sorted(compressions, key=lambda x: x["savings_bytes"], reverse=True)[:10]
 
         return stats
+
+    # -- cache helpers -------------------------------------------------
+
+    def update_cached_bucket_stats(self, snapshot: BucketSnapshot) -> None:
+        """Allow services to push a freshly computed snapshot into the cache."""
+
+        self._update_cache(snapshot)
+
+    def invalidate_bucket_cache(self, bucket: str) -> None:
+        with self._bucket_cache_lock:
+            self._bucket_stats_cache.pop(bucket, None)
+
+    def _update_cache(self, snapshot: BucketSnapshot) -> None:
+        with self._bucket_cache_lock:
+            self._bucket_stats_cache[snapshot.name] = snapshot
+
+    def _get_cached_snapshot(self, name: str) -> BucketSnapshot | None:
+        with self._bucket_cache_lock:
+            return self._bucket_stats_cache.get(name)
+
+    def _refresh_bucket_stats(self, name: str) -> BucketSnapshot:
+        try:
+            stats = self._client.get_bucket_stats(name, detailed_stats=True)
+        except Exception as exc:  # pragma: no cover - defensive logging path
+            logging.getLogger(__name__).debug("Failed to refresh stats for %s: %s", name, exc)
+            snapshot = self._placeholder_snapshot(name)
+            self.invalidate_bucket_cache(name)
+            return snapshot
+
+        original_total = stats.total_size
+        stored_total = stats.compressed_size
+        savings_pct = 0.0
+        if original_total:
+            savings_pct = (1.0 - (stored_total / original_total)) * 100.0
+
+        snapshot = BucketSnapshot(
+            name=name,
+            object_count=stats.object_count,
+            original_bytes=original_total,
+            stored_bytes=stored_total,
+            savings_pct=savings_pct,
+            computed_at=datetime.now(UTC),
+        )
+        self._update_cache(snapshot)
+        return snapshot
+
+    def _placeholder_snapshot(self, name: str) -> BucketSnapshot:
+        return BucketSnapshot(
+            name=name,
+            object_count=0,
+            original_bytes=0,
+            stored_bytes=0,
+            savings_pct=0.0,
+            computed_at=None,
+        )
 
     # -- helpers --------------------------------------------------------
 

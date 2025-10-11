@@ -206,6 +206,37 @@ class InMemoryDeltaGliderSDK:
         )
         return summary
 
+    def update_cached_bucket_stats(self, snapshot: BucketSnapshot) -> None:
+        """Keep parity with S3 adapter cache helper."""
+        for idx, bucket in enumerate(self._buckets):
+            if bucket.name == snapshot.name:
+                self._buckets[idx] = snapshot
+                break
+        else:
+            self._buckets.append(snapshot)
+
+    def compute_bucket_stats(self, bucket: str) -> BucketSnapshot:
+        objects = self._objects.get(bucket)
+        if objects is None:
+            raise ValueError(f"Bucket {bucket} not found")
+
+        total_original = sum(obj.original_bytes for obj in objects)
+        total_stored = sum(obj.stored_bytes for obj in objects)
+        savings_pct = 0.0
+        if total_original:
+            savings_pct = (1.0 - (total_stored / total_original)) * 100.0
+
+        snapshot = BucketSnapshot(
+            name=bucket,
+            object_count=len(objects),
+            original_bytes=total_original,
+            stored_bytes=total_stored,
+            savings_pct=savings_pct,
+            computed_at=datetime.now(UTC),
+        )
+        self.update_cached_bucket_stats(snapshot)
+        return snapshot
+
     def list_objects(
         self, bucket: str, prefix: str, max_items: int | None = None, quick_mode: bool = False
     ) -> ObjectListing:
