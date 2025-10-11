@@ -50,7 +50,8 @@ COPY pyproject.toml README.md /app/
 COPY src /app/src
 
 # Copy built frontend from previous stage
-COPY --from=frontend-builder /frontend/dist /app/src/dgcommander/static
+# Note: Vite builds to ../src/dgcommander/static from the frontend directory
+COPY --from=frontend-builder /src/dgcommander/static /app/src/dgcommander/static
 
 RUN pip install --upgrade pip \
     && pip install .[server]
