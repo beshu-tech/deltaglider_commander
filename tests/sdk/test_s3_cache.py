@@ -172,5 +172,7 @@ def test_upload_refreshes_bucket_cache(fake_environment):
 
     snapshot = list(sdk.list_buckets(compute_stats=False))[0]
     assert snapshot.object_count == len(fake_dg.objects["alpha"])
-    assert snapshot.original_bytes == sum(int(obj["Metadata"]["deltaglider-original-size"]) for obj in fake_dg.objects["alpha"])
+    assert snapshot.original_bytes == sum(
+        int(obj["Metadata"]["deltaglider-original-size"]) for obj in fake_dg.objects["alpha"]
+    )
     assert snapshot.computed_at is not None
