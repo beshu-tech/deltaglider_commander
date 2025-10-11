@@ -44,17 +44,31 @@ export function BucketsPanel() {
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900">
       <div className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-850 px-6 py-4 border-b border-slate-200 dark:border-slate-800">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Storage Buckets</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Manage and optimize your object storage containers</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+          Manage and optimize your object storage containers
+        </p>
       </div>
       <Table className="min-w-full">
         <TableHead>
           <tr className="bg-slate-50 dark:bg-slate-900/50">
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Name</th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Objects</th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Original Size</th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Compressed</th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Savings</th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 text-right">Actions</th>
+            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Name
+            </th>
+            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Objects
+            </th>
+            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Original Size
+            </th>
+            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Compressed
+            </th>
+            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Savings
+            </th>
+            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 text-right">
+              Actions
+            </th>
           </tr>
         </TableHead>
         <TableBody>
@@ -87,20 +101,45 @@ export function BucketsPanel() {
               >
                 <TableCell className="px-6 py-4 font-semibold text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors">
                   <span className="inline-flex items-center gap-2">
-                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    <svg
+                      className="w-4 h-4 text-slate-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                      />
                     </svg>
                     {bucket.name}
-                    {bucket.pending ? <Badge className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">Pending</Badge> : null}
+                    {bucket.pending ? (
+                      <Badge className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                        Pending
+                      </Badge>
+                    ) : null}
                   </span>
                 </TableCell>
-                <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">{bucket.object_count.toLocaleString()}</TableCell>
-                <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300">{formatBytes(bucket.original_bytes)}</TableCell>
-                <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300">{formatBytes(bucket.stored_bytes)}</TableCell>
+                <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">
+                  {bucket.object_count.toLocaleString()}
+                </TableCell>
+                <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                  {formatBytes(bucket.original_bytes)}
+                </TableCell>
+                <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                  {formatBytes(bucket.stored_bytes)}
+                </TableCell>
                 <TableCell className="px-6 py-4">
                   <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                      />
                     </svg>
                     {renderSavings(bucket)}
                   </span>
