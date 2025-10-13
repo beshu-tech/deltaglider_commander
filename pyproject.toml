@@ -30,6 +30,7 @@ dev = [
   "freezegun>=1.5",
   "ruff>=0.1.0",
   "mypy>=1.7.0",
+  "types-cachetools>=6.2",
   "bandit>=1.7.5",
   "safety>=2.3.5",
   "pip-audit>=2.6"
