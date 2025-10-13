@@ -129,7 +129,7 @@ export function ObjectsTable({
         <Table className="min-w-full">
           <TableHead className="sticky top-0 z-10">
             <tr className="bg-white dark:bg-slate-900">
-              <th className="w-12 px-3 py-2 text-left">
+              <th className="w-12 px-3 py-3 text-left">
                 <input
                   ref={headerCheckboxRef}
                   type="checkbox"
@@ -143,7 +143,7 @@ export function ObjectsTable({
                   aria-label="Select all items on this page"
                 />
               </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500">
                 <button
                   type="button"
                   onClick={() => onSortChange("name")}
@@ -156,7 +156,7 @@ export function ObjectsTable({
                   ) : null}
                 </button>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500">
                 <button
                   type="button"
                   onClick={() => onSortChange("size")}
@@ -166,7 +166,7 @@ export function ObjectsTable({
                   {renderSortIcon("size")}
                 </button>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500">
                 <button
                   type="button"
                   onClick={() => onSortChange("modified")}
@@ -176,7 +176,7 @@ export function ObjectsTable({
                   {renderSortIcon("modified")}
                 </button>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500">
                 Compression
               </th>
             </tr>
@@ -291,7 +291,7 @@ export function ObjectsTable({
               <tr>
                 <td
                   colSpan={5}
-                  className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300"
+                  className="px-3 py-section text-center text-body text-slate-500 dark:text-slate-300"
                 >
                   No objects found for the current filters.
                 </td>

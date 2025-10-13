@@ -41,32 +41,32 @@ export function BucketsPanel() {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900">
-      <div className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-850 px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Storage Buckets</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-surface-elevated shadow-lg dark:border-slate-800 dark:bg-slate-900">
+      <div className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-850 px-group py-3 border-b border-slate-200 dark:border-slate-800">
+        <h2 className="text-title-sm text-slate-900 dark:text-white">Storage Buckets</h2>
+        <p className="text-body-sm text-slate-600 dark:text-slate-400 mt-1">
           Manage and optimize your object storage containers
         </p>
       </div>
       <Table className="min-w-full">
         <TableHead>
           <tr className="bg-slate-50 dark:bg-slate-900/50">
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Name
             </th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Objects
             </th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Original Size
             </th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Compressed
             </th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Savings
             </th>
-            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 text-right">
+            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400 text-right">
               Actions
             </th>
           </tr>
