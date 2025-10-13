@@ -89,11 +89,24 @@ export function ObjectsTable({
         : fullPath;
       const target: SelectionTarget = { type: "prefix", key: prefix };
       const directorySelected = isSelected(target);
-      const rowClasses = `cursor-pointer border-b border-slate-100 transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800 ${
+      const rowClasses = `cursor-pointer border-b border-slate-100 transition-all duration-fast hover:bg-slate-100 focus-visible:outline-focus focus-visible:outline-offset-[-2px] focus-visible:outline-brand-500 focus-visible:ring-focus focus-visible:ring-brand-500/20 dark:border-slate-800 dark:hover:bg-slate-800 dark:focus-visible:outline-brand-400 dark:focus-visible:ring-brand-400/20 ${
         directorySelected ? "bg-brand-50/70 dark:bg-slate-800" : ""
       }`;
       return (
-        <tr key={`dir-${prefix}`} className={rowClasses} onClick={() => onEnterDirectory(prefix)}>
+        <tr
+          key={`dir-${prefix}`}
+          className={rowClasses}
+          onClick={() => onEnterDirectory(prefix)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onEnterDirectory(prefix);
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`Open folder ${label}`}
+        >
           <TableCell className="w-12">
             <input
               type="checkbox"
@@ -127,7 +140,7 @@ export function ObjectsTable({
     <div className="flex h-full flex-col">
       <div className="relative flex-1 overflow-auto">
         <Table className="min-w-full">
-          <TableHead className="sticky top-0 z-10">
+          <TableHead className="sticky top-0 z-10 shadow-elevation-sm dark:shadow-elevation-sm-dark">
             <tr className="bg-white dark:bg-slate-900">
               <th className="w-12 px-3 py-3 text-left">
                 <input
@@ -143,11 +156,11 @@ export function ObjectsTable({
                   aria-label="Select all items on this page"
                 />
               </th>
-              <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500">
+              <th className="group px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500 transition-colors duration-fast hover:bg-slate-50 dark:hover:bg-slate-800/50">
                 <button
                   type="button"
                   onClick={() => onSortChange("name")}
-                  className="flex items-center gap-2 text-slate-600 transition hover:text-brand-600 dark:text-slate-300"
+                  className="flex items-center gap-2 text-slate-600 transition-colors duration-fast hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
                 >
                   <span>Name</span>
                   {renderSortIcon("name")}
@@ -156,27 +169,27 @@ export function ObjectsTable({
                   ) : null}
                 </button>
               </th>
-              <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500">
+              <th className="group px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500 transition-colors duration-fast hover:bg-slate-50 dark:hover:bg-slate-800/50">
                 <button
                   type="button"
                   onClick={() => onSortChange("size")}
-                  className="flex items-center gap-2 text-slate-600 transition hover:text-brand-600 dark:text-slate-300"
+                  className="flex items-center gap-2 text-slate-600 transition-colors duration-fast hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
                 >
                   <span>Size</span>
                   {renderSortIcon("size")}
                 </button>
               </th>
-              <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500">
+              <th className="group px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500 transition-colors duration-fast hover:bg-slate-50 dark:hover:bg-slate-800/50">
                 <button
                   type="button"
                   onClick={() => onSortChange("modified")}
-                  className="flex items-center gap-2 text-slate-600 transition hover:text-brand-600 dark:text-slate-300"
+                  className="flex items-center gap-2 text-slate-600 transition-colors duration-fast hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
                 >
                   <span>Modified</span>
                   {renderSortIcon("modified")}
                 </button>
               </th>
-              <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500">
+              <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-slate-500 transition-colors duration-fast hover:bg-slate-50 dark:hover:bg-slate-800/50">
                 Compression
               </th>
             </tr>
@@ -187,12 +200,25 @@ export function ObjectsTable({
               const target: SelectionTarget = { type: "object", key: item.key };
               const objectSelected = isSelected(target);
               const isHighlighted = selectedKey === item.key;
-              const rowClasses = `cursor-pointer border-b border-slate-100 transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800 ${
+              const rowClasses = `cursor-pointer border-b border-slate-100 transition-all duration-fast hover:bg-slate-100 focus-visible:outline-focus focus-visible:outline-offset-[-2px] focus-visible:outline-brand-500 focus-visible:ring-focus focus-visible:ring-brand-500/20 dark:border-slate-800 dark:hover:bg-slate-800 dark:focus-visible:outline-brand-400 dark:focus-visible:ring-brand-400/20 ${
                 isHighlighted || objectSelected ? "bg-brand-50/70 dark:bg-slate-800" : ""
               }`;
               const name = item.key.split("/").pop() ?? item.key;
               return (
-                <tr key={item.key} className={rowClasses} onClick={() => onRowClick(item)}>
+                <tr
+                  key={item.key}
+                  className={rowClasses}
+                  onClick={() => onRowClick(item)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onRowClick(item);
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View object ${name}`}
+                >
                   <TableCell className="w-12">
                     <input
                       type="checkbox"

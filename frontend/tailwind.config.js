@@ -32,8 +32,9 @@ export default {
         inline: "0.5rem", // 8px - Inline spacing
       },
 
-      // Color System - Soft neutral backgrounds
+      // 5 Functional Color Tones - 2025 Modern Aesthetic (Light + Dark Mode)
       colors: {
+        // Brand/Accent - Primary interactive color
         brand: {
           50: "#f2fbff",
           100: "#e6f5ff",
@@ -46,11 +47,59 @@ export default {
           800: "#005584",
           900: "#003a5c",
         },
-        surface: {
-          base: "#F7F8FA", // Soft neutral gray for main background
-          elevated: "#FFFFFF", // White for cards and elevated surfaces
-          subtle: "#F1F3F5", // Subtle background for nested content
+
+        // Semantic tones for light/dark mode consistency
+        ui: {
+          // Background - Main application background
+          bg: "#F7F8FA", // Light mode
+          "bg-dark": "#0f172a", // Dark mode (slate-950)
+
+          // Surface - Elevated cards and panels
+          surface: "#FFFFFF", // Light mode
+          "surface-dark": "#1e293b", // Dark mode (slate-900)
+
+          // Border - Dividers and outlines
+          border: "#e2e8f0", // Light mode (slate-200)
+          "border-dark": "#334155", // Dark mode (slate-700)
+
+          // Text Primary - Main content text
+          text: "#0f172a", // Light mode (slate-900)
+          "text-dark": "#f1f5f9", // Dark mode (slate-100)
+
+          // Text Secondary - Supporting text
+          "text-muted": "#64748b", // Light mode (slate-500)
+          "text-muted-dark": "#94a3b8", // Dark mode (slate-400)
         },
+
+        // Legacy surface colors for backward compatibility
+        surface: {
+          base: "#F7F8FA",
+          elevated: "#FFFFFF",
+          subtle: "#F1F3F5",
+        },
+      },
+
+      // Layered Elevation System - Subtle shadows for depth
+      boxShadow: {
+        // Light mode - subtle dark shadows
+        "elevation-sm": "0 1px 2px rgba(0, 0, 0, 0.04)",
+        "elevation-md": "0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02)",
+        "elevation-lg": "0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03)",
+
+        // Dark mode - lighter backgrounds + subtle glow
+        "elevation-sm-dark": "0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.03)",
+        "elevation-md-dark": "0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)",
+        "elevation-lg-dark": "0 4px 16px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07)",
+      },
+
+      // Motion System - Subtle transitions (100-150ms)
+      transitionDuration: {
+        fast: "100ms", // Quick feedback (hover, focus)
+        base: "150ms", // Standard transitions (modals, dropdowns)
+        slow: "200ms", // Slower animations (page transitions)
+      },
+      transitionTimingFunction: {
+        smooth: "cubic-bezier(0.4, 0, 0.2, 1)", // ease-in-out equivalent
       },
 
       // Accessible Focus States - 2px solid, 3:1 contrast

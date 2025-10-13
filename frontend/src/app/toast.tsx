@@ -176,21 +176,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+      <div
+        className="pointer-events-none fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         {toasts.map((toast) => {
           const styles = levelStyles[toast.level];
           const Icon = styles.IconComponent;
           return (
             <div
               key={toast.id}
-              className={`pointer-events-auto flex min-w-[280px] max-w-[400px] items-start gap-3 rounded-lg border p-3 shadow-lg transition-all hover:shadow-xl ${styles.container}`}
+              role={toast.level === "error" ? "alert" : "status"}
+              className={`pointer-events-auto flex min-w-[280px] max-w-[400px] items-start gap-3 rounded-lg border p-3 shadow-elevation-lg transition-all duration-base hover:shadow-elevation-lg dark:shadow-elevation-lg-dark ${styles.container} animate-in slide-in-from-right-5 fade-in`}
             >
-              <Icon className={`mt-0.5 h-5 w-5 flex-shrink-0 ${styles.icon}`} />
+              <Icon className={`mt-0.5 h-5 w-5 flex-shrink-0 ${styles.icon}`} aria-hidden="true" />
               <div className="flex-1 min-w-0">
-                <div className={`text-sm font-semibold ${styles.title}`}>{toast.title}</div>
+                <div className={`text-body-sm font-semibold ${styles.title}`}>{toast.title}</div>
                 {toast.description && (
                   <p
-                    className={`mt-0.5 text-xs ${styles.description} truncate`}
+                    className={`mt-0.5 text-label-sm ${styles.description}`}
                     title={toast.description}
                   >
                     {toast.description}
@@ -200,8 +205,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => remove(toast.id)}
-                className={`flex-shrink-0 rounded p-1 transition hover:bg-white/50 dark:hover:bg-black/20 ${styles.icon}`}
-                aria-label="Dismiss"
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    remove(toast.id);
+                  }
+                }}
+                className={`flex-shrink-0 rounded p-1 transition-colors duration-fast hover:bg-white/50 focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-black/20 ${styles.icon}`}
+                aria-label={`Dismiss ${toast.level} notification: ${toast.title}`}
               >
                 <X className="h-4 w-4" />
               </button>

@@ -464,7 +464,7 @@ export function ObjectsView({
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-elevation-md dark:border-slate-800 dark:bg-slate-900 dark:shadow-elevation-md-dark">
       <ObjectsToolbar
         bucket={bucket}
         prefix={search.prefix}
