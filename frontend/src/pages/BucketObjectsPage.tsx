@@ -14,7 +14,6 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
   const { bucket } = useParams({ from: "/b/$bucket" });
   const rawSearch = useSearch({ from: "/b/$bucket" }) as Record<string, unknown> | undefined;
   const navigate = useNavigate();
-  const cursorHistory = useRef<(string | undefined)[]>([]);
   const [selectionResetKey, setSelectionResetKey] = useState(0);
   const objectMatch = useMatch({ from: "/b/$bucket/o/$objectKey+", shouldThrow: false });
   const matchedObjectKey = objectMatch?.params?.["objectKey+"] ?? null;
@@ -26,12 +25,7 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     headingRef.current?.focus();
   }, [bucket]);
 
-  useEffect(() => {
-    cursorHistory.current = [];
-  }, [bucket, currentSearch.prefix, currentSearch.sort, currentSearch.order, currentSearch.limit]);
-
   const updateSearch = (next: ObjectsSearchState) => {
-    cursorHistory.current = [];
     navigate({
       to: "/b/$bucket",
       params: { bucket },
@@ -41,24 +35,28 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     });
   };
 
-  const handleNextPage = (cursor: string) => {
-    cursorHistory.current.push(currentSearch.cursor);
+  const handleNextPage = () => {
     navigate({
       to: "/b/$bucket",
       params: { bucket },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      search: serializeObjectsSearch({ ...currentSearch, cursor }) as any,
+      search: serializeObjectsSearch({
+        ...currentSearch,
+        pageIndex: currentSearch.pageIndex + 1,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any,
       replace: true,
     });
   };
 
   const handlePreviousPage = () => {
-    const prevCursor = cursorHistory.current.pop() ?? undefined;
     navigate({
       to: "/b/$bucket",
       params: { bucket },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      search: serializeObjectsSearch({ ...currentSearch, cursor: prevCursor }) as any,
+      search: serializeObjectsSearch({
+        ...currentSearch,
+        pageIndex: Math.max(0, currentSearch.pageIndex - 1),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any,
       replace: true,
     });
   };

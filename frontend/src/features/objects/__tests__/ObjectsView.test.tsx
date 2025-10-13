@@ -23,31 +23,38 @@ vi.mock("../../../lib/api/endpoints", () => ({
 import { downloadObject } from "../../../lib/utils/download";
 import { fetchObjects } from "../../../lib/api/endpoints";
 
-vi.mock("../useObjects", () => ({
-  useObjects: vi.fn(() => ({
-    data: {
-      objects: [
-        {
-          key: "folder/file.txt",
-          original_bytes: 1024,
-          stored_bytes: 512,
-          compressed: true,
-          modified: new Date().toISOString(),
-        },
-      ],
-      common_prefixes: ["folder/"],
-      cursor: "next",
-    },
+vi.mock("../useObjectsCache", () => ({
+  useObjectsCache: vi.fn(() => ({
+    objects: [
+      {
+        key: "folder/file.txt",
+        original_bytes: 1024,
+        stored_bytes: 512,
+        compressed: true,
+        modified: new Date().toISOString(),
+      },
+    ],
+    directories: ["folder/"],
+    totalObjects: 1,
+    totalDirectories: 1,
+    totalItems: 2,
+    currentPage: 1,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+    pageIndex: 0,
     isLoading: false,
     isError: false,
     isFetching: false,
+    error: null,
+    refetch: vi.fn(),
   })),
 }));
 
 const defaultSearch: ObjectsSearchState = {
   prefix: "",
   search: undefined,
-  cursor: undefined,
+  pageIndex: 0,
   sort: "modified",
   order: "desc",
   limit: 100,

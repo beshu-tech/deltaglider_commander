@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, Search, UploadCloud } from "lucide-react";
+import { ChevronRight, RefreshCw, Search, UploadCloud } from "lucide-react";
 import { ObjectsCompressionFilter } from "./types";
 import { Input } from "../../lib/ui/Input";
 import { Select } from "../../lib/ui/Select";
@@ -15,6 +15,8 @@ export interface ObjectsToolbarProps {
   onCompressionChange: (value: ObjectsCompressionFilter) => void;
   onBreadcrumbNavigate: (value: string | null) => void;
   onUploadClick?: () => void;
+  onForceRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export function ObjectsToolbar({
@@ -26,6 +28,8 @@ export function ObjectsToolbar({
   onCompressionChange,
   onBreadcrumbNavigate,
   onUploadClick,
+  onForceRefresh,
+  isRefreshing = false,
 }: ObjectsToolbarProps) {
   const [searchValue, setSearchValue] = useState(search || "");
   const debounceRef = useRef<NodeJS.Timeout>();
@@ -51,7 +55,7 @@ export function ObjectsToolbar({
       debounceRef.current = setTimeout(() => {
         const trimmed = value.trim();
         onSearchChange(trimmed || undefined);
-      }, 1000);
+      }, 150); // Reduced from 1000ms to 150ms for client-side filtering
     },
     [onSearchChange],
   );
@@ -126,6 +130,18 @@ export function ObjectsToolbar({
             </option>
           ))}
         </Select>
+        {onForceRefresh ? (
+          <button
+            type="button"
+            onClick={onForceRefresh}
+            disabled={isRefreshing}
+            className="flex items-center justify-center rounded-md border border-slate-200 bg-white p-2 text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            title="Refresh from server"
+            aria-label="Refresh from server"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          </button>
+        ) : null}
         {onUploadClick ? (
           <Button type="button" className="gap-2" onClick={onUploadClick}>
             <UploadCloud className="h-4 w-4" />

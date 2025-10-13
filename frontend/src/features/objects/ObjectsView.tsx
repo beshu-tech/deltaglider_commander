@@ -7,7 +7,7 @@ import { EmptyState } from "../../lib/ui/EmptyState";
 import { downloadObject } from "../../lib/utils/download";
 import { ObjectItem, ObjectSortKey, ObjectsSearchState } from "./types";
 import { ObjectsTable } from "./ObjectsTable";
-import { useObjects } from "./useObjects";
+import { useObjectsCache } from "./useObjectsCache";
 import { ObjectsToolbar } from "./ObjectsToolbar";
 import { ObjectsSelectionBar } from "./ObjectsSelectionBar";
 import { SelectionTarget, useObjectSelection } from "./useObjectSelection";
@@ -19,7 +19,7 @@ interface ObjectsViewProps {
   onSearchChange: (next: ObjectsSearchState) => void;
   onRowClick: (item: ObjectItem) => void;
   selectedKey?: string | null;
-  onNextPage: (cursor: string) => void;
+  onNextPage: () => void;
   onPreviousPage: () => void;
   selectionResetKey?: number;
   onUploadClick?: () => void;
@@ -40,26 +40,24 @@ export function ObjectsView({
 
   const updateSearchState = useCallback(
     (updates: Partial<ObjectsSearchState>) => {
-      onSearchChange({ ...search, ...updates, cursor: undefined });
+      onSearchChange({ ...search, ...updates, pageIndex: 0 });
     },
     [onSearchChange, search],
   );
 
-  const query = useObjects({
+  const cacheQuery = useObjectsCache({
     bucket,
     prefix: search.prefix,
     search: search.search,
-    cursor: search.cursor,
+    compressed: getCompressionQueryParam(search),
     sort: search.sort,
     order: search.order,
-    limit: search.limit,
-    compressed: getCompressionQueryParam(search),
+    pageIndex: search.pageIndex,
+    pageSize: search.limit,
   });
 
-  const data = query.data;
-  const objects = useMemo(() => data?.objects ?? [], [data?.objects]);
-  const prefixes = useMemo(() => data?.common_prefixes ?? [], [data?.common_prefixes]);
-  const nextCursor = data?.cursor;
+  const objects = cacheQuery.objects;
+  const prefixes = cacheQuery.directories;
 
   const pageEntries = useMemo<SelectionTarget[]>(() => {
     const directoryEntries = prefixes.map<SelectionTarget>((prefix) => ({
@@ -135,6 +133,10 @@ export function ObjectsView({
     },
     [updateSearchState],
   );
+
+  const handleForceRefresh = useCallback(() => {
+    void cacheQuery.refetch();
+  }, [cacheQuery]);
 
   const handleDirectoryEnter = useCallback(
     (prefixValue: string) => {
@@ -362,23 +364,30 @@ export function ObjectsView({
     // Clear selection and refresh the view
     clearSelection();
     // Trigger a refetch by updating the query
-    query.refetch();
-  }, [bucket, clearSelection, expandSelectedKeys, toast, totalSelectedCount, query]);
+    cacheQuery.refetch();
+  }, [bucket, clearSelection, expandSelectedKeys, toast, totalSelectedCount, cacheQuery]);
 
-  const canGoPrevious = search.cursor !== undefined;
-  const canGoNext = Boolean(nextCursor);
+  const canGoPrevious = cacheQuery.hasPreviousPage;
+  const canGoNext = cacheQuery.hasNextPage;
 
   let tableContent: JSX.Element;
-  if (query.isError) {
+  if (cacheQuery.isError) {
     tableContent = (
       <div className="flex flex-1 items-center justify-center py-12">
-        <EmptyState title="Could not load objects" message={String(query.error)} />
+        <EmptyState title="Could not load objects" message={String(cacheQuery.error)} />
       </div>
     );
-  } else if (query.isLoading && !data) {
+  } else if (cacheQuery.isLoading) {
     tableContent = (
       <div className="flex flex-1 items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          {cacheQuery.fetchProgress && (
+            <p className="text-sm text-slate-500">
+              Loading... {cacheQuery.fetchProgress.loaded} objects
+            </p>
+          )}
+        </div>
       </div>
     );
   } else {
@@ -398,7 +407,7 @@ export function ObjectsView({
         pageSelectedCount={pageSelectedCount}
         onRowClick={onRowClick}
         onEnterDirectory={handleDirectoryEnter}
-        isFetching={query.isFetching}
+        isFetching={cacheQuery.isFetching}
       />
     );
   }
@@ -415,12 +424,14 @@ export function ObjectsView({
         onCompressionChange={(value) => updateSearchState({ compression: value })}
         onBreadcrumbNavigate={handleBreadcrumbNavigate}
         onUploadClick={onUploadClick}
+        onForceRefresh={handleForceRefresh}
+        isRefreshing={cacheQuery.isFetching}
       />
       {hasSelection ? (
         <ObjectsSelectionBar
           totalSelected={totalSelectedCount}
           pageSelected={pageSelectedCount}
-          isFetching={query.isFetching}
+          isFetching={cacheQuery.isFetching}
           onClear={clearSelection}
           onBulkDownload={handleBulkDownload}
           onBulkDelete={handleBulkDelete}
@@ -429,25 +440,20 @@ export function ObjectsView({
       <div className="flex-1 overflow-hidden">{tableContent}</div>
       <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-3 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
         <div className="flex items-center gap-2">
-          {query.isFetching ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> : null}
+          {cacheQuery.isFetching ? (
+            <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+          ) : null}
           <span>
-            Showing {objects.length} object{objects.length === 1 ? "" : "s"}
-            {pageSelectedCount ? ` · ${pageSelectedCount} selected here` : ""}
+            Page {cacheQuery.currentPage} of {cacheQuery.totalPages} ·{" "}
+            {objects.length + prefixes.length} items
+            {pageSelectedCount ? ` · ${pageSelectedCount} selected` : ""}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="secondary" disabled={!canGoPrevious} onClick={onPreviousPage}>
             Previous
           </Button>
-          <Button
-            variant="secondary"
-            disabled={!canGoNext}
-            onClick={() => {
-              if (nextCursor) {
-                onNextPage(nextCursor);
-              }
-            }}
-          >
+          <Button variant="secondary" disabled={!canGoNext} onClick={onNextPage}>
             Next
           </Button>
         </div>

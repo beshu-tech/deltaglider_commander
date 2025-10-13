@@ -1,0 +1,242 @@
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { qk } from "../../lib/api/queryKeys";
+import { ObjectItem, ObjectSortKey } from "./types";
+import {
+  fetchAllObjects,
+  sortObjects,
+  sortDirectories,
+  calculatePaginationInfo,
+  DirectoryCache,
+} from "./objectsCache";
+import { loadFromLocalStorage, saveToLocalStorage } from "../../lib/cache/localStorage";
+
+/**
+ * Options for the cached objects hook
+ */
+export interface UseObjectsCacheOptions {
+  bucket: string;
+  prefix?: string;
+  search?: string;
+  compressed?: "true" | "false" | "any";
+  sort: ObjectSortKey;
+  order: "asc" | "desc";
+  pageIndex: number;
+  pageSize: number;
+}
+
+/**
+ * Result from the cached objects hook
+ */
+export interface UseObjectsCacheResult {
+  // Data
+  objects: ObjectItem[];
+  directories: string[];
+  totalObjects: number;
+  totalDirectories: number;
+  totalItems: number;
+
+  // Pagination
+  currentPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  pageIndex: number;
+
+  // Query state
+  isLoading: boolean;
+  isError: boolean;
+  isFetching: boolean;
+  error: Error | null;
+  refetch: () => void;
+
+  // Progress (during initial fetch)
+  fetchProgress?: {
+    loaded: number;
+    total: number | undefined;
+  };
+}
+
+/**
+ * Hook that fetches and caches all objects in a directory for client-side sorting and pagination.
+ *
+ * This hook replaces useObjects for better performance when sorting. It:
+ * 1. Fetches ALL pages on initial load (uses cursor pagination internally)
+ * 2. Caches the complete dataset in TanStack Query
+ * 3. Performs sorting and pagination client-side (instant, no network requests)
+ * 4. Automatically invalidates cache when needed
+ *
+ * @param options - Hook options including bucket, prefix, sort, pagination
+ * @returns Paginated and sorted objects with query state
+ */
+export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCacheResult {
+  const { bucket, prefix = "", search, compressed, sort, order, pageIndex, pageSize } = options;
+
+  const [fetchProgress, setFetchProgress] = useState<{
+    loaded: number;
+    total: number | undefined;
+  }>();
+  const skipLocalStorageRef = useRef(false);
+
+  const queryKey = qk.objectsFull(bucket, prefix, undefined, "any");
+
+  // Query for full directory cache (without search or compression filter - we'll filter client-side)
+  const query = useQuery<DirectoryCache, Error>({
+    queryKey,
+    queryFn: async () => {
+      setFetchProgress(undefined); // Reset progress
+
+      // Try to load from localStorage first (unless skipLocalStorageRef is true)
+      if (!skipLocalStorageRef.current) {
+        const cached = loadFromLocalStorage<DirectoryCache>(queryKey);
+        if (cached) {
+          return cached;
+        }
+      }
+
+      // Reset the flag for next query
+      skipLocalStorageRef.current = false;
+
+      // Fetch from network
+      const result = await fetchAllObjects({
+        bucket,
+        prefix,
+        search: undefined, // Don't pass search to API, we'll filter client-side
+        compressed: "any", // Fetch all objects, we'll filter client-side
+        onProgress: (loaded, total) => {
+          setFetchProgress({ loaded, total });
+        },
+      });
+      setFetchProgress(undefined); // Clear progress when done
+
+      // Save to localStorage for future use
+      saveToLocalStorage(queryKey, result);
+
+      return result;
+    },
+    staleTime: 30_000, // Cache fresh for 30 seconds in memory
+    gcTime: 5 * 60 * 1000, // Keep in memory cache for 5 minutes
+  });
+
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    if (query.data) {
+      saveToLocalStorage(queryKey, query.data);
+    }
+  }, [query.data, queryKey]);
+
+  // Extract cached data
+  const cache = query.data;
+
+  // Filter objects by compression type (client-side)
+  const compressionFilteredObjects = useMemo(() => {
+    if (!cache) return [];
+    if (!compressed || compressed === "any") return cache.objects;
+
+    if (compressed === "true") {
+      return cache.objects.filter((obj) => obj.compressed);
+    } else if (compressed === "false") {
+      return cache.objects.filter((obj) => !obj.compressed);
+    }
+    return cache.objects;
+  }, [cache, compressed]);
+
+  // Filter objects by search term (client-side)
+  const filteredObjects = useMemo(() => {
+    if (!search || search.trim() === "") return compressionFilteredObjects;
+
+    const searchLower = search.toLowerCase();
+    return compressionFilteredObjects.filter((obj) => obj.key.toLowerCase().includes(searchLower));
+  }, [compressionFilteredObjects, search]);
+
+  // Filter directories by search term (client-side)
+  const filteredDirectories = useMemo(() => {
+    if (!cache) return [];
+    if (!search || search.trim() === "") return cache.directories;
+
+    const searchLower = search.toLowerCase();
+    return cache.directories.filter((dir) => dir.toLowerCase().includes(searchLower));
+  }, [cache, search]);
+
+  // Sort objects client-side
+  const sortedObjects = useMemo(() => {
+    return sortObjects(filteredObjects, sort, order);
+  }, [filteredObjects, sort, order]);
+
+  // Sort directories (always alphabetical)
+  const sortedDirectories = useMemo(() => {
+    return sortDirectories(filteredDirectories);
+  }, [filteredDirectories]);
+
+  // Calculate total items for pagination (based on filtered results)
+  const totalItems = sortedObjects.length + sortedDirectories.length;
+
+  // Calculate pagination info
+  const paginationInfo = useMemo(
+    () => calculatePaginationInfo(totalItems, pageIndex, pageSize),
+    [totalItems, pageIndex, pageSize],
+  );
+
+  // Paginate: directories first, then objects
+  const { paginatedDirectories, paginatedObjects } = useMemo(() => {
+    if (!cache) {
+      return { paginatedDirectories: [], paginatedObjects: [] };
+    }
+
+    const startIndex = paginationInfo.startIndex;
+    const endIndex = paginationInfo.endIndex;
+    const dirCount = sortedDirectories.length;
+
+    // If page starts before directories end, include directories
+    let dirs: string[] = [];
+    if (startIndex < dirCount) {
+      const dirEnd = Math.min(endIndex, dirCount);
+      dirs = sortedDirectories.slice(startIndex, dirEnd);
+    }
+
+    // If page extends into objects, include objects
+    let objs: ObjectItem[] = [];
+    if (endIndex > dirCount) {
+      const objStart = Math.max(0, startIndex - dirCount);
+      const objEnd = endIndex - dirCount;
+      objs = sortedObjects.slice(objStart, objEnd);
+    }
+
+    return {
+      paginatedDirectories: dirs,
+      paginatedObjects: objs,
+    };
+  }, [cache, sortedDirectories, sortedObjects, paginationInfo]);
+
+  // Custom refetch that bypasses localStorage
+  const refetch = () => {
+    skipLocalStorageRef.current = true;
+    return query.refetch();
+  };
+
+  return {
+    // Data
+    objects: paginatedObjects,
+    directories: paginatedDirectories,
+    totalObjects: sortedObjects.length, // Filtered count
+    totalDirectories: sortedDirectories.length, // Filtered count
+    totalItems,
+
+    // Pagination
+    currentPage: paginationInfo.currentPage,
+    totalPages: paginationInfo.totalPages,
+    hasNextPage: paginationInfo.hasNextPage,
+    hasPreviousPage: paginationInfo.hasPreviousPage,
+    pageIndex,
+
+    // Query state
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isFetching: query.isFetching,
+    error: query.error,
+    refetch,
+
+    // Progress
+    fetchProgress,
+  };
+}

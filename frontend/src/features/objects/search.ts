@@ -37,10 +37,23 @@ function parseLimit(value: unknown): number {
   return DEFAULT_OBJECTS_SEARCH_STATE.limit;
 }
 
+function parsePageIndex(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
+    return Math.floor(value);
+  }
+  if (typeof value === "string") {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isNaN(parsed) && parsed >= 0) {
+      return parsed;
+    }
+  }
+  return DEFAULT_OBJECTS_SEARCH_STATE.pageIndex;
+}
+
 export function normalizeObjectsSearch(raw: RawSearch): ObjectsSearchState {
   const prefix = typeof raw?.prefix === "string" ? raw.prefix : DEFAULT_OBJECTS_SEARCH_STATE.prefix;
   const search = typeof raw?.search === "string" ? raw.search : undefined;
-  const cursor = typeof raw?.cursor === "string" ? raw.cursor : undefined;
+  const pageIndex = parsePageIndex(raw?.pageIndex);
   const sort = parseSort(raw?.sort);
   const order = parseOrder(raw?.order);
   const limit = parseLimit(raw?.limit);
@@ -49,7 +62,7 @@ export function normalizeObjectsSearch(raw: RawSearch): ObjectsSearchState {
   return {
     prefix,
     search,
-    cursor,
+    pageIndex,
     sort,
     order,
     limit,
@@ -63,7 +76,7 @@ export function serializeObjectsSearch(
   return {
     prefix: state.prefix,
     search: state.search ?? undefined,
-    cursor: state.cursor ?? undefined,
+    pageIndex: state.pageIndex > 0 ? state.pageIndex : undefined,
     sort: state.sort,
     order: state.order,
     limit: state.limit,

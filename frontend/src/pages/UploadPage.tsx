@@ -24,8 +24,11 @@ export function UploadPage() {
   }, [bucket, currentSearch, navigate]);
 
   const handleCompleted = useCallback(() => {
+    // Invalidate both old cursor-based cache and new full cache
     queryClient.invalidateQueries({
-      predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "objects",
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        (query.queryKey[0] === "objects" || query.queryKey[0] === "objects-full"),
     });
   }, [queryClient]);
 

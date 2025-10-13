@@ -17,10 +17,11 @@ export function useDeleteObject(bucket: string | null) {
     onSuccess: (_data, key) => {
       toast.push({ title: "Object deleted", description: key, level: "success" });
       if (bucket) {
+        // Invalidate both old cursor-based cache and new full cache
         void queryClient.invalidateQueries({
           predicate: (query) =>
             Array.isArray(query.queryKey) &&
-            query.queryKey[0] === "objects" &&
+            (query.queryKey[0] === "objects" || query.queryKey[0] === "objects-full") &&
             query.queryKey[1] === bucket,
         });
         void queryClient.removeQueries({ queryKey: qk.metadata(bucket, key) });
