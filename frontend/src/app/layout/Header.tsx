@@ -1,12 +1,9 @@
-import { Link } from "@tanstack/react-router";
 import { Moon, Sun } from "lucide-react";
-import { getEnv } from "../../lib/config/env";
 import { Button } from "../../lib/ui/Button";
 import { useTheme } from "../theme";
 
 export function Header() {
   const [theme, toggleTheme] = useTheme();
-  const title = getEnv().VITE_APP_NAME;
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
