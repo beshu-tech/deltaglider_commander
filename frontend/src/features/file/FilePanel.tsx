@@ -66,6 +66,8 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
         });
         window.setTimeout(() => setCopiedField(null), 1500);
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Copy failed", error);
         toast.push({ title: "Copy failed", description: String(error), level: "error" });
       }
     },
@@ -96,6 +98,8 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
       const link = `${apiUrl}/api/download/${download_token}`;
       await handleCopy(link, "link");
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Copy download link failed", error);
       toast.push({ title: "Copy failed", description: String(error), level: "error" });
     } finally {
       setIsCopyingLink(false);
