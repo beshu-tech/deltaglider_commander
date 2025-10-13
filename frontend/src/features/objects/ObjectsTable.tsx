@@ -22,6 +22,7 @@ interface ObjectsTableProps {
   onRowClick: (item: ObjectItem) => void;
   onEnterDirectory: (prefix: string) => void;
   isFetching: boolean;
+  isLoadingMetadata?: boolean; // True when loading full metadata after preview
 }
 
 export function ObjectsTable({
@@ -40,6 +41,7 @@ export function ObjectsTable({
   onRowClick,
   onEnterDirectory,
   isFetching,
+  isLoadingMetadata = false,
 }: ObjectsTableProps) {
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
@@ -217,8 +219,14 @@ export function ObjectsTable({
                   </TableCell>
                   <TableCell>
                     {(() => {
+                      // original_bytes is always available in preview data, so show it immediately
                       const { effectiveSize } = getCompressionStats(item);
-                      if (item.compressed && item.original_bytes !== effectiveSize) {
+                      if (
+                        !isLoadingMetadata &&
+                        item.compressed &&
+                        item.original_bytes !== effectiveSize
+                      ) {
+                        // Show compressed size with strikethrough original when metadata is loaded
                         return (
                           <span className="flex flex-col text-sm">
                             <span className="font-medium text-slate-900 dark:text-slate-100">
@@ -230,6 +238,7 @@ export function ObjectsTable({
                           </span>
                         );
                       }
+                      // Always show original_bytes (available immediately)
                       return (
                         <span className="font-medium">{formatBytes(item.original_bytes)}</span>
                       );
@@ -237,7 +246,11 @@ export function ObjectsTable({
                   </TableCell>
                   <TableCell>{formatDateTime(item.modified)}</TableCell>
                   <TableCell>
-                    {(() => {
+                    {isLoadingMetadata ? (
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                      </div>
+                    ) : (() => {
                       const { percentage } = getCompressionStats(item);
                       if (!item.compressed) {
                         return (

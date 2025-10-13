@@ -20,43 +20,87 @@ export interface FetchAllObjectsParams {
   search?: string;
   compressed?: "true" | "false" | "any";
   onProgress?: (loaded: number, total: number | undefined) => void;
+  onPreviewReady?: (preview: DirectoryCache) => void;
 }
 
 /**
- * Fetches all objects in a directory by iterating through all cursor-based pages.
- * This allows us to cache the complete dataset for client-side sorting and pagination.
+ * Fetches all objects in a directory using two-stage loading:
+ * 1. Quick preview: First 100 items WITHOUT metadata (fast)
+ * 2. Full data: ALL items WITH metadata (complete)
+ *
+ * This allows us to show a preview immediately while loading the full dataset in the background.
  *
  * @param params - Fetch parameters
  * @returns Complete directory cache with all objects and directories
  */
 export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<DirectoryCache> {
-  const { bucket, prefix, search, compressed, onProgress } = params;
+  const { bucket, prefix, search, compressed, onProgress, onPreviewReady } = params;
+
+  // Stage 1: Quick preview (first 100 items, no metadata)
+  if (onPreviewReady) {
+    console.log("[objectsCache] Stage 1: Fetching quick preview (100 items, no metadata)");
+    const previewResponse = await fetchObjects({
+      bucket,
+      prefix,
+      search,
+      cursor: undefined,
+      limit: 100,
+      sort: "name",
+      order: "asc",
+      compressed,
+      fetchMetadata: false, // FAST: Skip metadata
+    });
+
+    console.log(
+      `[objectsCache] Preview ready: ${previewResponse.objects.length} objects, ${previewResponse.common_prefixes.length} dirs`,
+    );
+
+    // Provide quick preview to UI immediately
+    onPreviewReady({
+      objects: previewResponse.objects,
+      directories: previewResponse.common_prefixes,
+      totalObjects: previewResponse.objects.length,
+      totalDirectories: previewResponse.common_prefixes.length,
+    });
+  }
+
+  // Stage 2: Full data fetch (all items, with metadata)
+  console.log("[objectsCache] Stage 2: Fetching full data (all items, with metadata)");
   const allObjects: ObjectItem[] = [];
   const allDirectories = new Set<string>();
   let cursor: string | undefined;
+  let pageCount = 0;
 
   do {
+    pageCount++;
     const response = await fetchObjects({
       bucket,
       prefix,
       search,
       cursor,
-      limit: 500, // Use larger limit for efficiency
+      limit: 500, // Use larger page size for efficiency
       sort: "name",
       order: "asc",
       compressed,
+      fetchMetadata: true, // COMPLETE: Include all metadata
     });
 
     allObjects.push(...response.objects);
     response.common_prefixes.forEach((dir) => allDirectories.add(dir));
 
-    // Report progress if callback provided
+    // Report progress
     if (onProgress) {
-      // We don't know total until we finish, so pass undefined
       onProgress(allObjects.length, undefined);
     }
 
     cursor = response.cursor ?? undefined;
+    if (cursor) {
+      console.log(
+        `[objectsCache] Fetching page ${pageCount + 1}, loaded so far: ${allObjects.length}`,
+      );
+    } else {
+      console.log(`[objectsCache] Full fetch complete: ${allObjects.length} objects total`);
+    }
   } while (cursor);
 
   return {
@@ -103,14 +147,16 @@ export function sortObjects(
 }
 
 /**
- * Sorts directories array alphabetically.
- * Directories are always sorted by name ascending.
+ * Sorts directories array by name.
+ * Directories are sorted by name only (size/modified don't apply to directories).
  *
  * @param directories - Array of directory prefixes to sort
+ * @param order - Sort order (asc or desc)
  * @returns Sorted array (new array, does not mutate input)
  */
-export function sortDirectories(directories: string[]): string[] {
-  return [...directories].sort((a, b) => a.localeCompare(b));
+export function sortDirectories(directories: string[], order: "asc" | "desc" = "asc"): string[] {
+  const sorted = [...directories].sort((a, b) => a.localeCompare(b));
+  return order === "desc" ? sorted.reverse() : sorted;
 }
 
 /**
@@ -191,4 +237,19 @@ export function calculatePaginationInfo(
     startIndex: pageIndex * pageSize,
     endIndex: Math.min((pageIndex + 1) * pageSize, totalItems),
   };
+}
+
+/**
+ * Clears all cached object listings from localStorage and TanStack Query cache.
+ * This forces fresh data fetch on next directory access.
+ */
+export function clearObjectsCache(): void {
+  // Clear localStorage items that store object cache backups
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith("tanstack-query-")) {
+      localStorage.removeItem(key);
+    }
+  });
+
+  console.log("[objectsCache] Cleared all cached object listings from localStorage");
 }

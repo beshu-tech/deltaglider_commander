@@ -77,6 +77,7 @@ def list_objects(query: ObjectListRequest):
             compressed=query.compressed,
             search=query.search,
             credentials_key=credentials_key,  # SECURITY: Isolate cache by credentials
+            fetch_metadata=query.fetch_metadata,
         )
     except KeyError:
         raise NotFoundError("bucket", "bucket_not_found")

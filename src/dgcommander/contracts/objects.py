@@ -80,6 +80,7 @@ class ObjectListRequest(BaseModel):
     sort: str | None = None
     order: str | None = None
     compressed: bool | None = None
+    fetch_metadata: bool = True  # Default to True for backward compatibility
 
     @field_validator("bucket")
     @classmethod

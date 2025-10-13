@@ -132,10 +132,12 @@ class CatalogService:
         compressed: bool | None,
         search: str | None = None,
         credentials_key: str | None = None,
+        fetch_metadata: bool = True,
     ) -> ObjectList:
         # Try to get from cache first (if cache and credentials_key provided)
+        # IMPORTANT: Only use cache when fetch_metadata=True to avoid storing incomplete preview data
         sort_key = sort_order.name
-        if self.list_cache is not None and credentials_key is not None:
+        if fetch_metadata and self.list_cache is not None and credentials_key is not None:
             cached = self.list_cache.get(credentials_key, bucket, prefix, sort_key, compressed, search)
             if cached is not None:
                 sorted_objects, common_prefixes = cached.to_lists()
@@ -161,7 +163,7 @@ class CatalogService:
 
         # Cache miss - fetch ALL objects in the prefix to ensure proper sorting
         # (sorting must consider all objects, not just a page)
-        listing = self.sdk.list_objects(bucket, prefix, max_items=None, quick_mode=True)
+        listing = self.sdk.list_objects(bucket, prefix, max_items=None, quick_mode=not fetch_metadata)
         filtered = [obj for obj in listing.objects if compressed is None or obj.compressed == compressed]
 
         # Apply search filter if provided
@@ -173,7 +175,8 @@ class CatalogService:
         sorted_objects = _sort_objects(filtered, sort_order)
 
         # Store in cache for future requests (if cache and credentials_key provided)
-        if self.list_cache is not None and credentials_key is not None:
+        # IMPORTANT: Only cache when fetch_metadata=True to avoid caching incomplete preview data
+        if fetch_metadata and self.list_cache is not None and credentials_key is not None:
             self.list_cache.set(
                 credentials_key, bucket, prefix, sort_key, compressed, search, sorted_objects, listing.common_prefixes
             )

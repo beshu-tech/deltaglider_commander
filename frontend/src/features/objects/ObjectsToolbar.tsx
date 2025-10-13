@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, RefreshCw, Search, UploadCloud } from "lucide-react";
+import { ChevronRight, RefreshCw, Search, UploadCloud, Trash2 } from "lucide-react";
 import { ObjectsCompressionFilter } from "./types";
 import { Input } from "../../lib/ui/Input";
 import { Select } from "../../lib/ui/Select";
@@ -16,6 +16,7 @@ export interface ObjectsToolbarProps {
   onBreadcrumbNavigate: (value: string | null) => void;
   onUploadClick?: () => void;
   onForceRefresh?: () => void;
+  onClearCache?: () => void;
   isRefreshing?: boolean;
 }
 
@@ -29,6 +30,7 @@ export function ObjectsToolbar({
   onBreadcrumbNavigate,
   onUploadClick,
   onForceRefresh,
+  onClearCache,
   isRefreshing = false,
 }: ObjectsToolbarProps) {
   const [searchValue, setSearchValue] = useState(search || "");
@@ -130,6 +132,17 @@ export function ObjectsToolbar({
             </option>
           ))}
         </Select>
+        {onClearCache ? (
+          <button
+            type="button"
+            onClick={onClearCache}
+            className="flex items-center justify-center rounded-md border border-slate-200 bg-white p-2 text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            title="Clear cache"
+            aria-label="Clear cached directory listings"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        ) : null}
         {onForceRefresh ? (
           <button
             type="button"

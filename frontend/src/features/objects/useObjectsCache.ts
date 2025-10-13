@@ -47,6 +47,7 @@ export interface UseObjectsCacheResult {
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
+  isLoadingFull: boolean; // True when loading full data after preview
   error: Error | null;
   refetch: () => void;
 
@@ -76,6 +77,8 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     loaded: number;
     total: number | undefined;
   }>();
+  const [previewData, setPreviewData] = useState<DirectoryCache | null>(null);
+  const [isLoadingFull, setIsLoadingFull] = useState(false);
   const skipLocalStorageRef = useRef(false);
 
   const queryKey = qk.objectsFull(bucket, prefix, undefined, "any");
@@ -85,6 +88,8 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     queryKey,
     queryFn: async () => {
       setFetchProgress(undefined); // Reset progress
+      setPreviewData(null); // Clear any previous preview
+      setIsLoadingFull(false);
 
       // Try to load from localStorage first (unless skipLocalStorageRef is true)
       if (!skipLocalStorageRef.current) {
@@ -97,7 +102,7 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
       // Reset the flag for next query
       skipLocalStorageRef.current = false;
 
-      // Fetch from network
+      // Fetch from network with two-stage loading
       const result = await fetchAllObjects({
         bucket,
         prefix,
@@ -106,8 +111,14 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
         onProgress: (loaded, total) => {
           setFetchProgress({ loaded, total });
         },
+        onPreviewReady: (preview) => {
+          // Show preview immediately to user and mark as loading full data
+          setPreviewData(preview);
+          setIsLoadingFull(true);
+        },
       });
       setFetchProgress(undefined); // Clear progress when done
+      setIsLoadingFull(false);
 
       // Save to localStorage for future use
       saveToLocalStorage(queryKey, result);
@@ -125,8 +136,9 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     }
   }, [query.data, queryKey]);
 
-  // Extract cached data
-  const cache = query.data;
+  // Use preview data while full data is loading, otherwise use full data
+  // Priority: full data > preview data > null
+  const cache = query.data || previewData;
 
   // Filter objects by compression type (client-side)
   const compressionFilteredObjects = useMemo(() => {
@@ -163,10 +175,12 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     return sortObjects(filteredObjects, sort, order);
   }, [filteredObjects, sort, order]);
 
-  // Sort directories (always alphabetical)
+  // Sort directories by name (directories don't have size/modified, so only name sorting applies)
   const sortedDirectories = useMemo(() => {
-    return sortDirectories(filteredDirectories);
-  }, [filteredDirectories]);
+    // Only apply order when sorting by name, otherwise keep alphabetical
+    const dirOrder = sort === "name" ? order : "asc";
+    return sortDirectories(filteredDirectories, dirOrder);
+  }, [filteredDirectories, sort, order]);
 
   // Calculate total items for pagination (based on filtered results)
   const totalItems = sortedObjects.length + sortedDirectories.length;
@@ -233,6 +247,7 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     isLoading: query.isLoading,
     isError: query.isError,
     isFetching: query.isFetching,
+    isLoadingFull,
     error: query.error,
     refetch,
 

@@ -12,6 +12,8 @@ import { ObjectsToolbar } from "./ObjectsToolbar";
 import { ObjectsSelectionBar } from "./ObjectsSelectionBar";
 import { SelectionTarget, useObjectSelection } from "./useObjectSelection";
 import { getCompressionQueryParam } from "./search";
+import { clearObjectsCache } from "./objectsCache";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ObjectsViewProps {
   bucket: string;
@@ -37,6 +39,7 @@ export function ObjectsView({
   onUploadClick,
 }: ObjectsViewProps) {
   const toast = useToast();
+  const queryClient = useQueryClient();
 
   const updateSearchState = useCallback(
     (updates: Partial<ObjectsSearchState>) => {
@@ -137,6 +140,25 @@ export function ObjectsView({
   const handleForceRefresh = useCallback(() => {
     void cacheQuery.refetch();
   }, [cacheQuery]);
+
+  const handleClearCache = useCallback(() => {
+    const confirmed = confirm("Clear all cached directory listings? This will reload data from the server.");
+    if (!confirmed) {
+      return;
+    }
+
+    // Clear localStorage cache
+    clearObjectsCache();
+
+    // Clear TanStack Query cache
+    void queryClient.invalidateQueries({ queryKey: ["objects", "full"] });
+
+    toast.push({
+      title: "Cache cleared",
+      description: "All cached directory listings have been cleared",
+      level: "success",
+    });
+  }, [queryClient, toast]);
 
   const handleDirectoryEnter = useCallback(
     (prefixValue: string) => {
@@ -377,7 +399,8 @@ export function ObjectsView({
         <EmptyState title="Could not load objects" message={String(cacheQuery.error)} />
       </div>
     );
-  } else if (cacheQuery.isLoading) {
+  } else if (cacheQuery.isLoading && objects.length === 0 && prefixes.length === 0) {
+    // Only show loading spinner if we have no data yet (not even preview)
     tableContent = (
       <div className="flex flex-1 items-center justify-center py-12">
         <div className="flex flex-col items-center gap-3">
@@ -391,6 +414,7 @@ export function ObjectsView({
       </div>
     );
   } else {
+    // Show table if we have data (even if still loading full dataset)
     tableContent = (
       <ObjectsTable
         objects={objects}
@@ -408,6 +432,7 @@ export function ObjectsView({
         onRowClick={onRowClick}
         onEnterDirectory={handleDirectoryEnter}
         isFetching={cacheQuery.isFetching}
+        isLoadingMetadata={cacheQuery.isLoadingFull}
       />
     );
   }
@@ -424,6 +449,7 @@ export function ObjectsView({
         onCompressionChange={(value) => updateSearchState({ compression: value })}
         onBreadcrumbNavigate={handleBreadcrumbNavigate}
         onUploadClick={onUploadClick}
+        onClearCache={handleClearCache}
         onForceRefresh={handleForceRefresh}
         isRefreshing={cacheQuery.isFetching}
       />
@@ -447,6 +473,7 @@ export function ObjectsView({
             Page {cacheQuery.currentPage} of {cacheQuery.totalPages} ·{" "}
             {objects.length + prefixes.length} items
             {pageSelectedCount ? ` · ${pageSelectedCount} selected` : ""}
+            {cacheQuery.isLoadingFull ? " · loading full data..." : ""}
           </span>
         </div>
         <div className="flex items-center gap-2">

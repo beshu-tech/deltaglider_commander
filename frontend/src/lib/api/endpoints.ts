@@ -26,6 +26,7 @@ export interface ObjectsParams {
   sort?: string;
   order?: "asc" | "desc";
   compressed?: "true" | "false" | "any";
+  fetchMetadata?: boolean;
 }
 
 export async function fetchBuckets(): Promise<Bucket[]> {
@@ -137,6 +138,9 @@ export async function fetchObjects(params: ObjectsParams): Promise<ObjectList> {
   if (params.order) query.set("order", params.order);
   if (params.compressed && params.compressed !== "any") {
     query.set("compressed", params.compressed);
+  }
+  if (params.fetchMetadata !== undefined) {
+    query.set("fetch_metadata", String(params.fetchMetadata));
   }
   const data = await apiWithAuth<unknown>(`/api/objects/?${query.toString()}`);
   return objectListSchema.parse(data);

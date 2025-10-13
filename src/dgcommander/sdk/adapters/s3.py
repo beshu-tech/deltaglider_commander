@@ -149,7 +149,7 @@ class S3DeltaGliderSDK:
             bucket: S3 bucket name
             prefix: Object key prefix to filter by
             max_items: Maximum number of items to fetch. If None, fetch all objects.
-            quick_mode: If True, skip metadata extraction for faster listing (currently ignored)
+            quick_mode: If True, skip metadata extraction for faster listing (FetchMetadata=False)
         """
         normalized_prefix = self._normalize_prefix(prefix)
 
@@ -165,7 +165,7 @@ class S3DeltaGliderSDK:
                     "Prefix": normalized_prefix,
                     "MaxKeys": 1000,  # S3 max per request
                     "Delimiter": "/",
-                    "FetchMetadata": True,
+                    "FetchMetadata": not quick_mode,  # Skip metadata when quick_mode=True
                 }
                 if continuation_token:
                     list_kwargs["ContinuationToken"] = continuation_token
@@ -222,7 +222,7 @@ class S3DeltaGliderSDK:
                 Prefix=normalized_prefix,
                 MaxKeys=max_items,
                 Delimiter="/",
-                FetchMetadata=True,
+                FetchMetadata=not quick_mode,  # Skip metadata when quick_mode=True
             )
 
             for item in response.get("Contents", []):
