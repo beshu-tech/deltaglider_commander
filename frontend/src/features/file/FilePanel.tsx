@@ -23,6 +23,8 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
   const query = useFile(bucket, objectKey);
   const deleteMutation = useDeleteObject(bucket);
   const [isCopyingLink, setIsCopyingLink] = useState(false);
+  const [downloadLink, setDownloadLink] = useState<string | null>(null);
+  const [showLinkFallback, setShowLinkFallback] = useState(false);
 
   useEffect(() => {
     if (query.error) {
@@ -52,6 +54,11 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
   const handleCopy = useCallback(
     async (value: string, field: "key" | "uri" | "link") => {
       try {
+        // Check if clipboard API is available
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          throw new Error("Clipboard API not available. Please use HTTPS or localhost.");
+        }
+
         await navigator.clipboard.writeText(value);
         setCopiedField(field);
         const labels = {
@@ -96,11 +103,34 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
       const { download_token } = await prepareDownload(bucket, metadata.key);
       const apiUrl = getApiUrl() || window.location.origin;
       const link = `${apiUrl}/api/download/${download_token}`;
-      await handleCopy(link, "link");
+
+      // Try to copy to clipboard
+      try {
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          throw new Error("Clipboard API not available");
+        }
+        await navigator.clipboard.writeText(link);
+        setCopiedField("link");
+        toast.push({
+          title: "Download link copied",
+          description: "Link ready to share",
+          level: "success",
+        });
+        window.setTimeout(() => setCopiedField(null), 1500);
+      } catch (clipboardError) {
+        // Clipboard failed, show fallback UI
+        setDownloadLink(link);
+        setShowLinkFallback(true);
+        toast.push({
+          title: "Clipboard unavailable",
+          description: "Link displayed below for manual copy",
+          level: "info",
+        });
+      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Copy download link failed", error);
-      toast.push({ title: "Copy failed", description: String(error), level: "error" });
+      toast.push({ title: "Failed to generate link", description: String(error), level: "error" });
     } finally {
       setIsCopyingLink(false);
     }
@@ -180,6 +210,36 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
             </span>
           </Button>
         </div>
+
+        {/* Fallback UI for manual link copying */}
+        {showLinkFallback && downloadLink && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-medium text-amber-900 dark:text-amber-100">
+                Manual copy required
+              </p>
+              <button
+                onClick={() => setShowLinkFallback(false)}
+                className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300"
+                aria-label="Close"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="rounded bg-white p-2 dark:bg-slate-800">
+              <input
+                type="text"
+                value={downloadLink}
+                readOnly
+                className="w-full select-all border-none bg-transparent text-xs text-slate-700 outline-none dark:text-slate-300"
+                onClick={(e) => e.currentTarget.select()}
+              />
+            </div>
+            <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+              Click the link above to select and copy it manually
+            </p>
+          </div>
+        )}
       </section>
 
       <section className="space-y-3">
