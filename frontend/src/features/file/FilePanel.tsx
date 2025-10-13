@@ -170,10 +170,10 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
         <Button
           variant="ghost"
           onClick={onClose}
-          aria-label="Close"
-          className="text-slate-500 hover:text-slate-900"
+          aria-label="Close panel"
+          className="h-8 w-8 p-0 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </Button>
       </div>
       <section className="space-y-2">

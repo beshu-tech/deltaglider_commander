@@ -59,11 +59,11 @@ export function BucketsPage() {
             {summary ? (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* Buckets Stat */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-elevation-sm dark:shadow-elevation-sm-dark">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-11 h-11 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
                       <svg
-                        className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                        className="w-6 h-6 text-blue-600 dark:text-blue-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -76,16 +76,16 @@ export function BucketsPage() {
                         />
                       </svg>
                     </div>
-                    <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Buckets
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                     {summary.bucketCount}
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                     {summary.pendingCount > 0 ? (
-                      <span className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
                         {summary.pendingCount} pending
                       </span>
@@ -96,11 +96,11 @@ export function BucketsPage() {
                 </div>
 
                 {/* Objects Stat */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-elevation-sm dark:shadow-elevation-sm-dark">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-11 h-11 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
                       <svg
-                        className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                        className="w-6 h-6 text-purple-600 dark:text-purple-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -113,24 +113,24 @@ export function BucketsPage() {
                         />
                       </svg>
                     </div>
-                    <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Objects
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                     {summary.objectCount.toLocaleString()}
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                     {formatBytes(summary.storedBytes)} stored
                   </p>
                 </div>
 
                 {/* Compression Ratio */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-elevation-sm dark:shadow-elevation-sm-dark">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-11 h-11 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
                       <svg
-                        className="w-5 h-5 text-amber-600 dark:text-amber-400"
+                        className="w-6 h-6 text-amber-600 dark:text-amber-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -143,22 +143,24 @@ export function BucketsPage() {
                         />
                       </svg>
                     </div>
-                    <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Ratio
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-                    {(summary.originalBytes / summary.storedBytes).toFixed(1)}:1
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                    {summary.originalBytes === 0 || summary.storedBytes === 0
+                      ? "N/A"
+                      : `${(summary.originalBytes / summary.storedBytes).toFixed(1)}:1`}
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">compression</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">compression</p>
                 </div>
 
                 {/* Total Savings */}
-                <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950 dark:to-green-950 rounded-xl p-6 border border-emerald-200 dark:border-emerald-800 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-md">
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950 dark:to-green-950 rounded-xl p-6 border border-emerald-200 dark:border-emerald-800 shadow-elevation-md dark:shadow-elevation-md-dark">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-md">
                       <svg
-                        className="w-5 h-5 text-white"
+                        className="w-6 h-6 text-white"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -171,14 +173,14 @@ export function BucketsPage() {
                         />
                       </svg>
                     </div>
-                    <span className="text-xs font-bold uppercase text-emerald-700 dark:text-emerald-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                       Saved
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                  <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">
                     {summary.savingsPct.toFixed(1)}%
                   </div>
-                  <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
                     {formatBytes(summary.originalBytes - summary.storedBytes)}
                   </p>
                 </div>
