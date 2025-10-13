@@ -316,7 +316,7 @@ function SidebarActions({
   onFilterChange,
 }: SidebarActionsProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-group">
       {showCreateForm ? (
         <CreateBucketForm
           value={bucketName}
@@ -433,8 +433,8 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-full w-80 min-w-[20rem] flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 px-6 py-8 text-slate-100 border-r border-slate-800/50">
-      <div className="space-y-8">
+    <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 px-group py-section text-slate-100 border-r border-slate-800/50">
+      <div className="space-y-section">
         <SidebarHeader onNavigateHome={() => setFilter("")} />
         <SidebarActions
           creating={createBucketMutation.isPending}
@@ -454,8 +454,8 @@ export function Sidebar() {
           filter={filter}
           onFilterChange={setFilter}
         />
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-2">
+        <div className="space-y-item">
+          <div className="flex items-center gap-inline px-2">
             <svg
               className="h-3 w-3 text-slate-500"
               fill="none"
@@ -469,7 +469,7 @@ export function Sidebar() {
                 d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
               />
             </svg>
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <span className="text-label-sm uppercase tracking-wide text-slate-400">
               Your Buckets
             </span>
             <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>

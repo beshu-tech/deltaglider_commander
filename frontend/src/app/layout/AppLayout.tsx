@@ -6,7 +6,7 @@ import { Sidebar } from "./Sidebar";
 export function AppLayout() {
   return (
     <AuthGuard>
-      <div className="flex h-screen w-screen overflow-hidden bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="flex h-screen w-screen overflow-hidden bg-surface-base text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header />
