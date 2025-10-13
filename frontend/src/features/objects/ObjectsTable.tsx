@@ -250,37 +250,39 @@ export function ObjectsTable({
                       <div className="flex items-center justify-center">
                         <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                       </div>
-                    ) : (() => {
-                      const { percentage } = getCompressionStats(item);
-                      if (!item.compressed) {
+                    ) : (
+                      (() => {
+                        const { percentage } = getCompressionStats(item);
+                        if (!item.compressed) {
+                          return (
+                            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                              Original
+                            </span>
+                          );
+                        }
+
+                        // Color coding based on compression percentage
+                        const getCompressionColor = (pct: number) => {
+                          if (pct >= 90)
+                            return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+                          if (pct >= 70)
+                            return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+                          if (pct >= 50)
+                            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+                          if (pct >= 30)
+                            return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+                          return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+                        };
+
                         return (
-                          <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300">
-                            Original
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getCompressionColor(percentage)}`}
+                          >
+                            {percentage.toFixed(1)}%
                           </span>
                         );
-                      }
-
-                      // Color coding based on compression percentage
-                      const getCompressionColor = (pct: number) => {
-                        if (pct >= 90)
-                          return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
-                        if (pct >= 70)
-                          return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-                        if (pct >= 50)
-                          return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-                        if (pct >= 30)
-                          return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
-                        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-                      };
-
-                      return (
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getCompressionColor(percentage)}`}
-                        >
-                          {percentage.toFixed(1)}%
-                        </span>
-                      );
-                    })()}
+                      })()
+                    )}
                   </TableCell>
                 </tr>
               );

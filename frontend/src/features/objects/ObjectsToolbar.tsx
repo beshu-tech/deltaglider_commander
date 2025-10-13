@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, RefreshCw, Search, UploadCloud, Trash2 } from "lucide-react";
+import { ChevronRight, Eraser, RefreshCw, Search, UploadCloud } from "lucide-react";
 import { ObjectsCompressionFilter } from "./types";
 import { Input } from "../../lib/ui/Input";
 import { Select } from "../../lib/ui/Select";
@@ -125,6 +125,7 @@ export function ObjectsToolbar({
           value={compression}
           onChange={(event) => onCompressionChange(event.target.value as ObjectsCompressionFilter)}
           aria-label="Filter by compression"
+          className="appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=')] bg-[length:12px] bg-[right_0.75rem_center] bg-no-repeat pr-9"
         >
           {compressionOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -140,7 +141,7 @@ export function ObjectsToolbar({
             title="Clear cache"
             aria-label="Clear cached directory listings"
           >
-            <Trash2 className="h-4 w-4" />
+            <Eraser className="h-4 w-4" />
           </button>
         ) : null}
         {onForceRefresh ? (

@@ -142,7 +142,9 @@ export function ObjectsView({
   }, [cacheQuery]);
 
   const handleClearCache = useCallback(() => {
-    const confirmed = confirm("Clear all cached directory listings? This will reload data from the server.");
+    const confirmed = confirm(
+      "Clear all cached directory listings? This will reload data from the server.",
+    );
     if (!confirmed) {
       return;
     }
@@ -466,15 +468,24 @@ export function ObjectsView({
       <div className="flex-1 overflow-hidden">{tableContent}</div>
       <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-3 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
         <div className="flex items-center gap-2">
-          {cacheQuery.isFetching ? (
-            <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-          ) : null}
           <span>
             Page {cacheQuery.currentPage} of {cacheQuery.totalPages} ·{" "}
             {objects.length + prefixes.length} items
             {pageSelectedCount ? ` · ${pageSelectedCount} selected` : ""}
-            {cacheQuery.isLoadingFull ? " · loading full data..." : ""}
           </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {cacheQuery.isFetching && !cacheQuery.isLoadingFull ? (
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <span>Fetching files...</span>
+            </div>
+          ) : cacheQuery.isLoadingFull ? (
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <span>Retrieving compression metadata...</span>
+            </div>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <Button variant="secondary" disabled={!canGoPrevious} onClick={onPreviousPage}>
