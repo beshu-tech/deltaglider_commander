@@ -12,6 +12,7 @@ from .sdk.adapters.memory import InMemoryDeltaGliderSDK
 from .services.catalog import CatalogService
 from .services.deltaglider import DeltaGliderSDK, S3DeltaGliderSDK, S3Settings
 from .services.downloads import DownloadService
+from .services.list_cache import ListObjectsCache
 
 
 @dataclass(slots=True)
@@ -44,6 +45,9 @@ class DGCommanderConfig:
     session_idle_ttl: int = 1800
     test_mode: bool = False
     s3: S3Config = field(default_factory=S3Config)
+    # Object listing cache configuration
+    list_cache_ttl: int = 30  # seconds
+    list_cache_max_size: int = 100  # max cached folders
 
 
 @dataclass(slots=True)
@@ -63,6 +67,8 @@ def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
     session_max = int(env.get("DGCOMM_SESSION_MAX_SIZE", "20"))
     session_ttl = int(env.get("DGCOMM_SESSION_IDLE_TTL", "1800"))
     test_mode = _coerce_bool(env.get("DGCOMM_TEST_MODE") or env.get("TEST_MODE"), default=False)
+    list_cache_ttl = int(env.get("DGCOMM_LIST_CACHE_TTL", "30"))
+    list_cache_max_size = int(env.get("DGCOMM_LIST_CACHE_MAX_SIZE", "100"))
     s3 = S3Config(
         endpoint_url=env.get("DGCOMM_S3_ENDPOINT"),
         region_name=env.get("DGCOMM_S3_REGION"),
@@ -82,6 +88,8 @@ def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
         session_idle_ttl=session_ttl,
         test_mode=test_mode,
         s3=s3,
+        list_cache_ttl=list_cache_ttl,
+        list_cache_max_size=list_cache_max_size,
     )
 
 
@@ -90,7 +98,13 @@ def build_services(config: DGCommanderConfig, sdk: DeltaGliderSDK | None = None)
         # In production (non-TEST_MODE), use an empty stub SDK
         # The actual SDK is created per-request from session credentials
         sdk = InMemoryDeltaGliderSDK(buckets=[], objects={}, blobs={})
-    catalog = CatalogService(sdk=sdk)
+
+    # Initialize list cache if TTL > 0
+    list_cache = None
+    if config.list_cache_ttl > 0:
+        list_cache = ListObjectsCache(ttl_seconds=config.list_cache_ttl, max_size=config.list_cache_max_size)
+
+    catalog = CatalogService(sdk=sdk, list_cache=list_cache)
     downloads = DownloadService(sdk=sdk, secret_key=config.hmac_secret, ttl_seconds=config.download_token_ttl)
     jobs = SavingsJobRunner(catalog=catalog, sdk=sdk)
     limiter = FixedWindowRateLimiter(limit=config.objects_rate_limit, window_seconds=config.objects_rate_window)

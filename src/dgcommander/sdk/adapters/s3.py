@@ -148,61 +148,119 @@ class S3DeltaGliderSDK:
         Args:
             bucket: S3 bucket name
             prefix: Object key prefix to filter by
-            max_items: Maximum number of items to fetch (for pagination)
+            max_items: Maximum number of items to fetch. If None, fetch all objects.
             quick_mode: If True, skip metadata extraction for faster listing (currently ignored)
         """
         normalized_prefix = self._normalize_prefix(prefix)
 
-        # Use deltaglider client's list_objects - it handles all .delta and reference.bin abstraction
-        response = self._client.list_objects(
-            Bucket=bucket,
-            Prefix=normalized_prefix,
-            MaxKeys=max_items or 1000,
-            Delimiter="/",  # Get common prefixes for folder-like navigation
-            FetchMetadata=True,  # Fetch metadata for compression info
-        )
-
         objects: list[LogicalObject] = []
-        for item in response.get("Contents", []):
-            key = item["Key"]
-            size = item["Size"]
-            last_modified = item["LastModified"]
-            metadata = item.get("Metadata", {})
+        common_prefixes_set: set[str] = set()
+        continuation_token = None
 
-            # DeltaGlider 5.0 provides delta metadata in Metadata dict as strings
-            is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
-            original_size = int(metadata.get("deltaglider-original-size", size))
-            stored_size = size  # Size is already the stored size
+        # When max_items is None, fetch ALL objects by handling pagination
+        if max_items is None:
+            while True:
+                list_kwargs = {
+                    "Bucket": bucket,
+                    "Prefix": normalized_prefix,
+                    "MaxKeys": 1000,  # S3 max per request
+                    "Delimiter": "/",
+                    "FetchMetadata": True,
+                }
+                if continuation_token:
+                    list_kwargs["ContinuationToken"] = continuation_token
 
-            # Parse last_modified from ISO string to datetime
-            if isinstance(last_modified, str):
-                last_modified = datetime.fromisoformat(last_modified)
-            elif last_modified and last_modified.tzinfo is None:
-                last_modified = last_modified.replace(tzinfo=UTC)
-            elif last_modified:
-                last_modified = last_modified.astimezone(UTC)
-            else:
-                last_modified = datetime.now(UTC)
+                response = self._client.list_objects(**list_kwargs)
 
-            objects.append(
-                LogicalObject(
-                    key=key,
-                    original_bytes=original_size,
-                    stored_bytes=stored_size,
-                    compressed=is_delta,
-                    modified=last_modified,
-                    physical_key=key,  # deltaglider abstracts physical keys
-                )
+                # Process objects in this batch
+                for item in response.get("Contents", []):
+                    key = item["Key"]
+                    size = item["Size"]
+                    last_modified = item["LastModified"]
+                    metadata = item.get("Metadata", {})
+
+                    # DeltaGlider 5.0 provides delta metadata in Metadata dict as strings
+                    is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
+                    original_size = int(metadata.get("deltaglider-original-size", size))
+                    stored_size = size
+
+                    # Parse last_modified from ISO string to datetime
+                    if isinstance(last_modified, str):
+                        last_modified = datetime.fromisoformat(last_modified)
+                    elif last_modified and last_modified.tzinfo is None:
+                        last_modified = last_modified.replace(tzinfo=UTC)
+                    elif last_modified:
+                        last_modified = last_modified.astimezone(UTC)
+                    else:
+                        last_modified = datetime.now(UTC)
+
+                    objects.append(
+                        LogicalObject(
+                            key=key,
+                            original_bytes=original_size,
+                            stored_bytes=stored_size,
+                            compressed=is_delta,
+                            modified=last_modified,
+                            physical_key=key,
+                        )
+                    )
+
+                # Collect common prefixes
+                for p in response.get("CommonPrefixes", []):
+                    prefix_val = p["Prefix"]
+                    if prefix_val and prefix_val != "/" and prefix_val != normalized_prefix:
+                        common_prefixes_set.add(prefix_val)
+
+                # Check if there are more results
+                if not response.get("IsTruncated", False):
+                    break
+                continuation_token = response.get("NextContinuationToken")
+        else:
+            # Limited fetch for pagination
+            response = self._client.list_objects(
+                Bucket=bucket,
+                Prefix=normalized_prefix,
+                MaxKeys=max_items,
+                Delimiter="/",
+                FetchMetadata=True,
             )
 
-        # Extract common prefixes (folders) and filter out empty/root prefixes
-        common_prefixes = [
-            p["Prefix"]
-            for p in response.get("CommonPrefixes", [])
-            if p["Prefix"] and p["Prefix"] != "/" and p["Prefix"] != normalized_prefix
-        ]
+            for item in response.get("Contents", []):
+                key = item["Key"]
+                size = item["Size"]
+                last_modified = item["LastModified"]
+                metadata = item.get("Metadata", {})
 
-        return ObjectListing(objects=objects, common_prefixes=sorted(common_prefixes))
+                is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
+                original_size = int(metadata.get("deltaglider-original-size", size))
+                stored_size = size
+
+                if isinstance(last_modified, str):
+                    last_modified = datetime.fromisoformat(last_modified)
+                elif last_modified and last_modified.tzinfo is None:
+                    last_modified = last_modified.replace(tzinfo=UTC)
+                elif last_modified:
+                    last_modified = last_modified.astimezone(UTC)
+                else:
+                    last_modified = datetime.now(UTC)
+
+                objects.append(
+                    LogicalObject(
+                        key=key,
+                        original_bytes=original_size,
+                        stored_bytes=stored_size,
+                        compressed=is_delta,
+                        modified=last_modified,
+                        physical_key=key,
+                    )
+                )
+
+            for p in response.get("CommonPrefixes", []):
+                prefix_val = p["Prefix"]
+                if prefix_val and prefix_val != "/" and prefix_val != normalized_prefix:
+                    common_prefixes_set.add(prefix_val)
+
+        return ObjectListing(objects=objects, common_prefixes=sorted(common_prefixes_set))
 
     def get_metadata(self, bucket: str, key: str) -> FileMetadata:
         normalized = self._normalize_key(key)

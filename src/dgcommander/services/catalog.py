@@ -20,6 +20,7 @@ from ..util.types import (
     UploadSummary,
 )
 from .deltaglider import BucketSnapshot, DeltaGliderSDK, LogicalObject
+from .list_cache import ListObjectsCache
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ def _sort_objects(objects: Iterable[LogicalObject], sort_order: ObjectSortOrder)
 @dataclass(slots=True)
 class CatalogService:
     sdk: DeltaGliderSDK
+    list_cache: ListObjectsCache | None = None
 
     def list_buckets(self, compute_stats: bool = False) -> list[BucketStats]:
         stats: list[BucketStats] = []
@@ -129,11 +131,37 @@ class CatalogService:
         sort_order: ObjectSortOrder,
         compressed: bool | None,
         search: str | None = None,
+        credentials_key: str | None = None,
     ) -> ObjectList:
-        # Pass a hint to limit items fetched from S3 (fetch slightly more than limit for filtering)
-        max_items_hint = limit + 50 if limit < 1000 else None
-        # Use quick mode for better performance on initial listing
-        listing = self.sdk.list_objects(bucket, prefix, max_items=max_items_hint, quick_mode=True)
+        # Try to get from cache first (if cache and credentials_key provided)
+        sort_key = sort_order.name
+        if self.list_cache is not None and credentials_key is not None:
+            cached = self.list_cache.get(credentials_key, bucket, prefix, sort_key, compressed, search)
+            if cached is not None:
+                sorted_objects, common_prefixes = cached.to_lists()
+                # Apply pagination to cached results
+                offset = decode_cursor(cursor) or 0
+                page = sorted_objects[offset : offset + limit]
+                next_cursor = encode_cursor(offset + len(page)) if offset + len(page) < len(sorted_objects) else None
+
+                return ObjectList(
+                    objects=[
+                        ObjectItem(
+                            key=obj.key,
+                            original_bytes=obj.original_bytes,
+                            stored_bytes=obj.stored_bytes,
+                            compressed=obj.compressed,
+                            modified=obj.modified,
+                        )
+                        for obj in page
+                    ],
+                    common_prefixes=common_prefixes,
+                    cursor=next_cursor,
+                )
+
+        # Cache miss - fetch ALL objects in the prefix to ensure proper sorting
+        # (sorting must consider all objects, not just a page)
+        listing = self.sdk.list_objects(bucket, prefix, max_items=None, quick_mode=True)
         filtered = [obj for obj in listing.objects if compressed is None or obj.compressed == compressed]
 
         # Apply search filter if provided
@@ -141,8 +169,16 @@ class CatalogService:
             search_lower = search.lower()
             filtered = [obj for obj in filtered if search_lower in obj.key.lower()]
 
+        # Sort ALL filtered objects before pagination
         sorted_objects = _sort_objects(filtered, sort_order)
 
+        # Store in cache for future requests (if cache and credentials_key provided)
+        if self.list_cache is not None and credentials_key is not None:
+            self.list_cache.set(
+                credentials_key, bucket, prefix, sort_key, compressed, search, sorted_objects, listing.common_prefixes
+            )
+
+        # Apply pagination after sorting
         offset = decode_cursor(cursor) or 0
         page = sorted_objects[offset : offset + limit]
         next_cursor = encode_cursor(offset + len(page)) if offset + len(page) < len(sorted_objects) else None
@@ -169,6 +205,9 @@ class CatalogService:
     def delete_object(self, bucket: str, key: str) -> None:
         try:
             self.sdk.delete_object(bucket, key)
+            # Invalidate cache for this bucket
+            if self.list_cache is not None:
+                self.list_cache.invalidate_bucket(bucket)
         except ClientError as exc:
             error_code = exc.response.get("Error", {}).get("Code", "")
             if error_code in {"NoSuchKey", "NotFound"}:
@@ -187,6 +226,9 @@ class CatalogService:
         try:
             self.sdk.delete_objects(bucket, keys)
             deleted = list(keys)
+            # Invalidate cache for this bucket after successful delete
+            if self.list_cache is not None:
+                self.list_cache.invalidate_bucket(bucket)
         except NotFoundError:
             # If NotFoundError is raised, we don't know which key(s) failed, so mark all as not found
             for key in keys:
@@ -211,6 +253,9 @@ class CatalogService:
     ) -> UploadSummary:
         try:
             summary = self.sdk.upload(bucket, key, file_obj)
+            # Invalidate cache for this bucket after successful upload
+            if self.list_cache is not None:
+                self.list_cache.invalidate_bucket(bucket)
         except APIError:
             raise
         except Exception as exc:

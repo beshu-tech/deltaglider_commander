@@ -31,8 +31,14 @@ def list_objects(query: ObjectListRequest):
     # Use session SDK
     sdk = g.sdk_client
 
-    # Create catalog service with session SDK
-    catalog = CatalogService(sdk=sdk)
+    # Get shared cache from app extensions (for session-isolated caching)
+    from flask import current_app
+
+    services = current_app.extensions.get("dgcommander")
+    shared_cache = services.catalog.list_cache if services else None
+
+    # Create catalog service with session SDK and shared cache
+    catalog = CatalogService(sdk=sdk, list_cache=shared_cache)
 
     # Convert ObjectSortOrder from contracts to util.types
     from ..util.types import ObjectSortOrder as UtilObjectSortOrder
@@ -53,6 +59,13 @@ def list_objects(query: ObjectListRequest):
     if not catalog.bucket_exists(query.bucket):
         raise NotFoundError("bucket", "bucket_not_found")
 
+    # Generate credentials cache key for cache isolation (security)
+    # This allows cache sharing across sessions/browsers with same credentials
+    from ..services.list_cache import make_credentials_cache_key
+
+    credentials = getattr(g, "credentials", None)
+    credentials_key = make_credentials_cache_key(credentials)
+
     try:
         # Use the catalog's list_objects method with proper parameters
         object_list = catalog.list_objects(
@@ -63,6 +76,7 @@ def list_objects(query: ObjectListRequest):
             sort_order=util_sort_order,
             compressed=query.compressed,
             search=query.search,
+            credentials_key=credentials_key,  # SECURITY: Isolate cache by credentials
         )
     except KeyError:
         raise NotFoundError("bucket", "bucket_not_found")
@@ -88,7 +102,14 @@ def list_objects(query: ObjectListRequest):
 @require_session_or_env
 def object_metadata(bucket: str, key: str):
     sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk)
+
+    # Get shared cache from app extensions
+    from flask import current_app
+
+    services = current_app.extensions.get("dgcommander")
+    shared_cache = services.catalog.list_cache if services else None
+
+    catalog = CatalogService(sdk=sdk, list_cache=shared_cache)
     try:
         metadata = catalog.get_metadata(bucket, key)
     except KeyError as exc:
@@ -101,7 +122,14 @@ def object_metadata(bucket: str, key: str):
 def delete_object(bucket: str, key: str):
     _enforce_rate_limit(request)
     sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk)
+
+    # Get shared cache from app extensions (for cache invalidation)
+    from flask import current_app
+
+    services = current_app.extensions.get("dgcommander")
+    shared_cache = services.catalog.list_cache if services else None
+
+    catalog = CatalogService(sdk=sdk, list_cache=shared_cache)
     try:
         catalog.delete_object(bucket, key)
     except NotFoundError:
@@ -121,7 +149,14 @@ def bulk_delete_objects(data: BulkDeleteRequest):
     """Delete multiple objects in bulk."""
     _enforce_rate_limit(request)
     sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk)
+
+    # Get shared cache from app extensions (for cache invalidation)
+    from flask import current_app
+
+    services = current_app.extensions.get("dgcommander")
+    shared_cache = services.catalog.list_cache if services else None
+
+    catalog = CatalogService(sdk=sdk, list_cache=shared_cache)
 
     # Check if bucket exists efficiently
     if not catalog.bucket_exists(data.bucket):
