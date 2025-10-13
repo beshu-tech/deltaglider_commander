@@ -9,11 +9,11 @@ export interface ObjectsToolbarProps {
   bucket: string;
   prefix: string;
   search: string | undefined;
-  breadcrumbs: Array<{ label: string; value: string | null }>;
+  breadcrumbs: Array<{ label: string; value: string | null; isHome?: boolean }>;
   compression: ObjectsCompressionFilter;
   onSearchChange: (value: string | undefined) => void;
   onCompressionChange: (value: ObjectsCompressionFilter) => void;
-  onBreadcrumbNavigate: (value: string | null) => void;
+  onBreadcrumbNavigate: (value: string | null, isHome?: boolean) => void;
   onUploadClick?: () => void;
   onForceRefresh?: () => void;
   onClearCache?: () => void;
@@ -80,31 +80,32 @@ export function ObjectsToolbar({
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-group border-b border-slate-200 px-5 py-3 dark:border-slate-800">
-      <nav className="flex flex-wrap items-center gap-inline text-body-sm text-slate-500 dark:text-slate-300">
+    <div className="flex h-14 flex-wrap items-center justify-between gap-group border-b border-slate-200 px-5 dark:border-slate-800">
+      <nav className="flex flex-wrap items-center gap-inline">
         {breadcrumbs.map((crumb, index) => {
           const isActive = index === breadcrumbs.length - 1;
+          const canNavigate = crumb.value !== null || crumb.isHome;
           return (
             <div key={`${crumb.label}-${index}`} className="flex items-center gap-inline">
-              {crumb.value !== null ? (
+              {canNavigate ? (
                 <button
                   type="button"
-                  onClick={() => onBreadcrumbNavigate(crumb.value)}
-                  className={`rounded-md px-2 py-1 text-body-sm transition hover:bg-slate-100 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-brand-500 dark:hover:bg-slate-800 ${
+                  onClick={() => onBreadcrumbNavigate(crumb.value, crumb.isHome)}
+                  className={`rounded-md px-2 py-1 text-lg transition hover:bg-slate-100 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-brand-500 dark:hover:bg-slate-800 ${
                     isActive
                       ? "font-semibold text-slate-900 dark:text-slate-100"
-                      : "text-slate-600 dark:text-slate-300"
+                      : "font-medium text-slate-600 dark:text-slate-400"
                   }`}
                 >
                   {crumb.label}
                 </button>
               ) : (
-                <span className="px-2 py-1 text-body-sm font-semibold text-slate-900 dark:text-slate-100">
+                <span className="px-2 py-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
                   {crumb.label}
                 </span>
               )}
               {index < breadcrumbs.length - 1 ? (
-                <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                <ChevronRight className="h-5 w-5 text-slate-400" aria-hidden="true" />
               ) : null}
             </div>
           );

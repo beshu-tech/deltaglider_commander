@@ -48,15 +48,18 @@ export default {
           900: "#003a5c",
         },
 
+        // 2025 Neutral Dark - Professional dark theme base
+        "neutral-dark": "#1E1F22",
+
         // Semantic tones for light/dark mode consistency
         ui: {
           // Background - Main application background
           bg: "#F7F8FA", // Light mode
-          "bg-dark": "#0f172a", // Dark mode (slate-950)
+          "bg-dark": "#1E1F22", // Dark mode (neutral brownish-gray)
 
           // Surface - Elevated cards and panels
           surface: "#FFFFFF", // Light mode
-          "surface-dark": "#1e293b", // Dark mode (slate-900)
+          "surface-dark": "#2B2D30", // Dark mode (slightly lighter than neutral-dark)
 
           // Border - Dividers and outlines
           border: "#e2e8f0", // Light mode (slate-200)

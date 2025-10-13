@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMatch, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { ObjectsView } from "../features/objects/ObjectsView";
 import { ObjectsSearchState } from "../features/objects/types";
@@ -10,7 +10,6 @@ interface BucketObjectsContentProps {
 }
 
 function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
-  const headingRef = useRef<HTMLHeadingElement>(null);
   const { bucket } = useParams({ from: "/b/$bucket" });
   const rawSearch = useSearch({ from: "/b/$bucket" }) as Record<string, unknown> | undefined;
   const navigate = useNavigate();
@@ -20,10 +19,6 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
   const effectiveSelectedKey = selectedKey ?? matchedObjectKey;
 
   const currentSearch = useMemo(() => normalizeObjectsSearch(rawSearch), [rawSearch]);
-
-  useEffect(() => {
-    headingRef.current?.focus();
-  }, [bucket]);
 
   const updateSearch = (next: ObjectsSearchState) => {
     // Only replace history for pagination, sort, filter changes - not directory navigation
@@ -100,15 +95,7 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <div className={`flex flex-1 flex-col overflow-hidden p-6 ${showDetails ? "" : "pr-6"}`}>
-        <div className="mb-4">
-          <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold outline-none">
-            Bucket: {bucket}
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Browse objects and inspect details.
-          </p>
-        </div>
+      <div className={`flex flex-1 flex-col overflow-hidden ${showDetails ? "" : "pr-6"}`}>
         <ObjectsView
           bucket={bucket}
           search={currentSearch}

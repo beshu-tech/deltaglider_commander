@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useToast } from "../../app/toast";
 import { bulkDeleteObjects, BULK_DELETE_BATCH_SIZE, fetchObjects } from "../../lib/api/endpoints";
@@ -119,7 +120,10 @@ export function ObjectsView({
   }, [search.prefix]);
 
   const breadcrumbs = useMemo(() => {
-    const items: Array<{ label: string; value: string | null }> = [{ label: bucket, value: "" }];
+    const items: Array<{ label: string; value: string | null; isHome?: boolean }> = [
+      { label: "Dashboard", value: null, isHome: true },
+      { label: bucket, value: "" }
+    ];
     breadcrumbSegments.forEach((segment, index) => {
       const value = `${breadcrumbSegments.slice(0, index + 1).join("/")}/`;
       items.push({ label: segment, value });
@@ -131,12 +135,18 @@ export function ObjectsView({
     return items;
   }, [bucket, breadcrumbSegments, selectedKey]);
 
+  const navigate = useNavigate();
+
   const handleBreadcrumbNavigate = useCallback(
-    (value: string | null) => {
-      if (value === null) return;
+    (value: string | null, isHome?: boolean) => {
+      if (value === null && !isHome) return;
+      if (isHome) {
+        navigate({ to: "/buckets" });
+        return;
+      }
       updateSearchState({ prefix: value });
     },
-    [updateSearchState],
+    [navigate, updateSearchState],
   );
 
   const handleForceRefresh = useCallback(() => {

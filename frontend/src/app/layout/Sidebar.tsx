@@ -3,6 +3,8 @@ import { Link, useMatch, useNavigate } from "@tanstack/react-router";
 import {
   Archive,
   BookOpen,
+  ChevronDown,
+  ChevronRight,
   LifeBuoy,
   Loader2,
   LogOut,
@@ -339,42 +341,56 @@ interface SidebarFooterProps {
 
 function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
   return (
-    <div
-      className={`space-y-1 border-t border-slate-700/50 pt-4 text-sm text-slate-300 ${className ?? ""}`}
-    >
-      <Link
-        to="/settings"
-        className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
-      >
-        <Settings className="h-4 w-4" />
-        <span className="font-medium">Settings</span>
-      </Link>
-      <a
-        href="https://github.com/beshu-tech/deltaglider_commander/"
-        target="_blank"
-        rel="noreferrer"
-        className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
-      >
-        <BookOpen className="h-4 w-4" />
-        <span className="font-medium">Documentation</span>
-      </a>
-      <a
-        href="https://github.com/beshu-tech/deltaglider_commander/issues"
-        target="_blank"
-        rel="noreferrer"
-        className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
-      >
-        <LifeBuoy className="h-4 w-4" />
-        <span className="font-medium">Support</span>
-      </a>
-      <button
-        type="button"
-        onClick={onSignOut}
-        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
-      >
-        <LogOut className="h-4 w-4" />
-        <span className="font-medium">Sign Out</span>
-      </button>
+    <div className={`space-y-3 ${className ?? ""}`}>
+      {/* Profile/Identity Section */}
+      <div className="rounded-lg bg-slate-800/30 px-3 py-3 border border-slate-700/50">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-red-600 shadow-md">
+            <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-white"></div>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold text-white truncate">DeltaGlider</span>
+            <span className="text-xs text-slate-400 truncate">Commander</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Links */}
+      <div className="space-y-1 border-t border-slate-700/50 pt-3 text-[13px] text-slate-300">
+        <Link
+          to="/settings"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+        >
+          <Settings className="h-4 w-4" />
+          <span className="font-medium">Settings</span>
+        </Link>
+        <a
+          href="https://github.com/beshu-tech/deltaglider_commander/"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+        >
+          <BookOpen className="h-4 w-4" />
+          <span className="font-medium">Documentation</span>
+        </a>
+        <a
+          href="https://github.com/beshu-tech/deltaglider_commander/issues"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+        >
+          <LifeBuoy className="h-4 w-4" />
+          <span className="font-medium">Support</span>
+        </a>
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="font-medium">Sign Out</span>
+        </button>
+      </div>
     </div>
   );
 }
@@ -389,6 +405,7 @@ export function Sidebar() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [bucketName, setBucketName] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [bucketsExpanded, setBucketsExpanded] = useState(true);
   const createBucketMutation = useCreateBucket();
 
   const handleCreateSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -433,8 +450,8 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 px-group py-section text-slate-100 border-r border-slate-800/50">
-      <div className="space-y-section">
+    <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-neutral-dark px-6 py-section text-slate-100 border-r border-slate-700/30">
+      <div className="space-y-3">
         <SidebarHeader onNavigateHome={() => setFilter("")} />
         <SidebarActions
           creating={createBucketMutation.isPending}
@@ -455,7 +472,16 @@ export function Sidebar() {
           onFilterChange={setFilter}
         />
         <div className="space-y-item">
-          <div className="flex items-center gap-inline px-2">
+          <button
+            type="button"
+            onClick={() => setBucketsExpanded(!bucketsExpanded)}
+            className="flex w-full items-center gap-2 px-2 py-1 rounded-md hover:bg-slate-800/50 transition-colors focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-brand-500"
+          >
+            {bucketsExpanded ? (
+              <ChevronDown className="h-4 w-4 text-slate-400" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            )}
             <svg
               className="h-3 w-3 text-slate-500"
               fill="none"
@@ -470,21 +496,23 @@ export function Sidebar() {
               />
             </svg>
             <span className="text-label-sm uppercase tracking-wide text-slate-400">
-              Your Buckets
+              Your Buckets {buckets && buckets.length > 0 ? `(${buckets.length})` : ""}
             </span>
             <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>
-          </div>
-          <BucketList
-            buckets={buckets}
-            isLoading={isLoading}
-            error={isError ? error : null}
-            filter={filter}
-            activeBucket={activeBucket}
-            onCreateClick={() => {
-              setShowCreateForm(true);
-              setTimeout(() => setValidationError(null), 0);
-            }}
-          />
+          </button>
+          {bucketsExpanded && (
+            <BucketList
+              buckets={buckets}
+              isLoading={isLoading}
+              error={isError ? error : null}
+              filter={filter}
+              activeBucket={activeBucket}
+              onCreateClick={() => {
+                setShowCreateForm(true);
+                setTimeout(() => setValidationError(null), 0);
+              }}
+            />
+          )}
         </div>
       </div>
       <SidebarFooter onSignOut={handleSignOut} />

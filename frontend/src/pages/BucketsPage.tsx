@@ -28,11 +28,11 @@ export function BucketsPage() {
               <h1
                 ref={headingRef}
                 tabIndex={-1}
-                className="text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight"
+                className="text-4xl font-bold text-slate-900 dark:text-white/90 mb-3 tracking-tight"
               >
                 Object Storage Console
               </h1>
-              <p className="text-lg text-slate-600 dark:text-slate-300 max-w-3xl">
+              <p className="text-lg text-slate-600 dark:text-white/70 max-w-3xl">
                 Powered by{" "}
                 <a
                   href="https://pypi.org/project/deltaglider/"
@@ -80,10 +80,10 @@ export function BucketsPage() {
                       Buckets
                     </span>
                   </div>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white/90 mb-2">
                     {summary.bucketCount}
                   </div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  <p className="text-sm font-medium text-slate-600 dark:text-white/70">
                     {summary.pendingCount > 0 ? (
                       <span className="inline-flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
@@ -117,10 +117,10 @@ export function BucketsPage() {
                       Objects
                     </span>
                   </div>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white/90 mb-2">
                     {summary.objectCount.toLocaleString()}
                   </div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  <p className="text-sm font-medium text-slate-600 dark:text-white/70">
                     {formatBytes(summary.storedBytes)} stored
                   </p>
                 </div>
@@ -147,12 +147,12 @@ export function BucketsPage() {
                       Ratio
                     </span>
                   </div>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white/90 mb-2">
                     {summary.originalBytes === 0 || summary.storedBytes === 0
                       ? "N/A"
                       : `${(summary.originalBytes / summary.storedBytes).toFixed(1)}:1`}
                   </div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">compression</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-white/70">compression</p>
                 </div>
 
                 {/* Total Savings */}

@@ -47,5 +47,5 @@ export function TableRow({ className, ...rest }: HTMLAttributes<HTMLTableRowElem
 }
 
 export function TableCell({ className, ...rest }: HTMLAttributes<HTMLTableCellElement>) {
-  return <td className={twMerge("px-3 py-3 text-body-sm", className)} {...rest} />;
+  return <td className={twMerge("px-3 py-4 text-body-sm", className)} {...rest} />;
 }
