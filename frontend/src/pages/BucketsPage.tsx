@@ -152,7 +152,9 @@ export function BucketsPage() {
                       ? "N/A"
                       : `${(summary.originalBytes / summary.storedBytes).toFixed(1)}:1`}
                   </div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-white/70">compression</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-white/70">
+                    compression
+                  </p>
                 </div>
 
                 {/* Total Savings */}

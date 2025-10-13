@@ -122,7 +122,7 @@ export function ObjectsView({
   const breadcrumbs = useMemo(() => {
     const items: Array<{ label: string; value: string | null; isHome?: boolean }> = [
       { label: "Dashboard", value: null, isHome: true },
-      { label: bucket, value: "" }
+      { label: bucket, value: "" },
     ];
     breadcrumbSegments.forEach((segment, index) => {
       const value = `${breadcrumbSegments.slice(0, index + 1).join("/")}/`;
