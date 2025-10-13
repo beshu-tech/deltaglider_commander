@@ -102,7 +102,7 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     <div className="flex h-full w-full overflow-hidden">
       <div className={`flex flex-1 flex-col overflow-hidden p-6 ${showDetails ? "" : "pr-6"}`}>
         <div className="mb-4">
-          <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold">
+          <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold outline-none">
             Bucket: {bucket}
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">

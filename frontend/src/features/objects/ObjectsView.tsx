@@ -14,6 +14,8 @@ import { SelectionTarget, useObjectSelection } from "./useObjectSelection";
 import { getCompressionQueryParam } from "./search";
 import { clearObjectsCache } from "./objectsCache";
 import { useQueryClient } from "@tanstack/react-query";
+import { removeFromLocalStorage } from "../../lib/cache/localStorage";
+import { qk } from "../../lib/api/queryKeys";
 
 interface ObjectsViewProps {
   bucket: string;
@@ -385,11 +387,33 @@ export function ObjectsView({
       });
     }
 
+    // Clear localStorage cache for affected directories (smart invalidation)
+    // Since bulk delete can affect multiple directories, clear the current directory and parents
+    const prefixParts = search.prefix.split("/").filter(Boolean);
+
+    // Clear cache for current prefix
+    removeFromLocalStorage(qk.objectsFull(bucket, search.prefix, undefined, "any"));
+
+    // Clear cache for parent directories (bulk deletion affects parent listings)
+    for (let i = 0; i < prefixParts.length; i++) {
+      const parentPrefix = prefixParts.slice(0, i).join("/");
+      const normalizedParent = parentPrefix ? `${parentPrefix}/` : "";
+      removeFromLocalStorage(qk.objectsFull(bucket, normalizedParent, undefined, "any"));
+    }
+
     // Clear selection and refresh the view
     clearSelection();
-    // Trigger a refetch by updating the query
+    // Trigger a refetch by updating the query (bypasses localStorage)
     cacheQuery.refetch();
-  }, [bucket, clearSelection, expandSelectedKeys, toast, totalSelectedCount, cacheQuery]);
+  }, [
+    bucket,
+    search.prefix,
+    clearSelection,
+    expandSelectedKeys,
+    toast,
+    totalSelectedCount,
+    cacheQuery,
+  ]);
 
   const canGoPrevious = cacheQuery.hasPreviousPage;
   const canGoNext = cacheQuery.hasNextPage;

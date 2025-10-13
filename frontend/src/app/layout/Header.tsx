@@ -11,12 +11,7 @@ export function Header() {
   return (
     <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center gap-4">
-        <Link
-          to="/buckets"
-          className="text-base font-semibold text-slate-900 hover:text-brand-600 dark:text-slate-100"
-        >
-          {title}
-        </Link>
+
       </div>
       <div className="flex items-center gap-2">
         <Button variant="ghost" aria-label="Toggle theme" onClick={toggleTheme}>
