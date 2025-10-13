@@ -144,7 +144,7 @@ export function ObjectsView({
         navigate({ to: "/buckets" });
         return;
       }
-      updateSearchState({ prefix: value });
+      updateSearchState({ prefix: value ?? undefined });
     },
     [navigate, updateSearchState],
   );
