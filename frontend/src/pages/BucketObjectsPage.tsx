@@ -26,12 +26,15 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
   }, [bucket]);
 
   const updateSearch = (next: ObjectsSearchState) => {
+    // Only replace history for pagination, sort, filter changes - not directory navigation
+    const isDirectoryChange = next.prefix !== currentSearch.prefix;
+
     navigate({
       to: "/b/$bucket",
       params: { bucket },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       search: serializeObjectsSearch(next) as any,
-      replace: true,
+      replace: !isDirectoryChange, // Push new entry for directory navigation
     });
   };
 
