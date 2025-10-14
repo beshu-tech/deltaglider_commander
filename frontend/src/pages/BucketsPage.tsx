@@ -38,7 +38,12 @@ function StatCard({
       )}
     >
       <div className="flex items-start justify-between mb-4">
-        <div className={joinClasses("flex h-11 w-11 items-center justify-center rounded-lg", iconWrapperClassName)}>
+        <div
+          className={joinClasses(
+            "flex h-11 w-11 items-center justify-center rounded-lg",
+            iconWrapperClassName,
+          )}
+        >
           {icon}
         </div>
         <span
@@ -50,10 +55,20 @@ function StatCard({
           {label}
         </span>
       </div>
-      <div className={joinClasses("text-3xl font-bold text-slate-900 dark:text-white/90 mb-2", valueClassName)}>
+      <div
+        className={joinClasses(
+          "text-3xl font-bold text-slate-900 dark:text-white/90 mb-2",
+          valueClassName,
+        )}
+      >
         {value}
       </div>
-      <p className={joinClasses("text-sm font-medium text-slate-600 dark:text-white/70", descriptionClassName)}>
+      <p
+        className={joinClasses(
+          "text-sm font-medium text-slate-600 dark:text-white/70",
+          descriptionClassName,
+        )}
+      >
         {description}
       </p>
     </div>
@@ -120,7 +135,12 @@ export function BucketsPage() {
                   label="Buckets"
                   iconWrapperClassName="bg-blue-100 dark:bg-blue-900/50"
                   icon={
-                    <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -147,8 +167,18 @@ export function BucketsPage() {
                   label="Objects"
                   iconWrapperClassName="bg-purple-100 dark:bg-purple-900/50"
                   icon={
-                    <svg className="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h10M7 12h10m-7 5h4" />
+                    <svg
+                      className="h-6 w-6 text-purple-600 dark:text-purple-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h10M7 12h10m-7 5h4"
+                      />
                     </svg>
                   }
                   value={summary.objectCount.toLocaleString()}
@@ -160,7 +190,12 @@ export function BucketsPage() {
                   label="Ratio"
                   iconWrapperClassName="bg-amber-100 dark:bg-amber-900/50"
                   icon={
-                    <svg className="h-6 w-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-6 w-6 text-amber-600 dark:text-amber-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -183,7 +218,12 @@ export function BucketsPage() {
                   labelClassName="text-emerald-700 dark:text-emerald-400"
                   iconWrapperClassName="bg-gradient-to-br from-emerald-500 to-green-600 shadow-md"
                   icon={
-                    <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-6 w-6 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"

@@ -136,7 +136,7 @@ class ListObjectsCache:
             self._misses += 1
             logger.debug(
                 f"Cache MISS for creds={credentials_key[:8]}... {bucket}/{prefix} "
-                    f"(hits={self._hits}, misses={self._misses})"
+                f"(hits={self._hits}, misses={self._misses})"
             )
             return None
 
@@ -155,7 +155,9 @@ class ListObjectsCache:
         with self._lock:
             self._cache[key] = cached
             self._register_key(key, bucket, prefix)
-            logger.debug(f"Cached base listing ({len(objects)} objects) for creds={credentials_key[:8]}... {bucket}/{prefix}")
+            logger.debug(
+                f"Cached base listing ({len(objects)} objects) for creds={credentials_key[:8]}... {bucket}/{prefix}"
+            )
 
     def get_variant(
         self,
@@ -174,24 +176,18 @@ class ListObjectsCache:
             if cached is None:
                 self._misses += 1
                 self._remove_key(key)
-                logger.debug(
-                    f"Cache MISS for creds={credentials_key[:8]}... {bucket}/{prefix} (no base listing)"
-                )
+                logger.debug(f"Cache MISS for creds={credentials_key[:8]}... {bucket}/{prefix} (no base listing)")
                 return None
 
             variant = cached.get_variant(sort_order, compressed, search)
             common_prefixes = list(cached.common_prefixes)
             if variant is not None:
                 self._hits += 1
-                logger.debug(
-                    f"Variant HIT for creds={credentials_key[:8]}... {bucket}/{prefix} ({sort_order})"
-                )
+                logger.debug(f"Variant HIT for creds={credentials_key[:8]}... {bucket}/{prefix} ({sort_order})")
                 return VariantLookup(variant=variant, base_objects=None, common_prefixes=common_prefixes)
 
             self._misses += 1
-            logger.debug(
-                f"Variant MISS for creds={credentials_key[:8]}... {bucket}/{prefix} ({sort_order})"
-            )
+            logger.debug(f"Variant MISS for creds={credentials_key[:8]}... {bucket}/{prefix} ({sort_order})")
             return VariantLookup(
                 variant=None,
                 base_objects=list(cached.objects),
@@ -216,9 +212,7 @@ class ListObjectsCache:
             if cached is None:
                 return
             cached.store_variant(sort_order, compressed, search, objects)
-            logger.debug(
-                f"Cached variant ({sort_order}) for creds={credentials_key[:8]}... {bucket}/{prefix}"
-            )
+            logger.debug(f"Cached variant ({sort_order}) for creds={credentials_key[:8]}... {bucket}/{prefix}")
 
     def invalidate_bucket(self, bucket: str) -> None:
         """Invalidate all cache entries for a specific bucket.
@@ -230,9 +224,7 @@ class ListObjectsCache:
             for key in keys:
                 self._cache.pop(key, None)
                 self._remove_key(key)
-            logger.debug(
-                f"Invalidated {len(keys)} cache entr{'y' if len(keys)==1 else 'ies'} for bucket: {bucket}"
-            )
+            logger.debug(f"Invalidated {len(keys)} cache entr{'y' if len(keys) == 1 else 'ies'} for bucket: {bucket}")
 
     def invalidate_prefix(self, bucket: str, prefix: str) -> None:
         """Invalidate cache entries for a specific bucket and prefix.
@@ -245,9 +237,7 @@ class ListObjectsCache:
             for cache_key in keys:
                 self._cache.pop(cache_key, None)
                 self._remove_key(cache_key)
-            logger.debug(
-                f"Invalidated {len(keys)} cache entr{'y' if len(keys)==1 else 'ies'} for {bucket}/{prefix}"
-            )
+            logger.debug(f"Invalidated {len(keys)} cache entr{'y' if len(keys) == 1 else 'ies'} for {bucket}/{prefix}")
 
     def clear(self) -> None:
         """Clear all cache entries."""

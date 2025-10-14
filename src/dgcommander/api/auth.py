@@ -52,8 +52,6 @@ def _is_secure_request(req) -> bool:
     return False
 
 
-
-
 @auth_bp.route("/session", methods=["POST"])
 def create_session():
     """

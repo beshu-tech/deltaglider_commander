@@ -211,7 +211,6 @@ class InMemoryDeltaGliderSDK(BaseDeltaGliderAdapter):
         except KeyError as exc:
             raise FileNotFoundError(key) from exc
 
-
     def _update_bucket_snapshot(self, bucket: str) -> None:
         objects = self._objects.get(bucket, [])
         snapshot = self._build_snapshot(bucket, objects, computed_at=datetime.now(UTC))
@@ -221,5 +220,6 @@ class InMemoryDeltaGliderSDK(BaseDeltaGliderAdapter):
                 break
         else:
             self._buckets.append(snapshot)
+
 
 __all__ = ["InMemoryDeltaGliderSDK"]
