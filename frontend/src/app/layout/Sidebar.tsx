@@ -271,7 +271,7 @@ interface SidebarFooterProps {
 function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
   return (
     <div className={`space-y-4 ${className ?? ""}`}>
-      {/* Red Band Logo Section */}
+      {/* Typographic Logo Section */}
       <Link
         to="/buckets"
         className="block focus-visible:outline-none group -mx-6 px-6 py-6 bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:from-red-400 hover:via-red-500 hover:to-red-600 transition-all duration-200 shadow-lg relative overflow-hidden"
@@ -279,22 +279,18 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
         {/* Subtle shine effect on hover */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
 
-        <div className="flex items-center justify-start gap-6 relative">
-          {/* White Delta Symbol with Status */}
-          <div className="relative flex-shrink-0 ml-2">
-            <div className="w-0 h-0 border-l-[16px] border-r-[16px] border-b-[26px] border-l-transparent border-r-transparent border-b-white drop-shadow-lg"></div>
-            <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-r-[8px] border-b-[16px] border-l-transparent border-r-transparent border-b-red-600"></div>
-            {/* Green Status Indicator - positioned on top right of delta */}
-            <div className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-green-400 border-2 border-white shadow-lg ring-2 ring-green-400/30">
-              <div className="w-full h-full rounded-full bg-green-300 animate-pulse"></div>
-            </div>
+        <div className="relative flex flex-col items-start">
+          {/* Green Status Indicator - top right corner */}
+          <div className="absolute top-0 right-0 h-3 w-3 rounded-full bg-green-400 border-2 border-white shadow-lg ring-2 ring-green-400/30">
+            <div className="w-full h-full rounded-full bg-green-300 animate-pulse"></div>
           </div>
-          {/* White Text with better hierarchy */}
-          <div className="flex flex-col -ml-1">
-            <span className="text-2xl font-bold text-white tracking-tight drop-shadow-md leading-tight">
-              DeltaGlider
+
+          {/* Typographic Logo */}
+          <div className="flex flex-col">
+            <span className="text-3xl font-black text-white tracking-tighter drop-shadow-md leading-none">
+              DELTAGLIDER
             </span>
-            <span className="text-sm text-white/95 font-medium tracking-wide mt-0.5">
+            <span className="text-base text-white/95 font-semibold tracking-wider mt-1 uppercase">
               Commander
             </span>
           </div>
