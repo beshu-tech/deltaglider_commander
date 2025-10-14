@@ -58,10 +58,7 @@ export function BucketsPanel() {
               Objects
             </th>
             <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              Original Size
-            </th>
-            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              Compressed
+              Size
             </th>
             <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Savings
@@ -125,11 +122,21 @@ export function BucketsPanel() {
                 <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">
                   {bucket.object_count.toLocaleString()}
                 </TableCell>
-                <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                  {formatBytes(bucket.original_bytes)}
-                </TableCell>
-                <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                  {formatBytes(bucket.stored_bytes)}
+                <TableCell className="px-6 py-4">
+                  {bucket.stored_bytes !== bucket.original_bytes ? (
+                    <span className="flex flex-col text-sm">
+                      <span className="font-medium text-slate-900 dark:text-slate-100">
+                        {formatBytes(bucket.stored_bytes)}
+                      </span>
+                      <span className="text-xs text-slate-400 line-through">
+                        {formatBytes(bucket.original_bytes)}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="font-medium text-slate-600 dark:text-slate-300">
+                      {formatBytes(bucket.original_bytes)}
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">

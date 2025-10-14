@@ -66,29 +66,35 @@ export function useToast(): ToastContextValue {
   return context;
 }
 
+const brandContainer =
+  "bg-gradient-to-br from-red-900/95 via-red-900 to-red-900/90 border border-red-800/60 dark:border-red-700/60";
+const brandIcon = "text-white";
+const brandTitle = "text-white";
+const brandDescription = "text-red-100";
+
 const levelStyles = {
   info: {
-    container: "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800",
-    icon: "text-blue-600 dark:text-blue-400",
-    title: "text-blue-900 dark:text-blue-100",
-    description: "text-blue-700 dark:text-blue-300",
+    container: brandContainer,
+    icon: brandIcon,
+    title: brandTitle,
+    description: brandDescription,
     IconComponent: Info,
   },
   success: {
-    container: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800",
-    icon: "text-emerald-600 dark:text-emerald-400",
-    title: "text-emerald-900 dark:text-emerald-100",
-    description: "text-emerald-700 dark:text-emerald-300",
+    container: brandContainer,
+    icon: brandIcon,
+    title: brandTitle,
+    description: brandDescription,
     IconComponent: Check,
   },
   error: {
-    container: "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
-    icon: "text-red-600 dark:text-red-400",
-    title: "text-red-900 dark:text-red-100",
-    description: "text-red-700 dark:text-red-300",
+    container: brandContainer,
+    icon: brandIcon,
+    title: brandTitle,
+    description: brandDescription,
     IconComponent: AlertCircle,
   },
-};
+} as const;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -188,16 +194,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={toast.id}
               role={toast.level === "error" ? "alert" : "status"}
-              className={`pointer-events-auto flex min-w-[280px] max-w-[400px] items-start gap-3 rounded-lg border p-3 shadow-elevation-lg transition-all duration-base hover:shadow-elevation-lg dark:shadow-elevation-lg-dark ${styles.container} animate-in slide-in-from-right-5 fade-in`}
+              className={`pointer-events-auto flex min-w-[360px] max-w-[520px] items-start gap-4 rounded-xl border p-4 text-base shadow-2xl transition-all duration-base hover:shadow-2xl ${styles.container} animate-in slide-in-from-right-5 fade-in`}
             >
-              <Icon className={`mt-0.5 h-5 w-5 flex-shrink-0 ${styles.icon}`} aria-hidden="true" />
-              <div className="flex-1 min-w-0">
-                <div className={`text-body-sm font-semibold ${styles.title}`}>{toast.title}</div>
+              <Icon className={`mt-0.5 h-6 w-6 flex-shrink-0 ${styles.icon}`} aria-hidden="true" />
+              <div className="flex-1 min-w-0 space-y-1 text-white">
+                <div className={`text-base font-semibold leading-6 ${styles.title}`}>
+                  {toast.title}
+                </div>
                 {toast.description && (
-                  <p
-                    className={`mt-0.5 text-label-sm ${styles.description}`}
-                    title={toast.description}
-                  >
+                  <p className={`text-sm leading-5 ${styles.description}`} title={toast.description}>
                     {toast.description}
                   </p>
                 )}
@@ -210,7 +215,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     remove(toast.id);
                   }
                 }}
-                className={`flex-shrink-0 rounded p-1 transition-colors duration-fast hover:bg-white/50 focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-black/20 ${styles.icon}`}
+                className={`flex-shrink-0 rounded-md p-1.5 transition-colors duration-fast hover:bg-white/10 focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-white/70 ${styles.icon}`}
                 aria-label={`Dismiss ${toast.level} notification: ${toast.title}`}
               >
                 <X className="h-4 w-4" />
