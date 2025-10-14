@@ -64,6 +64,7 @@ export function ObjectsView({
 
   const objects = cacheQuery.objects;
   const prefixes = cacheQuery.directories;
+  const getDirectoryFileCount = cacheQuery.getDirectoryFileCount;
 
   const pageEntries = useMemo<SelectionTarget[]>(() => {
     const directoryEntries = prefixes.map<SelectionTarget>((prefix) => ({
@@ -469,6 +470,7 @@ export function ObjectsView({
         onEnterDirectory={handleDirectoryEnter}
         isFetching={cacheQuery.isFetching}
         isLoadingMetadata={cacheQuery.isLoadingFull}
+        getDirectoryFileCount={getDirectoryFileCount}
       />
     );
   }

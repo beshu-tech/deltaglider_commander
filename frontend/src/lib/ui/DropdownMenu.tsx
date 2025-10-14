@@ -59,7 +59,12 @@ export function DropdownMenu({ trigger, children, align = "right", className }: 
   );
 }
 
-export function DropdownMenuItem({ onClick, disabled, children, className }: DropdownMenuItemProps) {
+export function DropdownMenuItem({
+  onClick,
+  disabled,
+  children,
+  className,
+}: DropdownMenuItemProps) {
   return (
     <button
       type="button"

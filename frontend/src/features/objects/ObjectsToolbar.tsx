@@ -1,5 +1,13 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, Eraser, MoreHorizontal, MoreVertical, RefreshCw, Search, UploadCloud } from "lucide-react";
+import {
+  ChevronRight,
+  Eraser,
+  MoreHorizontal,
+  MoreVertical,
+  RefreshCw,
+  Search,
+  UploadCloud,
+} from "lucide-react";
 import { ObjectsCompressionFilter } from "./types";
 import { Input } from "../../lib/ui/Input";
 import { Button } from "../../lib/ui/Button";
@@ -39,15 +47,6 @@ export function ObjectsToolbar({
   useEffect(() => {
     setSearchValue(search || "");
   }, [search]);
-
-  const compressionOptions = useMemo(
-    () => [
-      { value: "all" as const, label: "All files" },
-      { value: "compressed" as const, label: "Compressed only" },
-      { value: "original" as const, label: "Original only" },
-    ],
-    [],
-  );
 
   const debouncedSearch = useCallback(
     (value: string) => {
@@ -172,13 +171,24 @@ export function ObjectsToolbar({
           }
           align="right"
         >
-          <DropdownMenuItem onClick={() => onCompressionChange("all")} disabled={compression === "all"}>
+          <DropdownMenuItem
+            onClick={() => onCompressionChange("all")}
+            disabled={compression === "all"}
+          >
             <span className={compression === "all" ? "font-semibold" : ""}>All files</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onCompressionChange("compressed")} disabled={compression === "compressed"}>
-            <span className={compression === "compressed" ? "font-semibold" : ""}>Compressed only</span>
+          <DropdownMenuItem
+            onClick={() => onCompressionChange("compressed")}
+            disabled={compression === "compressed"}
+          >
+            <span className={compression === "compressed" ? "font-semibold" : ""}>
+              Compressed only
+            </span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onCompressionChange("original")} disabled={compression === "original"}>
+          <DropdownMenuItem
+            onClick={() => onCompressionChange("original")}
+            disabled={compression === "original"}
+          >
             <span className={compression === "original" ? "font-semibold" : ""}>Original only</span>
           </DropdownMenuItem>
 

@@ -56,6 +56,9 @@ export interface UseObjectsCacheResult {
     loaded: number;
     total: number | undefined;
   };
+
+  // Utility function to count direct files in a subdirectory
+  getDirectoryFileCount: (directoryPrefix: string) => number;
 }
 
 /**
@@ -228,6 +231,29 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     return query.refetch();
   };
 
+  // Function to count direct files in a subdirectory
+  // Counts only files directly in the subdirectory, not in nested folders
+  const getDirectoryFileCount = (directoryPrefix: string): number => {
+    if (!cache) return 0;
+
+    // Ensure the prefix ends with /
+    const normalizedPrefix = directoryPrefix.endsWith("/")
+      ? directoryPrefix
+      : `${directoryPrefix}/`;
+
+    // Count objects that start with this prefix
+    // but don't contain another / after the prefix (direct files only)
+    return cache.objects.filter((obj) => {
+      if (!obj.key.startsWith(normalizedPrefix)) return false;
+
+      // Get the part after the prefix
+      const remainder = obj.key.substring(normalizedPrefix.length);
+
+      // If there's no /, it's a direct file in this directory
+      return !remainder.includes("/");
+    }).length;
+  };
+
   return {
     // Data
     objects: paginatedObjects,
@@ -253,5 +279,8 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
 
     // Progress
     fetchProgress,
+
+    // Utilities
+    getDirectoryFileCount,
   };
 }
