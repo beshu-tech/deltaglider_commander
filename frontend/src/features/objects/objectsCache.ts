@@ -1,6 +1,9 @@
 import { fetchObjects } from "../../lib/api/endpoints";
 import { ObjectItem, ObjectSortKey } from "./types";
 
+// Set to true to enable debug logging for cache operations
+const DEBUG_CACHE = false;
+
 /**
  * Complete directory cache with all objects and subdirectories
  */
@@ -38,7 +41,8 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
 
   // Stage 1: Quick preview (first 100 items, no metadata)
   if (onPreviewReady) {
-    console.log("[objectsCache] Stage 1: Fetching quick preview (100 items, no metadata)");
+    if (DEBUG_CACHE)
+      console.log("[objectsCache] Stage 1: Fetching quick preview (100 items, no metadata)");
     const previewResponse = await fetchObjects({
       bucket,
       prefix,
@@ -51,9 +55,11 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
       fetchMetadata: false, // FAST: Skip metadata
     });
 
-    console.log(
-      `[objectsCache] Preview ready: ${previewResponse.objects.length} objects, ${previewResponse.common_prefixes.length} dirs`,
-    );
+    if (DEBUG_CACHE) {
+      console.log(
+        `[objectsCache] Preview ready: ${previewResponse.objects.length} objects, ${previewResponse.common_prefixes.length} dirs`,
+      );
+    }
 
     // Provide quick preview to UI immediately
     onPreviewReady({
@@ -65,7 +71,8 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
   }
 
   // Stage 2: Full data fetch (all items, with metadata)
-  console.log("[objectsCache] Stage 2: Fetching full data (all items, with metadata)");
+  if (DEBUG_CACHE)
+    console.log("[objectsCache] Stage 2: Fetching full data (all items, with metadata)");
   const allObjects: ObjectItem[] = [];
   const allDirectories = new Set<string>();
   let cursor: string | undefined;
@@ -94,12 +101,14 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
     }
 
     cursor = response.cursor ?? undefined;
-    if (cursor) {
-      console.log(
-        `[objectsCache] Fetching page ${pageCount + 1}, loaded so far: ${allObjects.length}`,
-      );
-    } else {
-      console.log(`[objectsCache] Full fetch complete: ${allObjects.length} objects total`);
+    if (DEBUG_CACHE) {
+      if (cursor) {
+        console.log(
+          `[objectsCache] Fetching page ${pageCount + 1}, loaded so far: ${allObjects.length}`,
+        );
+      } else {
+        console.log(`[objectsCache] Full fetch complete: ${allObjects.length} objects total`);
+      }
     }
   } while (cursor);
 
@@ -251,5 +260,6 @@ export function clearObjectsCache(): void {
     }
   });
 
-  console.log("[objectsCache] Cleared all cached object listings from localStorage");
+  if (DEBUG_CACHE)
+    console.log("[objectsCache] Cleared all cached object listings from localStorage");
 }
