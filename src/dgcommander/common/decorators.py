@@ -64,7 +64,17 @@ def api_endpoint(
                     else:
                         response_obj = result
 
-                    return jsonify(response_obj.model_dump(mode="json"))
+                    dumped = response_obj.model_dump(mode="json")
+
+                    import json
+
+                    from flask import make_response
+
+                    json_data = json.dumps(dumped, ensure_ascii=False)
+                    response = make_response(json_data, 200)
+                    response.headers["Content-Type"] = "application/json; charset=utf-8"
+                    response.headers["Content-Length"] = str(len(json_data.encode("utf-8")))
+                    return response
 
                 return result
 
@@ -128,8 +138,10 @@ def with_timing(metric_name: str):
                 return result
             finally:
                 duration = time.time() - start_time
-                # Log metric (in production, send to metrics service)
-                print(f"[METRIC] {metric_name}: {duration:.3f}s")
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.debug(f"[METRIC] {metric_name}: {duration:.3f}s")
 
         return wrapper
 

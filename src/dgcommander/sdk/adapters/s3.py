@@ -308,7 +308,9 @@ class S3DeltaGliderSDK:
     def delete_objects(self, bucket: str, keys: list[str]) -> None:
         normalized_keys = [self._normalize_key(key) for key in keys]
         self._client.delete_objects(Bucket=bucket, Delete={"Objects": [{"Key": key} for key in normalized_keys]})
-        self._refresh_bucket_stats(bucket)
+        # Note: Removed _refresh_bucket_stats() call here as it hangs indefinitely
+        # Stats will be refreshed on-demand when viewing buckets
+        self.invalidate_bucket_cache(bucket)
 
     def upload(self, bucket: str, key: str, file_obj: BinaryIO) -> UploadSummary:
         normalized = self._normalize_key(key)
@@ -340,7 +342,9 @@ class S3DeltaGliderSDK:
             operation="put",  # deltaglider 4.1.0 abstracts operation details
             physical_key=normalized,  # physical key is abstracted away
         )
-        self._refresh_bucket_stats(bucket)
+        # Note: Removed _refresh_bucket_stats() call here as it hangs indefinitely
+        # Stats will be refreshed on-demand when viewing buckets
+        self.invalidate_bucket_cache(bucket)
         return upload_summary
 
     def upload_batch(

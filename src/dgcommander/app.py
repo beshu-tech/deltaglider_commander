@@ -42,8 +42,7 @@ def create_app(
     # Set to DEBUG for development, WARNING or ERROR for production
     log_level = os.environ.get("DGCOMM_LOG_LEVEL", "INFO").upper()
     logging.basicConfig(
-        level=getattr(logging, log_level, logging.INFO),
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=getattr(logging, log_level, logging.INFO), format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
     app.logger.setLevel(getattr(logging, log_level, logging.INFO))
 

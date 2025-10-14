@@ -166,11 +166,20 @@ def test_upload_refreshes_bucket_cache(fake_environment):
     sdk.compute_bucket_stats("alpha")
     assert fake_dg.stats_calls == [("alpha", True)]
 
-    # Upload new object through SDK (refresh expected)
+    # Upload new object through SDK (cache invalidation expected, not refresh)
+    # Note: _refresh_bucket_stats() was removed because it hangs indefinitely
+    # Stats are now computed on-demand via compute_stats=True
     sdk.upload("alpha", "bar.txt", io.BytesIO(b"123456"))
-    assert fake_dg.stats_calls[-1] == ("alpha", True)
+    # After upload, cache is invalidated (cleared), no stats refresh happens
+    assert len(fake_dg.stats_calls) == 1  # Only the initial compute_bucket_stats call
 
+    # Verify cache was invalidated by checking list_buckets returns default snapshot
     snapshot = list(sdk.list_buckets(compute_stats=False))[0]
+    assert snapshot.object_count == 0  # Cache was cleared
+    assert snapshot.computed_at is None  # No stats computed yet
+
+    # Now explicitly compute stats to verify objects are there
+    snapshot = sdk.compute_bucket_stats("alpha")
     assert snapshot.object_count == len(fake_dg.objects["alpha"])
     assert snapshot.original_bytes == sum(
         int(obj["Metadata"]["deltaglider-original-size"]) for obj in fake_dg.objects["alpha"]

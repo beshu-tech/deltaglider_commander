@@ -63,23 +63,10 @@ def _join_key(prefix: str, relative_path: str) -> str:
 @bp.post("/")
 @require_session_or_env
 def upload_objects():
-    import logging
-
-    logger = logging.getLogger(__name__)
-
     _enforce_rate_limit(request)
 
     # Use session SDK
     sdk = g.sdk_client
-    logger.info(f"Upload using SDK type: {type(sdk).__name__}")
-    if hasattr(sdk, "_settings"):
-        logger.info(f"Upload SDK endpoint: {sdk._settings.endpoint_url}")
-        logger.info(
-            f"Upload SDK access_key: {sdk._settings.access_key_id[:10]}..."
-            if sdk._settings.access_key_id
-            else "No access key"
-        )
-
     catalog = CatalogService(sdk=sdk)
 
     bucket = request.form.get("bucket", "").strip()

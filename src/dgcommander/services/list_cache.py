@@ -196,7 +196,7 @@ class ListObjectsCache:
             # For now, clear entire cache when any bucket is modified
             # This is simple and safe, though not optimal
             self._cache.clear()
-            logger.info(f"Invalidated entire cache due to modification in bucket: {bucket}")
+            logger.debug(f"Invalidated entire cache due to modification in bucket: {bucket}")
 
     def invalidate_prefix(self, bucket: str, prefix: str) -> None:
         """Invalidate cache entries for a specific bucket and prefix.

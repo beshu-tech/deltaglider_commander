@@ -240,8 +240,8 @@ class CatalogService:
             for key in keys:
                 errors.append({"key": key, "error": str(exc)})
         except Exception as exc:
+            logger.error(f"Exception deleting {bucket}/{key}: {type(exc).__name__}: {exc}", exc_info=True)
             for key in keys:
-                logger.error(f"Exception deleting {bucket}/{key}: {type(exc).__name__}: {exc}", exc_info=True)
                 errors.append({"key": key, "error": _summarize_exception(exc)})
 
         return deleted, errors
