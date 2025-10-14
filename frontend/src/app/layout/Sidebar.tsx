@@ -21,38 +21,8 @@ import { Button } from "../../lib/ui/Button";
 import { Input } from "../../lib/ui/Input";
 import { SessionManager } from "../../services/sessionManager";
 
-interface SidebarHeaderProps {
-  onNavigateHome: () => void;
-}
-
-function SidebarHeader({ onNavigateHome }: SidebarHeaderProps) {
-  return (
-    <Link to="/buckets" className="block focus-visible:outline-none group" onClick={onNavigateHome}>
-      <div className="space-y-4 pb-2">
-        {/* Enhanced Logo and Branding Section */}
-        <div className="flex items-center gap-4">
-          {/* Larger, More Professional Logo */}
-          <div className="relative">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 via-red-600 to-red-700 shadow-xl ring-1 ring-red-400/30 ring-offset-2 ring-offset-slate-950">
-              {/* Enhanced Delta Symbol */}
-              <div className="relative">
-                <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[14px] border-l-transparent border-r-transparent border-b-white"></div>
-                <div className="absolute top-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-b-[8px] border-l-transparent border-r-transparent border-b-red-600"></div>
-              </div>
-            </div>
-            {/* Professional Badge */}
-            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-2 border-slate-950 shadow-lg">
-              <div className="w-full h-full rounded-full bg-green-400 animate-pulse"></div>
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-white tracking-tight">DeltaGlider</span>
-            <span className="text-sm text-slate-300 font-semibold tracking-wide">Commander</span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
+function SidebarHeader() {
+  return null;
 }
 
 interface BucketFilterProps {
@@ -342,6 +312,29 @@ interface SidebarFooterProps {
 function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
   return (
     <div className={`space-y-3 ${className ?? ""}`}>
+      {/* Logo Section */}
+      <Link to="/buckets" className="block focus-visible:outline-none group">
+        <div className="rounded-lg bg-slate-800/30 px-3 py-3 border border-slate-700/50">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 via-red-600 to-red-700 shadow-md ring-1 ring-red-400/30">
+                <div className="relative">
+                  <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-white"></div>
+                  <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[3px] border-r-[3px] border-b-[6px] border-l-transparent border-r-transparent border-b-red-600"></div>
+                </div>
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-slate-950 shadow-sm">
+                <div className="w-full h-full rounded-full bg-green-400 animate-pulse"></div>
+              </div>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-white truncate">DeltaGlider</span>
+              <span className="text-xs text-slate-400 truncate">Commander</span>
+            </div>
+          </div>
+        </div>
+      </Link>
+
       {/* Navigation Links */}
       <div className="space-y-1 text-[13px] text-slate-300">
         <Link
@@ -439,7 +432,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-neutral-dark px-6 py-section text-slate-100 border-r border-slate-700/30">
       <div className="space-y-3">
-        <SidebarHeader onNavigateHome={() => setFilter("")} />
+        <SidebarHeader />
         <SidebarActions
           creating={createBucketMutation.isPending}
           showCreateForm={showCreateForm}
