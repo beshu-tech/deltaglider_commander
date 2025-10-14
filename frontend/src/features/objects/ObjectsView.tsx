@@ -506,7 +506,7 @@ export function ObjectsView({
         <div className="flex items-center gap-2">
           <span>
             Page {cacheQuery.currentPage} of {cacheQuery.totalPages} ·{" "}
-            {objects.length + prefixes.length} items
+            {objects.length + prefixes.length} of {cacheQuery.totalItems} items
             {pageSelectedCount ? ` · ${pageSelectedCount} selected` : ""}
           </span>
         </div>
