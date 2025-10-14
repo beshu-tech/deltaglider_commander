@@ -212,7 +212,6 @@ export function ObjectsToolbar({
         {onUploadClick ? (
           <Button type="button" className="gap-2" onClick={onUploadClick}>
             <UploadCloud className="h-4 w-4" />
-            Upload
           </Button>
         ) : null}
       </div>

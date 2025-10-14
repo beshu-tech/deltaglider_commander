@@ -130,14 +130,11 @@ export function ObjectsTable({
                 <Folder className="h-4 w-4" aria-hidden="true" />
               </span>
               <span>{label}</span>
-              {fileCount > 0 && (
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  ({fileCount} {fileCount === 1 ? "file" : "files"})
-                </span>
-              )}
             </div>
           </TableCell>
-          <TableCell className="text-slate-400 dark:text-slate-500">—</TableCell>
+          <TableCell className="text-slate-600 dark:text-slate-400">
+            {fileCount > 0 ? `${fileCount} ${fileCount === 1 ? "file" : "files"}` : "—"}
+          </TableCell>
           <TableCell className="text-slate-400 dark:text-slate-500">—</TableCell>
           <TableCell className="text-slate-400 dark:text-slate-500">—</TableCell>
         </tr>
