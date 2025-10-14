@@ -6,7 +6,10 @@ import { fetchObjects } from "../../lib/api/endpoints";
 /**
  * Result type for directory count queries
  */
-export type DirectoryCount = number | "100+";
+export interface DirectoryCounts {
+  files: number | "100+";
+  folders: number | "100+";
+}
 
 /**
  * Options for the directory counts hook
@@ -23,17 +26,18 @@ export interface UseDirectoryCountsOptions {
  * Result from the directory counts hook
  */
 export interface UseDirectoryCountsResult {
-  counts: Map<string, DirectoryCount>;
+  counts: Map<string, DirectoryCounts>;
   isLoading: boolean;
   loadedCount: number;
   totalCount: number;
 }
 
 /**
- * Hook that progressively fetches file counts for subdirectories.
+ * Hook that progressively fetches file and folder counts for subdirectories.
  *
  * This hook implements Stage 3 of the three-stage loading architecture:
  * - Fetches first 100 items from each subdirectory (without metadata)
+ * - Counts files and folders separately
  * - Sequential requests with configurable delay to respect backend
  * - Caches results in TanStack Query for reuse
  * - Returns "100+" if cursor indicates more items exist
@@ -45,7 +49,7 @@ export function useDirectoryCounts(options: UseDirectoryCountsOptions): UseDirec
   const { bucket, directories, enabled = true, maxDirectories = 50, delayMs = 100 } = options;
 
   const queryClient = useQueryClient();
-  const [counts, setCounts] = useState<Map<string, DirectoryCount>>(new Map());
+  const [counts, setCounts] = useState<Map<string, DirectoryCounts>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const [loadedCount, setLoadedCount] = useState(0);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -82,11 +86,11 @@ export function useDirectoryCounts(options: UseDirectoryCountsOptions): UseDirec
         try {
           // Check cache first
           const queryKey = qk.directoryCount(bucket, dir);
-          const cachedCount = queryClient.getQueryData<DirectoryCount>(queryKey);
+          const cachedCounts = queryClient.getQueryData<DirectoryCounts>(queryKey);
 
-          if (cachedCount !== undefined) {
+          if (cachedCounts !== undefined) {
             // Use cached value
-            setCounts((prev) => new Map(prev).set(dir, cachedCount));
+            setCounts((prev) => new Map(prev).set(dir, cachedCounts));
             loaded++;
             setLoadedCount(loaded);
             continue;
@@ -107,16 +111,31 @@ export function useDirectoryCounts(options: UseDirectoryCountsOptions): UseDirec
             order: "asc",
           });
 
-          // Determine count (exact if no cursor, "100+" if more items exist)
-          const count: DirectoryCount = response.cursor ? "100+" : response.objects.length;
+          // Count files and folders separately
+          let fileCount = 0;
+          let folderCount = 0;
+
+          for (const obj of response.objects) {
+            if (obj.is_prefix) {
+              folderCount++;
+            } else {
+              fileCount++;
+            }
+          }
+
+          // Build counts object (use "100+" if cursor indicates more items)
+          const counts: DirectoryCounts = {
+            files: response.cursor ? "100+" : fileCount,
+            folders: response.cursor ? "100+" : folderCount,
+          };
 
           // Cache the result
-          queryClient.setQueryData(queryKey, count, {
+          queryClient.setQueryData(queryKey, counts, {
             staleTime: 2 * 60 * 1000, // 2 minutes
           });
 
           // Update state
-          setCounts((prev) => new Map(prev).set(dir, count));
+          setCounts((prev) => new Map(prev).set(dir, counts));
           loaded++;
           setLoadedCount(loaded);
         } catch (error) {
