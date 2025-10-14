@@ -274,24 +274,27 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
       {/* Red Band Logo Section */}
       <Link
         to="/buckets"
-        className="block focus-visible:outline-none group -mx-6 px-6 py-5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 transition-all duration-200 shadow-lg"
+        className="block focus-visible:outline-none group -mx-6 px-6 py-6 bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:from-red-400 hover:via-red-500 hover:to-red-600 transition-all duration-200 shadow-lg relative overflow-hidden"
       >
-        <div className="flex items-center gap-4">
-          {/* White Delta Symbol */}
+        {/* Subtle shine effect on hover */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+
+        <div className="flex items-center gap-5 relative">
+          {/* White Delta Symbol with Status */}
           <div className="relative flex-shrink-0">
-            <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[16px] border-l-transparent border-r-transparent border-b-white drop-shadow-md"></div>
-            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[5px] border-r-[5px] border-b-[10px] border-l-transparent border-r-transparent border-b-red-600"></div>
-            {/* Green Status Indicator */}
-            <div className="absolute -bottom-1 -right-2 h-3 w-3 rounded-full bg-green-400 border-2 border-white shadow-md">
+            <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-b-[20px] border-l-transparent border-r-transparent border-b-white drop-shadow-lg"></div>
+            <div className="absolute top-2.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-b-[12px] border-l-transparent border-r-transparent border-b-red-600"></div>
+            {/* Green Status Indicator - positioned on top right of delta */}
+            <div className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-green-400 border-2 border-white shadow-lg ring-2 ring-green-400/30">
               <div className="w-full h-full rounded-full bg-green-300 animate-pulse"></div>
             </div>
           </div>
-          {/* White Text */}
+          {/* White Text with better hierarchy */}
           <div className="flex flex-col">
-            <span className="text-xl font-bold text-white tracking-tight drop-shadow-sm">
+            <span className="text-xl font-bold text-white tracking-tight drop-shadow-md">
               DeltaGlider
             </span>
-            <span className="text-sm text-white/90 font-semibold tracking-wide">Commander</span>
+            <span className="text-sm text-white/95 font-medium tracking-wide">Commander</span>
           </div>
         </div>
       </Link>
