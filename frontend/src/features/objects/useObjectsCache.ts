@@ -10,7 +10,7 @@ import {
   DirectoryCache,
 } from "./objectsCache";
 import { loadFromLocalStorage, saveToLocalStorage } from "../../lib/cache/localStorage";
-import { useDirectoryCounts, DirectoryCount } from "./useDirectoryCounts";
+import { useDirectoryCounts, DirectoryCounts } from "./useDirectoryCounts";
 
 /**
  * Options for the cached objects hook
@@ -59,7 +59,7 @@ export interface UseObjectsCacheResult {
   };
 
   // Directory file counts (Stage 3 loading)
-  directoryFileCounts: Map<string, DirectoryCount>;
+  directoryFileCounts: Map<string, DirectoryCounts>;
   isLoadingCounts: boolean;
 
   // Utility function to count direct files in a subdirectory (deprecated, use directoryFileCounts)

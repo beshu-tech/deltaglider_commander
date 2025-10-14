@@ -112,16 +112,9 @@ export function useDirectoryCounts(options: UseDirectoryCountsOptions): UseDirec
           });
 
           // Count files and folders separately
-          let fileCount = 0;
-          let folderCount = 0;
-
-          for (const obj of response.objects) {
-            if (obj.is_prefix) {
-              folderCount++;
-            } else {
-              fileCount++;
-            }
-          }
+          // Files are in the objects array, folders are in common_prefixes
+          const fileCount = response.objects.length;
+          const folderCount = response.common_prefixes.length;
 
           // Build counts object (use "100+" if cursor indicates more items)
           const counts: DirectoryCounts = {
@@ -130,9 +123,7 @@ export function useDirectoryCounts(options: UseDirectoryCountsOptions): UseDirec
           };
 
           // Cache the result
-          queryClient.setQueryData(queryKey, counts, {
-            staleTime: 2 * 60 * 1000, // 2 minutes
-          });
+          queryClient.setQueryData(queryKey, counts);
 
           // Update state
           setCounts((prev) => new Map(prev).set(dir, counts));
