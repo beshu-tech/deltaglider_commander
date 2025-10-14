@@ -271,26 +271,27 @@ interface SidebarFooterProps {
 function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
   return (
     <div className={`space-y-4 ${className ?? ""}`}>
-      {/* Prominent Full-Width Logo Section */}
+      {/* Red Band Logo Section */}
       <Link
         to="/buckets"
-        className="block focus-visible:outline-none group -mx-6 px-6 py-4 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-y border-slate-700/50 hover:from-slate-800/70 hover:to-slate-900/70 transition-all duration-200"
+        className="block focus-visible:outline-none group -mx-6 px-6 py-5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 transition-all duration-200 shadow-lg"
       >
-        <div className="flex items-center justify-center gap-4">
-          <div className="relative">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 via-red-600 to-red-700 shadow-xl ring-2 ring-red-400/30">
-              <div className="relative">
-                <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[14px] border-l-transparent border-r-transparent border-b-white"></div>
-                <div className="absolute top-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-b-[8px] border-l-transparent border-r-transparent border-b-red-600"></div>
-              </div>
-            </div>
-            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-2 border-slate-950 shadow-lg">
-              <div className="w-full h-full rounded-full bg-green-400 animate-pulse"></div>
+        <div className="flex items-center gap-4">
+          {/* White Delta Symbol */}
+          <div className="relative flex-shrink-0">
+            <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[16px] border-l-transparent border-r-transparent border-b-white drop-shadow-md"></div>
+            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[5px] border-r-[5px] border-b-[10px] border-l-transparent border-r-transparent border-b-red-600"></div>
+            {/* Green Status Indicator */}
+            <div className="absolute -bottom-1 -right-2 h-3 w-3 rounded-full bg-green-400 border-2 border-white shadow-md">
+              <div className="w-full h-full rounded-full bg-green-300 animate-pulse"></div>
             </div>
           </div>
+          {/* White Text */}
           <div className="flex flex-col">
-            <span className="text-lg font-bold text-white tracking-tight">DeltaGlider</span>
-            <span className="text-sm text-slate-300 font-semibold tracking-wide">Commander</span>
+            <span className="text-xl font-bold text-white tracking-tight drop-shadow-sm">
+              DeltaGlider
+            </span>
+            <span className="text-sm text-white/90 font-semibold tracking-wide">Commander</span>
           </div>
         </div>
       </Link>
