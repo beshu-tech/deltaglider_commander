@@ -5,10 +5,15 @@ import { fetchObjects } from "../../lib/api/endpoints";
 
 /**
  * Result type for directory count queries
+ *
+ * @property files - Actual number of files found (up to limit)
+ * @property folders - Actual number of folders found (up to limit)
+ * @property hasMore - Whether more items exist beyond the fetched limit
  */
 export interface DirectoryCounts {
-  files: number | "100+";
-  folders: number | "100+";
+  files: number;
+  folders: number;
+  hasMore: boolean;
 }
 
 /**
@@ -116,10 +121,11 @@ export function useDirectoryCounts(options: UseDirectoryCountsOptions): UseDirec
           const fileCount = response.objects.length;
           const folderCount = response.common_prefixes.length;
 
-          // Build counts object (use "100+" if cursor indicates more items)
+          // Build counts object with actual counts and hasMore flag
           const counts: DirectoryCounts = {
-            files: response.cursor ? "100+" : fileCount,
-            folders: response.cursor ? "100+" : folderCount,
+            files: fileCount,
+            folders: folderCount,
+            hasMore: !!response.cursor, // Cursor indicates more items exist
           };
 
           // Cache the result

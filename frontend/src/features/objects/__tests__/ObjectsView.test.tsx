@@ -48,6 +48,8 @@ vi.mock("../useObjectsCache", () => ({
     isFetching: false,
     error: null,
     refetch: vi.fn(),
+    directoryFileCounts: new Map(),
+    isLoadingCounts: false,
   })),
 }));
 

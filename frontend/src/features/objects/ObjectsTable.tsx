@@ -6,6 +6,7 @@ import { formatDateTime } from "../../lib/utils/dates";
 import { ObjectItem, ObjectSortKey } from "./types";
 import { SelectionTarget } from "./useObjectSelection";
 import { DirectoryCounts } from "./useDirectoryCounts";
+import { formatDirectoryCounts } from "./directoryCountsFormatter";
 
 interface ObjectsTableProps {
   objects: ObjectItem[];
@@ -91,23 +92,12 @@ export function ObjectsTable({
         ? fullPath.slice(currentPrefix.length)
         : fullPath;
       const counts = directoryFileCounts.get(prefix);
+      const countsText = formatDirectoryCounts(counts);
       const target: SelectionTarget = { type: "prefix", key: prefix };
       const directorySelected = isSelected(target);
       const rowClasses = `cursor-pointer border-b border-slate-100 transition-all duration-fast hover:bg-slate-100 focus-visible:outline-focus focus-visible:outline-offset-[-2px] focus-visible:outline-brand-500 focus-visible:ring-focus focus-visible:ring-brand-500/20 dark:border-slate-800 dark:hover:bg-slate-800 dark:focus-visible:outline-brand-400 dark:focus-visible:ring-brand-400/20 ${
         directorySelected ? "bg-brand-50/70 dark:bg-slate-800" : ""
       }`;
-
-      // Format the count display
-      const formatCount = (count: number | "100+" | undefined, label: string) => {
-        if (count === undefined) return "";
-        if (count === "100+") return `100+ ${label}`;
-        if (count === 0) return "";
-        return `${count} ${count === 1 ? label.slice(0, -1) : label}`;
-      };
-
-      const filesText = formatCount(counts?.files, "files");
-      const foldersText = formatCount(counts?.folders, "folders");
-      const countsText = [filesText, foldersText].filter(Boolean).join(", ") || "—";
 
       return (
         <tr
