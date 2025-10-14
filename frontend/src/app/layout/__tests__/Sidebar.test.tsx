@@ -85,7 +85,7 @@ describe("Sidebar", () => {
     expect(screen.getByText("alpha")).toBeInTheDocument();
     expect(screen.getByText("beta")).toBeInTheDocument();
 
-    const filterInput = screen.getByPlaceholderText("Search buckets...");
+    const filterInput = screen.getByPlaceholderText("Filter buckets...");
     await user.clear(filterInput);
     await user.type(filterInput, "alp");
 
