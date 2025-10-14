@@ -263,47 +263,6 @@ function BucketList({
   );
 }
 
-interface SidebarActionsProps {
-  creating: boolean;
-  showCreateForm: boolean;
-  bucketName: string;
-  validationError: string | null;
-  onCreateClick: () => void;
-  onCancelCreate: () => void;
-  onSubmitCreate: (event: FormEvent<HTMLFormElement>) => void;
-  onBucketNameChange: (value: string) => void;
-  filter: string;
-  onFilterChange: (value: string) => void;
-}
-
-function SidebarActions({
-  creating,
-  showCreateForm,
-  bucketName,
-  validationError,
-  onCancelCreate,
-  onSubmitCreate,
-  onBucketNameChange,
-  filter,
-  onFilterChange,
-}: SidebarActionsProps) {
-  return (
-    <div className="space-y-group">
-      {showCreateForm ? (
-        <CreateBucketForm
-          value={bucketName}
-          validationError={validationError}
-          isSubmitting={creating}
-          onValueChange={onBucketNameChange}
-          onSubmit={onSubmitCreate}
-          onCancel={onCancelCreate}
-        />
-      ) : null}
-      <BucketFilter filter={filter} onFilterChange={onFilterChange} />
-    </div>
-  );
-}
-
 interface SidebarFooterProps {
   className?: string;
   onSignOut: () => void;
@@ -311,26 +270,27 @@ interface SidebarFooterProps {
 
 function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
   return (
-    <div className={`space-y-3 ${className ?? ""}`}>
-      {/* Logo Section */}
-      <Link to="/buckets" className="block focus-visible:outline-none group">
-        <div className="rounded-lg bg-slate-800/30 px-3 py-3 border border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 via-red-600 to-red-700 shadow-md ring-1 ring-red-400/30">
-                <div className="relative">
-                  <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-white"></div>
-                  <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[3px] border-r-[3px] border-b-[6px] border-l-transparent border-r-transparent border-b-red-600"></div>
-                </div>
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-slate-950 shadow-sm">
-                <div className="w-full h-full rounded-full bg-green-400 animate-pulse"></div>
+    <div className={`space-y-4 ${className ?? ""}`}>
+      {/* Prominent Full-Width Logo Section */}
+      <Link
+        to="/buckets"
+        className="block focus-visible:outline-none group -mx-6 px-6 py-4 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-y border-slate-700/50 hover:from-slate-800/70 hover:to-slate-900/70 transition-all duration-200"
+      >
+        <div className="flex items-center justify-center gap-4">
+          <div className="relative">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 via-red-600 to-red-700 shadow-xl ring-2 ring-red-400/30">
+              <div className="relative">
+                <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[14px] border-l-transparent border-r-transparent border-b-white"></div>
+                <div className="absolute top-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-b-[8px] border-l-transparent border-r-transparent border-b-red-600"></div>
               </div>
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-white truncate">DeltaGlider</span>
-              <span className="text-xs text-slate-400 truncate">Commander</span>
+            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-2 border-slate-950 shadow-lg">
+              <div className="w-full h-full rounded-full bg-green-400 animate-pulse"></div>
             </div>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-white tracking-tight">DeltaGlider</span>
+            <span className="text-sm text-slate-300 font-semibold tracking-wide">Commander</span>
           </div>
         </div>
       </Link>
@@ -433,24 +393,19 @@ export function Sidebar() {
     <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-neutral-dark px-6 py-section text-slate-100 border-r border-slate-700/30">
       <div className="space-y-3">
         <SidebarHeader />
-        <SidebarActions
-          creating={createBucketMutation.isPending}
-          showCreateForm={showCreateForm}
-          bucketName={bucketName}
-          validationError={validationError}
-          onCreateClick={() => {
-            setShowCreateForm(true);
-            setTimeout(() => setValidationError(null), 0);
-          }}
-          onCancelCreate={handleCancelCreate}
-          onSubmitCreate={handleCreateSubmit}
-          onBucketNameChange={(value) => {
-            setBucketName(value);
-            setValidationError(null);
-          }}
-          filter={filter}
-          onFilterChange={setFilter}
-        />
+        {showCreateForm && (
+          <CreateBucketForm
+            value={bucketName}
+            validationError={validationError}
+            isSubmitting={createBucketMutation.isPending}
+            onValueChange={(value) => {
+              setBucketName(value);
+              setValidationError(null);
+            }}
+            onSubmit={handleCreateSubmit}
+            onCancel={handleCancelCreate}
+          />
+        )}
         <div className="space-y-item">
           <button
             type="button"
@@ -481,17 +436,20 @@ export function Sidebar() {
             <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>
           </button>
           {bucketsExpanded && (
-            <BucketList
-              buckets={buckets}
-              isLoading={isLoading}
-              error={isError ? error : null}
-              filter={filter}
-              activeBucket={activeBucket}
-              onCreateClick={() => {
-                setShowCreateForm(true);
-                setTimeout(() => setValidationError(null), 0);
-              }}
-            />
+            <div className="space-y-3 pt-2">
+              <BucketFilter filter={filter} onFilterChange={setFilter} />
+              <BucketList
+                buckets={buckets}
+                isLoading={isLoading}
+                error={isError ? error : null}
+                filter={filter}
+                activeBucket={activeBucket}
+                onCreateClick={() => {
+                  setShowCreateForm(true);
+                  setTimeout(() => setValidationError(null), 0);
+                }}
+              />
+            </div>
           )}
         </div>
       </div>
