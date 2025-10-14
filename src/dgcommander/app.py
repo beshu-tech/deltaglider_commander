@@ -38,8 +38,20 @@ def create_app(
     )
 
     # Configure logging
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    app.logger.setLevel(logging.DEBUG)
+    # Use DGCOMM_LOG_LEVEL env var (default: INFO) to control verbosity
+    # Set to DEBUG for development, WARNING or ERROR for production
+    log_level = os.environ.get("DGCOMM_LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        level=getattr(logging, log_level, logging.INFO),
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    app.logger.setLevel(getattr(logging, log_level, logging.INFO))
+
+    # Silence noisy third-party loggers (especially boto3/botocore)
+    logging.getLogger("boto3").setLevel(logging.WARNING)
+    logging.getLogger("botocore").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("s3transfer").setLevel(logging.WARNING)
 
     # IMPORTANT: Unset AWS_* environment variables to prevent boto3/deltaglider from using them
     # The app should ONLY use credentials provided via UI (passed as DGCOMM_S3_* or per-session)

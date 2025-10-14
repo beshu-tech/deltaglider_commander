@@ -142,6 +142,7 @@ The API is available at `http://localhost:8000/api` and the MinIO console at `ht
 Backend uses `DGCOMM_` prefixed environment variables:
 
 - `DGCOMM_HMAC_SECRET`: Secret for download token signing (required)
+- `DGCOMM_LOG_LEVEL`: Logging verbosity level (default: `INFO`; options: `DEBUG`, `INFO`, `WARNING`, `ERROR`)
 - `DGCOMM_CACHE_DIR`: Directory for delta cache operations (optional)
 - `CACHE_ENABLED`: Toggle in-process request caches (default: `true`; set to `false` to disable caching)
 - `TEST_MODE`: Enable test SDK initialization (development only)

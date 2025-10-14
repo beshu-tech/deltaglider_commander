@@ -4,6 +4,7 @@
 # Required environment variables (must be provided at runtime):
 #   DGCOMM_HMAC_SECRET - Secret for signing download tokens (required)
 # Optional environment variables:
+#   DGCOMM_LOG_LEVEL - Logging verbosity: DEBUG, INFO, WARNING, ERROR (default: INFO)
 #   CACHE_ENABLED - Set to "false" to bypass in-process caches during debugging
 #
 # S3/AWS credentials are configured through the web UI at runtime,
@@ -12,6 +13,7 @@
 # Example run command:
 #   docker run -p 8000:8000 \
 #     -e DGCOMM_HMAC_SECRET=your-hmac-secret \
+#     -e DGCOMM_LOG_LEVEL=WARNING \
 #     beshultd/deltaglider_commander
 
 # Stage 1: Build frontend
@@ -62,6 +64,7 @@ EXPOSE 8000
 ENV DGCOMM_HMAC_SECRET=""
 
 # Application defaults
+ENV DGCOMM_LOG_LEVEL="INFO"
 ENV DGCOMM_CACHE_DIR="/tmp/dgcommander-cache"
 ENV DGCOMM_OBJECT_RATE_LIMIT="10"
 ENV DGCOMM_OBJECT_RATE_WINDOW="1.0"
