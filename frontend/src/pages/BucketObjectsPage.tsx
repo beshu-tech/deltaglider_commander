@@ -95,7 +95,7 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <div className={`flex flex-1 flex-col overflow-hidden ${showDetails ? "" : "pr-6"}`}>
+      <div className="flex flex-1 flex-col overflow-hidden">
         <ObjectsView
           bucket={bucket}
           search={currentSearch}

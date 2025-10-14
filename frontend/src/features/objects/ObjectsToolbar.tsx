@@ -1,9 +1,9 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, Eraser, RefreshCw, Search, UploadCloud } from "lucide-react";
+import { ChevronRight, Eraser, MoreHorizontal, MoreVertical, RefreshCw, Search, UploadCloud } from "lucide-react";
 import { ObjectsCompressionFilter } from "./types";
 import { Input } from "../../lib/ui/Input";
-import { Select } from "../../lib/ui/Select";
 import { Button } from "../../lib/ui/Button";
+import { DropdownMenu, DropdownMenuItem } from "../../lib/ui/DropdownMenu";
 
 export interface ObjectsToolbarProps {
   bucket: string;
@@ -79,34 +79,70 @@ export function ObjectsToolbar({
     onSearchChange(trimmed || undefined);
   };
 
+  // Calculate visible breadcrumbs - show rightmost items when path is too deep
+  const visibleBreadcrumbs = useMemo(() => {
+    const MAX_VISIBLE = 8; // Show max 8 breadcrumb segments (plenty of room in typical layouts)
+    if (breadcrumbs.length <= MAX_VISIBLE) {
+      return { items: breadcrumbs, hasHidden: false, hiddenCount: 0 };
+    }
+    // Always show first (Dashboard) and last 3 items, collapse the middle
+    const lastThree = breadcrumbs.slice(-3);
+    const first = breadcrumbs[0];
+    return {
+      items: [first, ...lastThree],
+      hasHidden: true,
+      hiddenCount: breadcrumbs.length - 4,
+    };
+  }, [breadcrumbs]);
+
   return (
-    <div className="flex h-14 flex-wrap items-center justify-between gap-group border-b border-slate-200 px-5 dark:border-slate-800">
-      <nav className="flex flex-wrap items-center gap-inline">
-        {breadcrumbs.map((crumb, index) => {
-          const isActive = index === breadcrumbs.length - 1;
+    <div className="flex h-14 items-center justify-between gap-group border-b border-slate-200 px-5 dark:border-slate-800">
+      <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+        {visibleBreadcrumbs.items.map((crumb, index) => {
+          const isActive = crumb === breadcrumbs[breadcrumbs.length - 1];
           const canNavigate = crumb.value !== null || crumb.isHome;
+          const isFirstAfterHome = index === 1 && visibleBreadcrumbs.hasHidden;
+
           return (
-            <div key={`${crumb.label}-${index}`} className="flex items-center gap-inline">
+            <div key={`${crumb.label}-${index}`} className="flex shrink-0 items-center gap-1">
+              {isFirstAfterHome && visibleBreadcrumbs.hasHidden ? (
+                <>
+                  <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                    title={`${visibleBreadcrumbs.hiddenCount} hidden levels`}
+                    aria-label={`${visibleBreadcrumbs.hiddenCount} hidden directory levels`}
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                  <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                </>
+              ) : index > 0 ? (
+                <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+              ) : null}
+
               {canNavigate ? (
                 <button
                   type="button"
                   onClick={() => onBreadcrumbNavigate(crumb.value, crumb.isHome)}
-                  className={`rounded-md px-2 py-1 text-lg transition hover:bg-slate-100 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-brand-500 dark:hover:bg-slate-800 ${
+                  className={`truncate rounded-md px-2 py-1 text-sm transition hover:bg-slate-100 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-brand-500 dark:hover:bg-slate-800 ${
                     isActive
                       ? "font-semibold text-slate-900 dark:text-slate-100"
                       : "font-medium text-slate-600 dark:text-slate-400"
                   }`}
+                  style={{ maxWidth: isActive ? "200px" : "150px" }}
                 >
                   {crumb.label}
                 </button>
               ) : (
-                <span className="px-2 py-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
+                <span
+                  className="truncate px-2 py-1 text-sm font-semibold text-slate-900 dark:text-slate-100"
+                  style={{ maxWidth: "200px" }}
+                >
                   {crumb.label}
                 </span>
               )}
-              {index < breadcrumbs.length - 1 ? (
-                <ChevronRight className="h-5 w-5 text-slate-400" aria-hidden="true" />
-              ) : null}
             </div>
           );
         })}
@@ -122,41 +158,47 @@ export function ObjectsToolbar({
             aria-label={`Search objects in ${bucket}`}
           />
         </form>
-        <Select
-          value={compression}
-          onChange={(event) => onCompressionChange(event.target.value as ObjectsCompressionFilter)}
-          aria-label="Filter by compression"
-          className="appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=')] bg-[length:12px] bg-[right_0.75rem_center] bg-no-repeat pr-9"
+
+        <DropdownMenu
+          trigger={
+            <button
+              type="button"
+              className="flex items-center justify-center rounded-md border border-slate-200 bg-surface-elevated p-2 text-slate-700 transition hover:bg-slate-50 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              aria-label="More actions"
+              title="More actions"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+          }
+          align="right"
         >
-          {compressionOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-        {onClearCache ? (
-          <button
-            type="button"
-            onClick={onClearCache}
-            className="flex items-center justify-center rounded-md border border-slate-200 bg-surface-elevated p-2 text-slate-700 transition hover:bg-slate-50 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-            title="Clear cache"
-            aria-label="Clear cached directory listings"
-          >
-            <Eraser className="h-4 w-4" />
-          </button>
-        ) : null}
-        {onForceRefresh ? (
-          <button
-            type="button"
-            onClick={onForceRefresh}
-            disabled={isRefreshing}
-            className="flex items-center justify-center rounded-md border border-slate-200 bg-surface-elevated p-2 text-slate-700 transition hover:bg-slate-50 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-            title="Refresh from server"
-            aria-label="Refresh from server"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          </button>
-        ) : null}
+          <DropdownMenuItem onClick={() => onCompressionChange("all")} disabled={compression === "all"}>
+            <span className={compression === "all" ? "font-semibold" : ""}>All files</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onCompressionChange("compressed")} disabled={compression === "compressed"}>
+            <span className={compression === "compressed" ? "font-semibold" : ""}>Compressed only</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onCompressionChange("original")} disabled={compression === "original"}>
+            <span className={compression === "original" ? "font-semibold" : ""}>Original only</span>
+          </DropdownMenuItem>
+
+          <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
+
+          {onForceRefresh ? (
+            <DropdownMenuItem onClick={onForceRefresh} disabled={isRefreshing}>
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>Refresh from server</span>
+            </DropdownMenuItem>
+          ) : null}
+
+          {onClearCache ? (
+            <DropdownMenuItem onClick={onClearCache}>
+              <Eraser className="h-4 w-4" />
+              <span>Clear cache</span>
+            </DropdownMenuItem>
+          ) : null}
+        </DropdownMenu>
+
         {onUploadClick ? (
           <Button type="button" className="gap-2" onClick={onUploadClick}>
             <UploadCloud className="h-4 w-4" />

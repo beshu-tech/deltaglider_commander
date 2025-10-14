@@ -55,17 +55,19 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
     };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-6">
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-6" autoComplete="on">
       <div>
         <label htmlFor="accessKeyId" className="block text-sm font-medium mb-1">
           AWS Access Key ID
         </label>
         <input
           id="accessKeyId"
+          name="username"
           type="text"
           required
           value={formData.accessKeyId}
           onChange={handleChange("accessKeyId")}
+          autoComplete="username"
           className="w-full px-3 py-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
           placeholder="AKIAIOSFODNN7EXAMPLE"
         />
@@ -77,10 +79,12 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
         </label>
         <input
           id="secretAccessKey"
+          name="password"
           type="password"
           required
           value={formData.secretAccessKey}
           onChange={handleChange("secretAccessKey")}
+          autoComplete="current-password"
           className="w-full px-3 py-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
           placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         />

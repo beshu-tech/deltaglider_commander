@@ -33,12 +33,6 @@ interface BucketFilterProps {
 function BucketFilter({ filter, onFilterChange }: BucketFilterProps) {
   return (
     <div className="space-y-2">
-      <label
-        htmlFor="sidebar-filter"
-        className="text-xs font-semibold uppercase tracking-wide text-slate-400"
-      >
-        Filter Buckets
-      </label>
       <div className="relative">
         <Search
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
@@ -49,8 +43,8 @@ function BucketFilter({ filter, onFilterChange }: BucketFilterProps) {
           type="search"
           value={filter}
           onChange={(event) => onFilterChange(event.target.value)}
-          placeholder="Search buckets..."
-          className="pl-9 h-9 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all"
+          placeholder="Filter buckets..."
+          className="pl-9 h-9 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-red-900/30 focus:border-red-900/50 transition-all"
         />
       </div>
     </div>
@@ -80,7 +74,7 @@ function CreateBucketForm({
       className="space-y-3 rounded-lg border border-slate-700/50 bg-slate-800/30 p-4 backdrop-blur-sm"
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">
+        <span className="text-xs font-semibold uppercase tracking-wide text-red-300">
           New bucket
         </span>
         <button
@@ -104,7 +98,7 @@ function CreateBucketForm({
           value={value}
           onChange={(event) => onValueChange(event.target.value)}
           placeholder="e.g. images-prod"
-          className="h-9 border-slate-600/50 bg-slate-700/50 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all"
+          className="h-9 border-slate-600/50 bg-slate-700/50 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-red-900/30 focus:border-red-900/50 transition-all"
           disabled={isSubmitting}
           autoFocus
         />
@@ -115,7 +109,7 @@ function CreateBucketForm({
       <div className="flex items-center gap-2">
         <Button
           type="submit"
-          className="flex-1 h-9 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+          className="flex-1 h-9 bg-gradient-to-r from-red-900/90 via-red-900 to-red-900/90 hover:from-red-800/80 hover:via-red-800 hover:to-red-800/80 text-white font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-200"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -196,10 +190,10 @@ function BucketList({
     <nav className="flex flex-col gap-1 text-sm">
       <Link
         to="/buckets"
-        className="flex items-center gap-3 rounded-lg px-3 py-3 mb-3 bg-gradient-to-r from-slate-800/50 to-slate-800/30 border border-slate-700/50 text-slate-200 transition-all duration-200 hover:from-slate-800/70 hover:to-slate-800/50 hover:border-slate-600/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+        className="flex items-center gap-3 rounded-lg px-3 py-3 mb-3 bg-gradient-to-r from-slate-800/50 to-slate-800/30 border border-slate-700/50 text-slate-200 transition-all duration-200 hover:from-slate-800/70 hover:to-slate-800/50 hover:border-slate-600/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900"
         activeProps={{
           className:
-            "from-blue-600/20 to-blue-700/20 border-blue-500/40 text-white shadow-lg shadow-blue-500/10",
+            "from-red-900/20 to-red-900/20 border-red-900/40 text-white shadow-lg shadow-red-900/10",
         }}
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 shadow-inner">
@@ -233,9 +227,9 @@ function BucketList({
             to="/b/$bucket"
             params={{ bucket: bucket.name }}
             search={DEFAULT_OBJECTS_SEARCH_STATE}
-            className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 ${
+            className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 ${
               isActive
-                ? "bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-white shadow-sm border border-blue-500/30"
+                ? "bg-gradient-to-r from-red-900/20 to-red-900/20 text-white shadow-sm border border-red-900/30"
                 : "text-slate-300 hover:bg-slate-800/50 hover:text-white border border-transparent"
             }`}
             aria-current={isActive ? "page" : undefined}
@@ -254,7 +248,7 @@ function BucketList({
       })}
       <button
         onClick={onCreateClick}
-        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-400 text-sm transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 border border-dashed border-slate-600/50 hover:border-slate-500/50 mt-2"
+        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-400 text-sm transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 border border-dashed border-slate-600/50 hover:border-slate-500/50 mt-2"
       >
         <Plus className="h-4 w-4 flex-shrink-0" />
         <span className="font-medium">Create Bucket</span>
@@ -274,23 +268,21 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
       {/* Typographic Logo Section */}
       <Link
         to="/buckets"
-        className="block focus-visible:outline-none group -mx-6 px-6 py-6 bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:from-red-400 hover:via-red-500 hover:to-red-600 transition-all duration-200 shadow-lg relative overflow-hidden"
+        className="block focus-visible:outline-none group -mx-6 px-6 py-7 bg-gradient-to-r from-red-900/90 via-red-900 to-red-900/90 hover:from-red-800/80 hover:via-red-800 hover:to-red-800/80 transition-all duration-200 relative overflow-hidden"
       >
         {/* Subtle shine effect on hover */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
 
         <div className="relative flex flex-col items-start">
-          {/* Green Status Indicator - top right corner */}
-          <div className="absolute top-0 right-0 h-3 w-3 rounded-full bg-green-400 border-2 border-white shadow-lg ring-2 ring-green-400/30">
-            <div className="w-full h-full rounded-full bg-green-300 animate-pulse"></div>
-          </div>
-
           {/* Typographic Logo */}
-          <div className="flex flex-col">
-            <span className="text-3xl font-black text-white tracking-tighter drop-shadow-md leading-none">
+          <div className="flex flex-col gap-2">
+            <span
+              className="text-[28px] font-light text-white tracking-wide drop-shadow-lg leading-none"
+              style={{ letterSpacing: "0.08em" }}
+            >
               DELTAGLIDER
             </span>
-            <span className="text-base text-white/95 font-semibold tracking-wider mt-1 uppercase">
+            <span className="text-xs text-white/85 font-light tracking-[0.3em] uppercase pl-0.5">
               Commander
             </span>
           </div>
@@ -301,7 +293,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
       <div className="space-y-1 text-[13px] text-slate-300">
         <Link
           to="/settings"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900"
         >
           <Settings className="h-4 w-4" />
           <span className="font-medium">Settings</span>
@@ -310,7 +302,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
           href="https://github.com/beshu-tech/deltaglider_commander/"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900"
         >
           <BookOpen className="h-4 w-4" />
           <span className="font-medium">Documentation</span>
@@ -319,7 +311,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
           href="https://github.com/beshu-tech/deltaglider_commander/issues"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900"
         >
           <LifeBuoy className="h-4 w-4" />
           <span className="font-medium">Support</span>
@@ -338,7 +330,11 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
 }
 
 export function Sidebar() {
-  const { data: buckets, isLoading, isError, error } = useBuckets();
+  const settingsMatch = useMatch({ from: "/settings", shouldThrow: false });
+  const isOnSettingsPage = !!settingsMatch;
+
+  // Only fetch buckets when NOT on settings page to avoid auth loop
+  const { data: buckets, isLoading, isError, error } = useBuckets({ enabled: !isOnSettingsPage });
   const bucketMatch = useMatch({ from: "/b/$bucket", shouldThrow: false });
   const activeBucket = bucketMatch?.params?.bucket ?? null;
   const navigate = useNavigate();
@@ -412,7 +408,7 @@ export function Sidebar() {
           <button
             type="button"
             onClick={() => setBucketsExpanded(!bucketsExpanded)}
-            className="flex w-full items-center gap-2 px-2 py-1 rounded-md hover:bg-slate-800/50 transition-colors focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-brand-500"
+            className="flex w-full items-center gap-2 px-2 py-1 rounded-md hover:bg-slate-800/50 transition-colors focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-red-900"
           >
             {bucketsExpanded ? (
               <ChevronDown className="h-4 w-4 text-slate-400" />

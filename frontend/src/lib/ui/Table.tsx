@@ -5,7 +5,7 @@ export function Table({ className, ...rest }: TableHTMLAttributes<HTMLTableEleme
   return (
     <table
       className={twMerge(
-        "min-w-full divide-y divide-slate-200 overflow-hidden rounded-md bg-white text-sm dark:divide-slate-700 dark:bg-slate-900",
+        "min-w-full divide-y divide-slate-200 overflow-hidden bg-white text-sm dark:divide-slate-700 dark:bg-slate-900",
         className,
       )}
       {...rest}
