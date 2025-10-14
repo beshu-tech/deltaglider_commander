@@ -9,7 +9,7 @@ import dgcommander.api.auth as auth_module
 def stub_auth_dependencies(monkeypatch):
     """Avoid external SDK calls when exercising auth endpoints."""
 
-    monkeypatch.setattr(auth_module, "validate_credentials", lambda credentials: None)
+    monkeypatch.setattr(auth_module, "validate_credentials", lambda credentials, **kwargs: None)
 
     class DummySDK:
         def __init__(self, *args, **kwargs):
@@ -18,7 +18,7 @@ def stub_auth_dependencies(monkeypatch):
         def list_buckets(self):  # pragma: no cover - unused but mirrors interface
             return []
 
-    monkeypatch.setattr(auth_module, "S3DeltaGliderSDK", DummySDK)
+    monkeypatch.setattr(auth_module, "create_sdk", lambda settings: DummySDK(settings))
 
 
 def test_session_cookie_not_secure_over_http(client):

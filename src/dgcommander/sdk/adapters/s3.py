@@ -12,6 +12,7 @@ from typing import BinaryIO
 
 from ...util.types import FileMetadata, UploadSummary
 from ..models import BucketSnapshot, LogicalObject, ObjectListing
+from .base import BaseDeltaGliderAdapter
 
 
 @dataclass(slots=True)
@@ -28,7 +29,7 @@ class S3Settings:
     cache_dir: str | None = None
 
 
-class S3DeltaGliderSDK:
+class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
     """
     SDK backed by the official deltaglider package.
 
@@ -172,44 +173,7 @@ class S3DeltaGliderSDK:
 
                 response = self._client.list_objects(**list_kwargs)
 
-                # Process objects in this batch
-                for item in response.get("Contents", []):
-                    key = item["Key"]
-                    size = item["Size"]
-                    last_modified = item["LastModified"]
-                    metadata = item.get("Metadata", {})
-
-                    # DeltaGlider 5.0 provides delta metadata in Metadata dict as strings
-                    is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
-                    original_size = int(metadata.get("deltaglider-original-size", size))
-                    stored_size = size
-
-                    # Parse last_modified from ISO string to datetime
-                    if isinstance(last_modified, str):
-                        last_modified = datetime.fromisoformat(last_modified)
-                    elif last_modified and last_modified.tzinfo is None:
-                        last_modified = last_modified.replace(tzinfo=UTC)
-                    elif last_modified:
-                        last_modified = last_modified.astimezone(UTC)
-                    else:
-                        last_modified = datetime.now(UTC)
-
-                    objects.append(
-                        LogicalObject(
-                            key=key,
-                            original_bytes=original_size,
-                            stored_bytes=stored_size,
-                            compressed=is_delta,
-                            modified=last_modified,
-                            physical_key=key,
-                        )
-                    )
-
-                # Collect common prefixes
-                for p in response.get("CommonPrefixes", []):
-                    prefix_val = p["Prefix"]
-                    if prefix_val and prefix_val != "/" and prefix_val != normalized_prefix:
-                        common_prefixes_set.add(prefix_val)
+                self._extend_listing_response(response, objects, common_prefixes_set, normalized_prefix)
 
                 # Check if there are more results
                 if not response.get("IsTruncated", False):
@@ -225,40 +189,7 @@ class S3DeltaGliderSDK:
                 FetchMetadata=not quick_mode,  # Skip metadata when quick_mode=True
             )
 
-            for item in response.get("Contents", []):
-                key = item["Key"]
-                size = item["Size"]
-                last_modified = item["LastModified"]
-                metadata = item.get("Metadata", {})
-
-                is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
-                original_size = int(metadata.get("deltaglider-original-size", size))
-                stored_size = size
-
-                if isinstance(last_modified, str):
-                    last_modified = datetime.fromisoformat(last_modified)
-                elif last_modified and last_modified.tzinfo is None:
-                    last_modified = last_modified.replace(tzinfo=UTC)
-                elif last_modified:
-                    last_modified = last_modified.astimezone(UTC)
-                else:
-                    last_modified = datetime.now(UTC)
-
-                objects.append(
-                    LogicalObject(
-                        key=key,
-                        original_bytes=original_size,
-                        stored_bytes=stored_size,
-                        compressed=is_delta,
-                        modified=last_modified,
-                        physical_key=key,
-                    )
-                )
-
-            for p in response.get("CommonPrefixes", []):
-                prefix_val = p["Prefix"]
-                if prefix_val and prefix_val != "/" and prefix_val != normalized_prefix:
-                    common_prefixes_set.add(prefix_val)
+            self._extend_listing_response(response, objects, common_prefixes_set, normalized_prefix)
 
         return ObjectListing(objects=objects, common_prefixes=sorted(common_prefixes_set))
 
@@ -487,13 +418,52 @@ class S3DeltaGliderSDK:
 
     # -- helpers --------------------------------------------------------
 
-    @staticmethod
-    def _normalize_key(key: str) -> str:
-        return key.lstrip("/")
+    def _extend_listing_response(
+        self,
+        response: dict,
+        objects: list[LogicalObject],
+        common_prefixes: set[str],
+        normalized_prefix: str,
+    ) -> None:
+        for item in response.get("Contents", []):
+            objects.append(self._logical_object_from_listing(item))
+
+        for p in response.get("CommonPrefixes", []):
+            prefix_val = p["Prefix"]
+            if prefix_val and prefix_val != "/" and prefix_val != normalized_prefix:
+                common_prefixes.add(prefix_val)
+
+    def _logical_object_from_listing(self, item: dict) -> LogicalObject:
+        key = item["Key"]
+        size = item["Size"]
+        metadata = item.get("Metadata", {})
+
+        is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
+        original_size = int(metadata.get("deltaglider-original-size", size))
+        stored_size = size
+        modified = self._ensure_datetime(item.get("LastModified"))
+
+        return LogicalObject(
+            key=key,
+            original_bytes=original_size,
+            stored_bytes=stored_size,
+            compressed=is_delta,
+            modified=modified,
+            physical_key=key,
+        )
 
     @staticmethod
-    def _normalize_prefix(prefix: str) -> str:
-        return prefix.lstrip("/")
+    def _ensure_datetime(value: datetime | str | None) -> datetime:
+        if isinstance(value, datetime):
+            if value.tzinfo is None:
+                return value.replace(tzinfo=UTC)
+            return value.astimezone(UTC)
+        if isinstance(value, str):
+            parsed = datetime.fromisoformat(value)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=UTC)
+            return parsed.astimezone(UTC)
+        return datetime.now(UTC)
 
 
 __all__ = ["S3DeltaGliderSDK", "S3Settings"]

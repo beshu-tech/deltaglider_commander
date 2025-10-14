@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from threading import RLock
 from typing import TYPE_CHECKING
 
@@ -42,21 +42,47 @@ def make_credentials_cache_key(credentials: dict | None) -> str:
     return hashlib.sha256(cred_str.encode()).hexdigest()[:16]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class CachedListing:
-    """Immutable cached listing result."""
+    """Cached listing with lazily-computed variants."""
 
     objects: tuple[LogicalObject, ...]
     common_prefixes: tuple[str, ...]
+    _variants: dict[str, tuple[LogicalObject, ...]] = field(default_factory=dict, repr=False)
 
     @classmethod
     def from_lists(cls, objects: list[LogicalObject], common_prefixes: list[str]) -> CachedListing:
         """Create from mutable lists."""
+
         return cls(objects=tuple(objects), common_prefixes=tuple(common_prefixes))
 
-    def to_lists(self) -> tuple[list[LogicalObject], list[str]]:
-        """Convert to mutable lists."""
-        return list(self.objects), list(self.common_prefixes)
+    def get_variant(self, sort_order: str, compressed: bool | None, search: str | None) -> list[LogicalObject] | None:
+        key = self._variant_key(sort_order, compressed, search)
+        variant = self._variants.get(key)
+        if variant is None:
+            return None
+        return list(variant)
+
+    def store_variant(
+        self, sort_order: str, compressed: bool | None, search: str | None, objects: list[LogicalObject]
+    ) -> None:
+        key = self._variant_key(sort_order, compressed, search)
+        self._variants[key] = tuple(objects)
+
+    @staticmethod
+    def _variant_key(sort_order: str, compressed: bool | None, search: str | None) -> str:
+        search_key = (search or "").lower()
+        compression_key = "all" if compressed is None else str(compressed)
+        return f"{sort_order}|{compression_key}|{search_key}"
+
+
+@dataclass(slots=True)
+class VariantLookup:
+    """Result from cache lookup for an object listing variant."""
+
+    variant: list[LogicalObject] | None
+    base_objects: list[LogicalObject] | None
+    common_prefixes: list[str] | None
 
 
 class ListObjectsCache:
@@ -81,59 +107,23 @@ class ListObjectsCache:
         self._lock = RLock()
         self._hits = 0
         self._misses = 0
+        self._bucket_index: dict[str, set[str]] = {}
+        self._prefix_index: dict[tuple[str, str], set[str]] = {}
+        self._key_index: dict[str, tuple[str, str]] = {}
         logger.info(f"Initialized ListObjectsCache with ttl={ttl_seconds}s, max_size={max_size}")
 
-    def _make_key(
-        self,
-        credentials_key: str,
-        bucket: str,
-        prefix: str,
-        sort_order: str,
-        compressed: bool | None,
-        search: str | None,
-    ) -> str:
-        """Generate cache key from listing parameters.
+    def _make_key(self, credentials_key: str, bucket: str, prefix: str) -> str:
+        """Generate cache key based on credentials and location."""
 
-        SECURITY: credentials_key is included to isolate cache entries per credential set.
-        This prevents data leakage between users with different S3 credentials, while allowing
-        cache sharing across sessions/browsers with the same credentials.
-        """
-        # Create a stable key from parameters, INCLUDING credentials_key for isolation
-        key_parts = [
-            credentials_key,  # CRITICAL: Isolate by credentials (not session)
-            bucket,
-            prefix,
-            sort_order,
-            str(compressed) if compressed is not None else "all",
-            search or "",
-        ]
+        key_parts = [credentials_key, bucket, prefix]
         key_str = "|".join(key_parts)
         # Use hash for shorter keys
         return hashlib.sha256(key_str.encode()).hexdigest()[:16]
 
-    def get(
-        self,
-        credentials_key: str,
-        bucket: str,
-        prefix: str,
-        sort_order: str,
-        compressed: bool | None,
-        search: str | None,
-    ) -> CachedListing | None:
-        """Retrieve cached listing if available.
+    def get_listing(self, credentials_key: str, bucket: str, prefix: str) -> CachedListing | None:
+        """Retrieve cached base listing if available."""
 
-        Args:
-            credentials_key: Hash of credentials for cache isolation (security)
-            bucket: S3 bucket name
-            prefix: Object key prefix
-            sort_order: Sort order string
-            compressed: Filter by compression status
-            search: Search filter string
-
-        Returns:
-            CachedListing if cache hit, None if cache miss
-        """
-        key = self._make_key(credentials_key, bucket, prefix, sort_order, compressed, search)
+        key = self._make_key(credentials_key, bucket, prefix)
         with self._lock:
             cached = self._cache.get(key)
             if cached is not None:
@@ -146,11 +136,69 @@ class ListObjectsCache:
             self._misses += 1
             logger.debug(
                 f"Cache MISS for creds={credentials_key[:8]}... {bucket}/{prefix} "
-                f"(hits={self._hits}, misses={self._misses})"
+                    f"(hits={self._hits}, misses={self._misses})"
             )
             return None
 
-    def set(
+    def prime_listing(
+        self,
+        credentials_key: str,
+        bucket: str,
+        prefix: str,
+        objects: list[LogicalObject],
+        common_prefixes: list[str],
+    ) -> None:
+        """Store base listing data in cache."""
+
+        key = self._make_key(credentials_key, bucket, prefix)
+        cached = CachedListing.from_lists(objects, common_prefixes)
+        with self._lock:
+            self._cache[key] = cached
+            self._register_key(key, bucket, prefix)
+            logger.debug(f"Cached base listing ({len(objects)} objects) for creds={credentials_key[:8]}... {bucket}/{prefix}")
+
+    def get_variant(
+        self,
+        credentials_key: str,
+        bucket: str,
+        prefix: str,
+        sort_order: str,
+        compressed: bool | None,
+        search: str | None,
+    ) -> VariantLookup | None:
+        """Retrieve cached variant or provide base data for recomputation."""
+
+        key = self._make_key(credentials_key, bucket, prefix)
+        with self._lock:
+            cached = self._cache.get(key)
+            if cached is None:
+                self._misses += 1
+                self._remove_key(key)
+                logger.debug(
+                    f"Cache MISS for creds={credentials_key[:8]}... {bucket}/{prefix} (no base listing)"
+                )
+                return None
+
+            variant = cached.get_variant(sort_order, compressed, search)
+            common_prefixes = list(cached.common_prefixes)
+            if variant is not None:
+                self._hits += 1
+                logger.debug(
+                    f"Variant HIT for creds={credentials_key[:8]}... {bucket}/{prefix} ({sort_order})"
+                )
+                return VariantLookup(variant=variant, base_objects=None, common_prefixes=common_prefixes)
+
+            self._misses += 1
+            logger.debug(
+                f"Variant MISS for creds={credentials_key[:8]}... {bucket}/{prefix} ({sort_order})"
+            )
+            return VariantLookup(
+                variant=None,
+                base_objects=list(cached.objects),
+                common_prefixes=common_prefixes,
+            )
+
+    def store_variant(
         self,
         credentials_key: str,
         bucket: str,
@@ -159,25 +207,18 @@ class ListObjectsCache:
         compressed: bool | None,
         search: str | None,
         objects: list[LogicalObject],
-        common_prefixes: list[str],
     ) -> None:
-        """Store listing result in cache.
+        """Persist a computed variant for later reuse."""
 
-        Args:
-            credentials_key: Hash of credentials for cache isolation (security)
-            bucket: S3 bucket name
-            prefix: Object key prefix
-            sort_order: Sort order string
-            compressed: Filter by compression status
-            search: Search filter string
-            objects: List of objects to cache
-            common_prefixes: List of common prefixes to cache
-        """
-        key = self._make_key(credentials_key, bucket, prefix, sort_order, compressed, search)
-        cached = CachedListing.from_lists(objects, common_prefixes)
+        key = self._make_key(credentials_key, bucket, prefix)
         with self._lock:
-            self._cache[key] = cached
-            logger.debug(f"Cached {len(objects)} objects for creds={credentials_key[:8]}... {bucket}/{prefix}")
+            cached = self._cache.get(key)
+            if cached is None:
+                return
+            cached.store_variant(sort_order, compressed, search, objects)
+            logger.debug(
+                f"Cached variant ({sort_order}) for creds={credentials_key[:8]}... {bucket}/{prefix}"
+            )
 
     def invalidate_bucket(self, bucket: str) -> None:
         """Invalidate all cache entries for a specific bucket.
@@ -185,27 +226,28 @@ class ListObjectsCache:
         Called when objects are uploaded, deleted, or modified in the bucket.
         """
         with self._lock:
-            # Find and remove all keys for this bucket
-            keys_to_remove = []
-            for key in list(self._cache.keys()):
-                # We need to check if this key belongs to the bucket
-                # Since keys are hashed, we'll need to clear the entire cache for simplicity
-                # A more sophisticated approach would maintain a bucket -> keys mapping
-                keys_to_remove.append(key)
-
-            # For now, clear entire cache when any bucket is modified
-            # This is simple and safe, though not optimal
-            self._cache.clear()
-            logger.debug(f"Invalidated entire cache due to modification in bucket: {bucket}")
+            keys = list(self._bucket_index.get(bucket, set()))
+            for key in keys:
+                self._cache.pop(key, None)
+                self._remove_key(key)
+            logger.debug(
+                f"Invalidated {len(keys)} cache entr{'y' if len(keys)==1 else 'ies'} for bucket: {bucket}"
+            )
 
     def invalidate_prefix(self, bucket: str, prefix: str) -> None:
         """Invalidate cache entries for a specific bucket and prefix.
 
         More granular than invalidate_bucket, but still clears entire cache for simplicity.
         """
-        # For simplicity, invalidate entire cache
-        # TODO: Maintain bucket/prefix -> key mapping for granular invalidation
-        self.invalidate_bucket(bucket)
+        key = (bucket, prefix)
+        with self._lock:
+            keys = list(self._prefix_index.get(key, set()))
+            for cache_key in keys:
+                self._cache.pop(cache_key, None)
+                self._remove_key(cache_key)
+            logger.debug(
+                f"Invalidated {len(keys)} cache entr{'y' if len(keys)==1 else 'ies'} for {bucket}/{prefix}"
+            )
 
     def clear(self) -> None:
         """Clear all cache entries."""
@@ -213,6 +255,9 @@ class ListObjectsCache:
             self._cache.clear()
             self._hits = 0
             self._misses = 0
+            self._bucket_index.clear()
+            self._prefix_index.clear()
+            self._key_index.clear()
             logger.info("Cache cleared")
 
     def stats(self) -> dict[str, int | float]:
@@ -229,5 +274,26 @@ class ListObjectsCache:
                 "max_size": self._cache.maxsize,
             }
 
+    def _register_key(self, key: str, bucket: str, prefix: str) -> None:
+        self._key_index[key] = (bucket, prefix)
+        self._bucket_index.setdefault(bucket, set()).add(key)
+        self._prefix_index.setdefault((bucket, prefix), set()).add(key)
 
-__all__ = ["ListObjectsCache", "CachedListing"]
+    def _remove_key(self, key: str) -> None:
+        info = self._key_index.pop(key, None)
+        if info is None:
+            return
+        bucket, prefix = info
+        bucket_keys = self._bucket_index.get(bucket)
+        if bucket_keys is not None:
+            bucket_keys.discard(key)
+            if not bucket_keys:
+                self._bucket_index.pop(bucket, None)
+        prefix_keys = self._prefix_index.get((bucket, prefix))
+        if prefix_keys is not None:
+            prefix_keys.discard(key)
+            if not prefix_keys:
+                self._prefix_index.pop((bucket, prefix), None)
+
+
+__all__ = ["ListObjectsCache", "CachedListing", "VariantLookup"]

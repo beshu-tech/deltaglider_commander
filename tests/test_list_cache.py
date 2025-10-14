@@ -247,16 +247,17 @@ def test_cache_credentials_isolation():
         modified=datetime.now(UTC),
         physical_key="sensitive-data.txt",
     )
-    cache.set(creds_a, "private-bucket", "data/", "name_asc", None, None, [obj_a], [])
+    cache.prime_listing(creds_a, "private-bucket", "data/", [obj_a], [])
+    cache.store_variant(creds_a, "private-bucket", "data/", "name_asc", None, None, [obj_a])
 
     # User A can retrieve their own data
-    result_a = cache.get(creds_a, "private-bucket", "data/", "name_asc", None, None)
-    assert result_a is not None
-    assert len(result_a.objects) == 1
-    assert result_a.objects[0].key == "sensitive-data.txt"
+    lookup_a = cache.get_variant(creds_a, "private-bucket", "data/", "name_asc", None, None)
+    assert lookup_a is not None and lookup_a.variant is not None
+    assert len(lookup_a.variant) == 1
+    assert lookup_a.variant[0].key == "sensitive-data.txt"
 
     # User B tries to access same bucket with different session - should get cache miss
-    result_b = cache.get(creds_b, "private-bucket", "data/", "name_asc", None, None)
+    result_b = cache.get_variant(creds_b, "private-bucket", "data/", "name_asc", None, None)
     assert result_b is None  # SECURITY: Different session = cache miss
 
     # User B stores their own objects (different data for same bucket)
@@ -268,19 +269,20 @@ def test_cache_credentials_isolation():
         modified=datetime.now(UTC),
         physical_key="other-file.txt",
     )
-    cache.set(creds_b, "private-bucket", "data/", "name_asc", None, None, [obj_b], [])
+    cache.prime_listing(creds_b, "private-bucket", "data/", [obj_b], [])
+    cache.store_variant(creds_b, "private-bucket", "data/", "name_asc", None, None, [obj_b])
 
     # User A still gets their own data
-    result_a_again = cache.get(creds_a, "private-bucket", "data/", "name_asc", None, None)
-    assert result_a_again is not None
-    assert len(result_a_again.objects) == 1
-    assert result_a_again.objects[0].key == "sensitive-data.txt"  # Still user A's data
+    result_a_again = cache.get_variant(creds_a, "private-bucket", "data/", "name_asc", None, None)
+    assert result_a_again is not None and result_a_again.variant is not None
+    assert len(result_a_again.variant) == 1
+    assert result_a_again.variant[0].key == "sensitive-data.txt"  # Still user A's data
 
     # User B gets their own data
-    result_b_again = cache.get(creds_b, "private-bucket", "data/", "name_asc", None, None)
-    assert result_b_again is not None
-    assert len(result_b_again.objects) == 1
-    assert result_b_again.objects[0].key == "other-file.txt"  # User B's data
+    result_b_again = cache.get_variant(creds_b, "private-bucket", "data/", "name_asc", None, None)
+    assert result_b_again is not None and result_b_again.variant is not None
+    assert len(result_b_again.variant) == 1
+    assert result_b_again.variant[0].key == "other-file.txt"  # User B's data
 
     # Verify both sessions are isolated
     assert cache.stats()["cached_entries"] == 2  # Two separate cache entries
@@ -299,7 +301,7 @@ def test_list_cache_stats():
     assert stats["hit_rate_percent"] == 0.0
 
     # Cache miss
-    result = cache.get(credentials_key, "bucket", "prefix", "name_asc", None, None)
+    result = cache.get_variant(credentials_key, "bucket", "prefix", "name_asc", None, None)
     assert result is None
     stats = cache.stats()
     assert stats["misses"] == 1
@@ -315,9 +317,10 @@ def test_list_cache_stats():
         modified=datetime.now(UTC),
         physical_key="test.txt",
     )
-    cache.set(credentials_key, "bucket", "prefix", "name_asc", None, None, [obj], [])
-    result = cache.get(credentials_key, "bucket", "prefix", "name_asc", None, None)
-    assert result is not None
+    cache.prime_listing(credentials_key, "bucket", "prefix", [obj], [])
+    cache.store_variant(credentials_key, "bucket", "prefix", "name_asc", None, None, [obj])
+    result = cache.get_variant(credentials_key, "bucket", "prefix", "name_asc", None, None)
+    assert result is not None and result.variant is not None
     stats = cache.stats()
     assert stats["hits"] == 1
     assert stats["misses"] == 1

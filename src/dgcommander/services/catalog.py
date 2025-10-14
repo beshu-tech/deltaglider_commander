@@ -137,52 +137,61 @@ class CatalogService:
         # Try to get from cache first (if cache and credentials_key provided)
         # IMPORTANT: Only use cache when fetch_metadata=True to avoid storing incomplete preview data
         sort_key = sort_order.name
-        if fetch_metadata and self.list_cache is not None and credentials_key is not None:
-            cached = self.list_cache.get(credentials_key, bucket, prefix, sort_key, compressed, search)
-            if cached is not None:
-                sorted_objects, common_prefixes = cached.to_lists()
-                # Apply pagination to cached results
-                offset = decode_cursor(cursor) or 0
-                page = sorted_objects[offset : offset + limit]
-                next_cursor = encode_cursor(offset + len(page)) if offset + len(page) < len(sorted_objects) else None
+        search_key = search.lower() if search else None
+        offset = decode_cursor(cursor) or 0
 
-                return ObjectList(
-                    objects=[
-                        ObjectItem(
-                            key=obj.key,
-                            original_bytes=obj.original_bytes,
-                            stored_bytes=obj.stored_bytes,
-                            compressed=obj.compressed,
-                            modified=obj.modified,
-                        )
-                        for obj in page
-                    ],
-                    common_prefixes=common_prefixes,
-                    cursor=next_cursor,
+        cache = self.list_cache if fetch_metadata else None
+
+        sorted_objects: list[LogicalObject] | None = None
+        base_objects: list[LogicalObject] | None = None
+        common_prefixes: list[str] = []
+
+        if cache is not None and credentials_key is not None:
+            lookup = cache.get_variant(credentials_key, bucket, prefix, sort_key, compressed, search_key)
+            if lookup is not None:
+                if lookup.common_prefixes is not None:
+                    common_prefixes = lookup.common_prefixes
+                if lookup.variant is not None:
+                    sorted_objects = lookup.variant
+                else:
+                    base_objects = lookup.base_objects or []
+
+        if sorted_objects is None:
+            if base_objects is None:
+                listing = self.sdk.list_objects(bucket, prefix, max_items=None, quick_mode=not fetch_metadata)
+                base_objects = list(listing.objects)
+                common_prefixes = list(listing.common_prefixes)
+
+                if cache is not None and credentials_key is not None:
+                    cache.prime_listing(
+                        credentials_key,
+                        bucket,
+                        prefix,
+                        base_objects,
+                        list(listing.common_prefixes),
+                    )
+            else:
+                # Base objects came from cache; ensure we use stored prefixes
+                common_prefixes = common_prefixes or []
+
+            filtered = [obj for obj in base_objects if compressed is None or obj.compressed == compressed]
+
+            if search_key:
+                filtered = [obj for obj in filtered if search_key in obj.key.lower()]
+
+            sorted_objects = _sort_objects(filtered, sort_order)
+
+            if cache is not None and credentials_key is not None:
+                cache.store_variant(
+                    credentials_key,
+                    bucket,
+                    prefix,
+                    sort_key,
+                    compressed,
+                    search_key,
+                    sorted_objects,
                 )
 
-        # Cache miss - fetch ALL objects in the prefix to ensure proper sorting
-        # (sorting must consider all objects, not just a page)
-        listing = self.sdk.list_objects(bucket, prefix, max_items=None, quick_mode=not fetch_metadata)
-        filtered = [obj for obj in listing.objects if compressed is None or obj.compressed == compressed]
-
-        # Apply search filter if provided
-        if search:
-            search_lower = search.lower()
-            filtered = [obj for obj in filtered if search_lower in obj.key.lower()]
-
-        # Sort ALL filtered objects before pagination
-        sorted_objects = _sort_objects(filtered, sort_order)
-
-        # Store in cache for future requests (if cache and credentials_key provided)
-        # IMPORTANT: Only cache when fetch_metadata=True to avoid caching incomplete preview data
-        if fetch_metadata and self.list_cache is not None and credentials_key is not None:
-            self.list_cache.set(
-                credentials_key, bucket, prefix, sort_key, compressed, search, sorted_objects, listing.common_prefixes
-            )
-
-        # Apply pagination after sorting
-        offset = decode_cursor(cursor) or 0
         page = sorted_objects[offset : offset + limit]
         next_cursor = encode_cursor(offset + len(page)) if offset + len(page) < len(sorted_objects) else None
 
@@ -197,7 +206,7 @@ class CatalogService:
                 )
                 for obj in page
             ],
-            common_prefixes=listing.common_prefixes,
+            common_prefixes=common_prefixes,
             cursor=next_cursor,
         )
 
