@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dgcommander"
-version = "1.0.5"
+version = "1.0.6"
 description = "DeltaGlider UI backend service"
 readme = "README.md"
 authors = [
