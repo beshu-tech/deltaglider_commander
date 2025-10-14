@@ -5,6 +5,7 @@ import { formatBytes } from "../../lib/utils/bytes";
 import { formatDateTime } from "../../lib/utils/dates";
 import { ObjectItem, ObjectSortKey } from "./types";
 import { SelectionTarget } from "./useObjectSelection";
+import { DirectoryCount } from "./useDirectoryCounts";
 
 interface ObjectsTableProps {
   objects: ObjectItem[];
@@ -23,7 +24,7 @@ interface ObjectsTableProps {
   onEnterDirectory: (prefix: string) => void;
   isFetching: boolean;
   isLoadingMetadata?: boolean; // True when loading full metadata after preview
-  getDirectoryFileCount: (directoryPrefix: string) => number;
+  directoryFileCounts: Map<string, DirectoryCount>;
 }
 
 export function ObjectsTable({
@@ -43,7 +44,7 @@ export function ObjectsTable({
   onEnterDirectory,
   isFetching,
   isLoadingMetadata = false,
-  getDirectoryFileCount,
+  directoryFileCounts,
 }: ObjectsTableProps) {
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
@@ -89,7 +90,7 @@ export function ObjectsTable({
       const label = fullPath.startsWith(currentPrefix)
         ? fullPath.slice(currentPrefix.length)
         : fullPath;
-      const fileCount = getDirectoryFileCount(prefix);
+      const fileCount = directoryFileCounts.get(prefix);
       const target: SelectionTarget = { type: "prefix", key: prefix };
       const directorySelected = isSelected(target);
       const rowClasses = `cursor-pointer border-b border-slate-100 transition-all duration-fast hover:bg-slate-100 focus-visible:outline-focus focus-visible:outline-offset-[-2px] focus-visible:outline-brand-500 focus-visible:ring-focus focus-visible:ring-brand-500/20 dark:border-slate-800 dark:hover:bg-slate-800 dark:focus-visible:outline-brand-400 dark:focus-visible:ring-brand-400/20 ${
@@ -133,7 +134,13 @@ export function ObjectsTable({
             </div>
           </TableCell>
           <TableCell className="text-slate-600 dark:text-slate-400">
-            {fileCount > 0 ? `${fileCount} ${fileCount === 1 ? "file" : "files"}` : "—"}
+            {fileCount === undefined
+              ? "—"
+              : fileCount === "100+"
+                ? "100+ files"
+                : fileCount === 0
+                  ? "—"
+                  : `${fileCount} ${fileCount === 1 ? "file" : "files"}`}
           </TableCell>
           <TableCell className="text-slate-400 dark:text-slate-500">—</TableCell>
           <TableCell className="text-slate-400 dark:text-slate-500">—</TableCell>

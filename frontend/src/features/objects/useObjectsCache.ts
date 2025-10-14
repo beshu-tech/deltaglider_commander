@@ -10,6 +10,7 @@ import {
   DirectoryCache,
 } from "./objectsCache";
 import { loadFromLocalStorage, saveToLocalStorage } from "../../lib/cache/localStorage";
+import { useDirectoryCounts, DirectoryCount } from "./useDirectoryCounts";
 
 /**
  * Options for the cached objects hook
@@ -57,7 +58,11 @@ export interface UseObjectsCacheResult {
     total: number | undefined;
   };
 
-  // Utility function to count direct files in a subdirectory
+  // Directory file counts (Stage 3 loading)
+  directoryFileCounts: Map<string, DirectoryCount>;
+  isLoadingCounts: boolean;
+
+  // Utility function to count direct files in a subdirectory (deprecated, use directoryFileCounts)
   getDirectoryFileCount: (directoryPrefix: string) => number;
 }
 
@@ -185,6 +190,14 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     return sortDirectories(filteredDirectories, dirOrder);
   }, [filteredDirectories, sort, order]);
 
+  // Stage 3: Progressive directory count fetching
+  // Enable after we have directory names (from Stage 1 or cache)
+  const directoryCounts = useDirectoryCounts({
+    bucket,
+    directories: sortedDirectories,
+    enabled: sortedDirectories.length > 0 && !query.isLoading,
+  });
+
   // Calculate total items for pagination (based on filtered results)
   const totalItems = sortedObjects.length + sortedDirectories.length;
 
@@ -279,6 +292,10 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
 
     // Progress
     fetchProgress,
+
+    // Directory counts (Stage 3)
+    directoryFileCounts: directoryCounts.counts,
+    isLoadingCounts: directoryCounts.isLoading,
 
     // Utilities
     getDirectoryFileCount,

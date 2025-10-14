@@ -23,6 +23,8 @@ export const qk = {
     ] as const,
   objectsFull: (bucket: string, prefix: string, search: string | undefined, compressed: string) =>
     ["objects-full", bucket, prefix, search ?? null, compressed] as const,
+  directoryCount: (bucket: string, directoryPrefix: string) =>
+    ["directory-count", bucket, directoryPrefix] as const,
   metadata: (bucket: string, key: string) => ["meta", bucket, key] as const,
   statsSummary: (bucket?: string | null) => ["stats", "summary", bucket ?? "_all_"] as const,
 } as const;
