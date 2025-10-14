@@ -342,21 +342,8 @@ interface SidebarFooterProps {
 function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
   return (
     <div className={`space-y-3 ${className ?? ""}`}>
-      {/* Profile/Identity Section */}
-      <div className="rounded-lg bg-slate-800/30 px-3 py-3 border border-slate-700/50">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-red-600 shadow-md">
-            <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-white"></div>
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold text-white truncate">DeltaGlider</span>
-            <span className="text-xs text-slate-400 truncate">Commander</span>
-          </div>
-        </div>
-      </div>
-
       {/* Navigation Links */}
-      <div className="space-y-1 border-t border-slate-700/50 pt-3 text-[13px] text-slate-300">
+      <div className="space-y-1 text-[13px] text-slate-300">
         <Link
           to="/settings"
           className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
