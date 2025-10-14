@@ -500,7 +500,9 @@ export function ObjectsView({
           onBulkDownload={handleBulkDownload}
           onBulkDelete={handleBulkDelete}
         />
-      ) : null}
+      ) : (
+        <div className="h-3" />
+      )}
       <div className="flex-1 overflow-hidden">{tableContent}</div>
       <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-3 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
         <div className="flex items-center gap-2">
