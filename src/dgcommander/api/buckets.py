@@ -26,7 +26,6 @@ def list_buckets():
     jobs = getattr(container, "jobs", None)
 
     payload = []
-    # catalog.list_buckets() already handles exceptions and raises SDKError
     for bucket_stats in catalog.list_buckets(compute_stats=False):
         entry = {
             "name": bucket_stats.name,
@@ -35,9 +34,12 @@ def list_buckets():
             "stored_bytes": bucket_stats.stored_bytes,
             "savings_pct": bucket_stats.savings_pct,
         }
-        if jobs and jobs.pending(bucket_stats.name):
+
+        pending_job = jobs.pending(bucket_stats.name) if jobs else False
+        if pending_job:
             entry["pending"] = True
         payload.append(entry)
+
     return json_response({"buckets": payload})
 
 
@@ -85,6 +87,36 @@ def compute_savings(bucket: str):
     task_id = container.jobs.enqueue(bucket, sdk=sdk)
     logger.info(f"[COMPUTE-SAVINGS] Job enqueued with task_id: {task_id}")
     return json_response({"status": "accepted", "bucket": bucket, "task_id": task_id}, status=202)
+
+
+@bp.get("/<bucket>/stats")
+@require_session_or_env
+def bucket_stats(bucket: str):
+    from flask import g
+
+    from ..contracts.buckets import BucketStats as BucketStatsContract
+    from ..services.catalog import CatalogService
+    from ..services.deltaglider import StatsMode
+
+    mode_param = (request.args.get("mode") or "sampled").lower()
+    try:
+        mode = StatsMode(mode_param)
+    except ValueError as exc:
+        raise APIError(code="invalid_stats_mode", message="Unsupported stats mode", http_status=400) from exc
+
+    catalog = CatalogService(sdk=g.sdk_client)
+    stats = catalog.get_bucket_stats(bucket, mode=mode)
+
+    contract = BucketStatsContract(
+        name=stats.name,
+        object_count=stats.object_count,
+        original_bytes=stats.original_bytes,
+        stored_bytes=stats.stored_bytes,
+        savings_pct=stats.savings_pct,
+        pending=False,
+        computed_at=stats.computed_at,
+    )
+    return json_response({"bucket": contract.model_dump(mode="json")})
 
 
 @bp.delete("/<bucket>")
