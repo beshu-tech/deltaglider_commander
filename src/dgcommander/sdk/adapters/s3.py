@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, BinaryIO
 
-from ..models import BucketSnapshot, FileMetadata, LogicalObject, ObjectListing, UploadSummary
+from ..models import BucketSnapshot, FileMetadata, LogicalObject, ObjectListing, StatsMode, UploadSummary
 from ._bucket_cache import BucketStatsCache
 from ._compression import compute_compression_stats
 from ._delta_metadata import DeltaMetadataResolver
@@ -112,7 +112,7 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
         snapshots: list[BucketSnapshot] = []
         for name in bucket_names:
             if compute_stats:
-                snapshot = self._refresh_bucket_stats(name)
+                snapshot = self._refresh_bucket_stats(name, StatsMode.detailed)
             else:
                 snapshot = self._bucket_cache.get(name)
                 if snapshot is None:
@@ -135,12 +135,12 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
         self._client.delete_bucket(Bucket=name)
         self._bucket_cache.remove(name)
 
-    def compute_bucket_stats(self, name: str) -> BucketSnapshot:
+    def compute_bucket_stats(self, name: str, mode: StatsMode = StatsMode.detailed) -> BucketSnapshot:
         response = self._boto3_client.list_buckets()
         bucket_names = [bucket["Name"] for bucket in response.get("Buckets", [])]
         if name not in bucket_names:
             raise ValueError(f"Bucket {name} not found")
-        return self._refresh_bucket_stats(name)
+        return self._refresh_bucket_stats(name, mode)
 
     def bucket_exists(self, name: str) -> bool:
         """Check if a bucket exists without listing all objects."""
@@ -401,10 +401,10 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
     def _get_cached_snapshot(self, name: str) -> BucketSnapshot | None:
         return self._bucket_cache.get(name)
 
-    def _refresh_bucket_stats(self, name: str) -> BucketSnapshot:
+    def _refresh_bucket_stats(self, name: str, mode: StatsMode = StatsMode.detailed) -> BucketSnapshot:
         try:
-            # Use 'detailed' mode and bypass caches to guarantee fresh statistics
-            stats = self._client.get_bucket_stats(name, mode="detailed", use_cache=False, refresh_cache=True)
+            # Use supplied mode and bypass caches to guarantee fresh statistics
+            stats = self._client.get_bucket_stats(name, mode=mode.value, use_cache=False, refresh_cache=True)
         except Exception as exc:  # pragma: no cover - defensive logging path
             logging.getLogger(__name__).debug("Failed to refresh stats for %s: %s", name, exc)
             snapshot = self._placeholder_snapshot(name)

@@ -27,4 +27,5 @@ export const qk = {
     ["directory-count", bucket, directoryPrefix] as const,
   metadata: (bucket: string, key: string) => ["meta", bucket, key] as const,
   statsSummary: (bucket?: string | null) => ["stats", "summary", bucket ?? "_all_"] as const,
+  bucketStats: (bucket: string, mode: string) => ["bucket-stats", bucket, mode] as const,
 } as const;

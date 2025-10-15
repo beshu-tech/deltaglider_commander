@@ -41,6 +41,9 @@ class BucketStats:
     savings_pct: float
     pending: bool = False
     computed_at: datetime | None = None
+    stats_mode: str = "quick"
+    stats_loaded: bool = False
+    object_count_is_limited: bool = False
 
 
 @dataclass(slots=True)

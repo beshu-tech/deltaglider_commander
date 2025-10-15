@@ -7,10 +7,16 @@ export const bucketSchema = z.object({
   stored_bytes: z.number().int().nonnegative(),
   savings_pct: z.number(),
   pending: z.boolean().optional(),
+  stats_mode: z.string().optional().default("quick"),
+  stats_loaded: z.boolean().optional().default(false),
 });
 
 export const bucketsResponseSchema = z.object({
   buckets: z.array(bucketSchema),
+});
+
+export const bucketStatsResponseSchema = z.object({
+  bucket: bucketSchema,
 });
 
 export const objectItemSchema = z.object({
@@ -83,6 +89,7 @@ export const apiErrorSchema = z.object({
 });
 
 export type Bucket = z.infer<typeof bucketSchema>;
+export type BucketStatsResponse = z.infer<typeof bucketStatsResponseSchema>;
 export type ObjectItem = z.infer<typeof objectItemSchema>;
 export type ObjectList = z.infer<typeof objectListSchema>;
 export type FileMetadata = z.infer<typeof fileMetadataSchema>;

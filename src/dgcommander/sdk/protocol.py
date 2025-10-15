@@ -6,7 +6,7 @@ import io
 from collections.abc import Iterable
 from typing import BinaryIO, Protocol
 
-from .models import BucketSnapshot, FileMetadata, ObjectListing, UploadSummary
+from .models import BucketSnapshot, FileMetadata, ObjectListing, StatsMode, UploadSummary
 
 
 class DeltaGliderSDK(Protocol):
@@ -58,7 +58,7 @@ class DeltaGliderSDK(Protocol):
         """Upload a file to a bucket."""
         ...
 
-    def compute_bucket_stats(self, bucket: str) -> BucketSnapshot:
+    def compute_bucket_stats(self, bucket: str, mode: StatsMode = StatsMode.detailed) -> BucketSnapshot:
         """Compute and return up-to-date statistics for a bucket."""
         ...
 

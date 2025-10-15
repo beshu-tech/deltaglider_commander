@@ -118,3 +118,26 @@ def test_delete_missing_bucket_returns_404(client):
             "message": "bucket not found",
         }
     }
+
+
+def test_bucket_stats_endpoint_returns_sampled_stats(client):
+    response = client.get("/api/buckets/releases/stats?mode=sampled")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert "bucket" in payload
+    stats = payload["bucket"]
+    assert stats["name"] == "releases"
+    assert stats["object_count"] == 3
+    assert stats["stored_bytes"] > 0
+
+
+def test_bucket_stats_endpoint_rejects_invalid_mode(client):
+    response = client.get("/api/buckets/releases/stats?mode=unknown")
+    assert response.status_code == 400
+    payload = response.get_json()
+    assert payload == {
+        "error": {
+            "code": "invalid_stats_mode",
+            "message": "Unsupported stats mode",
+        }
+    }

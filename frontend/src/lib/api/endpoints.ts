@@ -2,6 +2,7 @@ import { ApiError } from "./client";
 import { apiWithAuth } from "./authInterceptor";
 import {
   Bucket,
+  bucketStatsResponseSchema,
   DownloadPrepare,
   FileMetadata,
   ObjectList,
@@ -16,7 +17,6 @@ import {
 
 // Re-export types from schemas
 export type { UploadResponse, UploadResult };
-
 export interface ObjectsParams {
   bucket: string;
   prefix?: string;
@@ -33,6 +33,23 @@ export async function fetchBuckets(): Promise<Bucket[]> {
   const data = await apiWithAuth<{ buckets: unknown }>("/api/buckets/");
   const parsed = bucketsResponseSchema.parse(data);
   return parsed.buckets;
+}
+
+export type BucketStatsMode = "quick" | "sampled" | "detailed";
+
+export async function fetchBucketStats(
+  bucket: string,
+  mode: BucketStatsMode = "sampled",
+): Promise<Bucket> {
+  const query = new URLSearchParams();
+  if (mode) {
+    query.set("mode", mode);
+  }
+  const data = await apiWithAuth<unknown>(
+    `/api/buckets/${encodeURIComponent(bucket)}/stats?${query.toString()}`,
+  );
+  const parsed = bucketStatsResponseSchema.parse(data);
+  return parsed.bucket;
 }
 
 export async function createBucket(name: string): Promise<void> {

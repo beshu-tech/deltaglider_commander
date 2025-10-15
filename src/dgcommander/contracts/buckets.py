@@ -19,6 +19,9 @@ class BucketStats(BaseContract):
     savings_pct: float = Field(ge=0, le=100)
     pending: bool = False
     computed_at: datetime | None = None
+    stats_mode: str = Field(default="quick")
+    stats_loaded: bool = False
+    object_count_is_limited: bool = False
 
     @property
     def total_savings_bytes(self) -> int:

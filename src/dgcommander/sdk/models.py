@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 
 
 @dataclass(slots=True)
@@ -36,6 +37,14 @@ class ObjectListing:
 
     objects: list[LogicalObject]
     common_prefixes: list[str]
+
+
+class StatsMode(str, Enum):
+    """Supported bucket statistics modes."""
+
+    quick = "quick"
+    sampled = "sampled"
+    detailed = "detailed"
 
 
 @dataclass(slots=True)
@@ -107,4 +116,4 @@ class UploadSummary:
         return data
 
 
-__all__ = ["BucketSnapshot", "FileMetadata", "LogicalObject", "ObjectListing", "UploadSummary"]
+__all__ = ["BucketSnapshot", "FileMetadata", "LogicalObject", "ObjectListing", "StatsMode", "UploadSummary"]

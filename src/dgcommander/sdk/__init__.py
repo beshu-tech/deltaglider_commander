@@ -30,7 +30,7 @@ _prefer_local_deltaglider()
 
 from .adapters.memory import InMemoryDeltaGliderSDK
 from .adapters.s3 import S3DeltaGliderSDK, S3Settings
-from .models import BucketSnapshot, FileMetadata, LogicalObject, ObjectListing, UploadSummary
+from .models import BucketSnapshot, FileMetadata, LogicalObject, ObjectListing, StatsMode, UploadSummary
 from .protocol import DeltaGliderSDK
 
 __all__ = [
@@ -42,5 +42,6 @@ __all__ = [
     "ObjectListing",
     "S3DeltaGliderSDK",
     "S3Settings",
+    "StatsMode",
     "UploadSummary",
 ]

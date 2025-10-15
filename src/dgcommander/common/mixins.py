@@ -23,7 +23,7 @@ class AutoSerializableMixin:
                 result[key] = value.to_dict()
             elif isinstance(value, datetime):
                 result[key] = value.isoformat().replace("+00:00", "Z")
-            elif isinstance(value, (list, tuple)):
+            elif isinstance(value, list | tuple):
                 result[key] = [item.to_dict() if hasattr(item, "to_dict") else item for item in value]
             elif isinstance(value, dict):
                 result[key] = {k: v.to_dict() if hasattr(v, "to_dict") else v for k, v in value.items()}
@@ -177,7 +177,7 @@ class MetricsMixin:
             if not values:
                 continue
 
-            numeric_values = [v for _, v in values if isinstance(v, (int, float))]
+            numeric_values = [v for _, v in values if isinstance(v, int | float)]
             if numeric_values:
                 summary[name] = {
                     "count": len(values),

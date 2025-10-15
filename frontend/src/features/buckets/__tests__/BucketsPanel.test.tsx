@@ -7,6 +7,7 @@ const navigateMock = vi.fn();
 const useBucketsMock = vi.fn();
 const useDeleteBucketMock = vi.fn();
 const useSavingsMock = vi.fn();
+const useBucketStatsMock = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigateMock,
@@ -18,6 +19,10 @@ vi.mock("../useBuckets", () => ({
 
 vi.mock("../useBucketManagement", () => ({
   useDeleteBucket: () => useDeleteBucketMock(),
+}));
+
+vi.mock("../useBucketStats", () => ({
+  useBucketStats: (...args: unknown[]) => useBucketStatsMock(...args),
 }));
 
 vi.mock("../../savings/useSavings", () => ({
@@ -40,6 +45,13 @@ beforeEach(() => {
   useBucketsMock.mockReturnValue({ data: buckets, isLoading: false, isError: false, error: null });
   useDeleteBucketMock.mockReturnValue({ mutate: vi.fn(), isPending: false, variables: undefined });
   useSavingsMock.mockReturnValue({ mutate: vi.fn(), isPending: false });
+  useBucketStatsMock.mockReturnValue({
+    data: buckets[0],
+    isLoading: false,
+    isError: false,
+    error: null,
+    isPlaceholderData: false,
+  });
 });
 
 describe("BucketsPanel", () => {

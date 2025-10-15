@@ -22,6 +22,7 @@ from ..sdk import (
     ObjectListing,
     S3DeltaGliderSDK,
     S3Settings,
+    StatsMode,
     UploadSummary,
 )
 
@@ -34,5 +35,6 @@ __all__ = [
     "ObjectListing",
     "S3DeltaGliderSDK",
     "S3Settings",
+    "StatsMode",
     "UploadSummary",
 ]

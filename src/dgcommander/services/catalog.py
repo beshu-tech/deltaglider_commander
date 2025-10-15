@@ -12,10 +12,53 @@ from botocore.exceptions import ClientError
 from ..util.errors import APIError, NotFoundError, SDKError
 from ..util.paging import decode_cursor, encode_cursor
 from ..util.types import BucketStats, ObjectItem, ObjectList, ObjectSortOrder
-from .deltaglider import BucketSnapshot, DeltaGliderSDK, FileMetadata, LogicalObject, UploadSummary
+from .deltaglider import (
+    BucketSnapshot,
+    DeltaGliderSDK,
+    FileMetadata,
+    LogicalObject,
+    StatsMode,
+    UploadSummary,
+)
 from .list_cache import ListObjectsCache
 
 logger = logging.getLogger(__name__)
+
+OBJECT_COUNT_LIMIT = 10_000
+
+
+def _clamp_savings_pct(original_bytes: int, stored_bytes: int) -> float:
+    if original_bytes <= 0:
+        return 0.0
+    ratio = 1.0 - (stored_bytes / original_bytes)
+    pct = ratio * 100.0
+    return max(0.0, min(100.0, pct))
+
+
+def _build_bucket_stats(
+    snapshot: BucketSnapshot,
+    *,
+    mode: StatsMode,
+    pending: bool,
+    force_loaded: bool = False,
+) -> BucketStats:
+    object_count = min(snapshot.object_count, OBJECT_COUNT_LIMIT)
+    limited = snapshot.object_count > OBJECT_COUNT_LIMIT
+    savings_pct = _clamp_savings_pct(snapshot.original_bytes, snapshot.stored_bytes)
+    stats_loaded = force_loaded or bool(snapshot.computed_at)
+
+    return BucketStats(
+        name=snapshot.name,
+        object_count=object_count,
+        original_bytes=snapshot.original_bytes,
+        stored_bytes=snapshot.stored_bytes,
+        savings_pct=savings_pct,
+        pending=pending,
+        computed_at=snapshot.computed_at,
+        stats_mode=mode.value,
+        stats_loaded=stats_loaded,
+        object_count_is_limited=limited,
+    )
 
 
 def _sort_objects(objects: Iterable[LogicalObject], sort_order: ObjectSortOrder) -> list[LogicalObject]:
@@ -56,6 +99,27 @@ class CatalogService:
             stats.append(base)
 
         return stats
+
+    def get_bucket_stats(self, bucket: str, *, mode: StatsMode) -> BucketStats:
+        try:
+            snapshot = self.sdk.compute_bucket_stats(bucket, mode=mode)
+        except ValueError as exc:
+            raise NotFoundError("bucket", "bucket_not_found") from exc
+        except Exception as exc:
+            if isinstance(exc, APIError):
+                raise
+            details = {"reason": _summarize_exception(exc)}
+            raise SDKError("Unable to compute bucket statistics", details=details) from exc
+
+        return BucketStats(
+            name=snapshot.name,
+            object_count=snapshot.object_count,
+            original_bytes=snapshot.original_bytes,
+            stored_bytes=snapshot.stored_bytes,
+            savings_pct=snapshot.savings_pct,
+            pending=False,
+            computed_at=snapshot.computed_at,
+        )
 
     def bucket_exists(self, bucket: str) -> bool:
         try:

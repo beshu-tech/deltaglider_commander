@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from datetime import UTC, datetime
 from typing import BinaryIO
 
-from ..models import BucketSnapshot, FileMetadata, LogicalObject, ObjectListing, UploadSummary
+from ..models import BucketSnapshot, FileMetadata, LogicalObject, ObjectListing, StatsMode, UploadSummary
 from .base import BaseDeltaGliderAdapter
 
 
@@ -152,7 +152,7 @@ class InMemoryDeltaGliderSDK(BaseDeltaGliderAdapter):
         else:
             self._buckets.append(snapshot)
 
-    def compute_bucket_stats(self, bucket: str) -> BucketSnapshot:
+    def compute_bucket_stats(self, bucket: str, mode: StatsMode = StatsMode.detailed) -> BucketSnapshot:
         objects = self._objects.get(bucket)
         if objects is None:
             raise ValueError(f"Bucket {bucket} not found")

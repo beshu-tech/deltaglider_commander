@@ -78,7 +78,6 @@ ignore = [
   "B904", # exception handling pattern allowed
   "E402", # module level import in conftest is necessary
   "S106", # hardcoded password in tests is acceptable
-  "UP038", # isinstance with tuple is fine
 ]
 
 [tool.ruff.lint.per-file-ignores]

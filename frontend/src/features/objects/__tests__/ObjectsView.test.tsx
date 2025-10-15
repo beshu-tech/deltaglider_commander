@@ -1,10 +1,16 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ObjectsView } from "../ObjectsView";
 import { ObjectsSearchState } from "../types";
 import { ToastProvider } from "../../../app/toast";
+
+const navigateMock = vi.fn();
+
+vi.mock("@tanstack/react-router", () => ({
+  useNavigate: () => navigateMock,
+}));
 
 vi.mock("../../../lib/utils/download", () => ({
   downloadObject: vi.fn(() => Promise.resolve()),
@@ -67,6 +73,7 @@ const downloadObjectMock = vi.mocked(downloadObject);
 const fetchObjectsMock = vi.mocked(fetchObjects);
 
 beforeEach(() => {
+  navigateMock.mockReset();
   downloadObjectMock.mockClear();
   fetchObjectsMock.mockClear();
 });
