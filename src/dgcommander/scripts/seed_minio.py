@@ -36,7 +36,7 @@ def ensure_bucket(client, bucket: str) -> None:
         if bucket not in bucket_names:
             # Create bucket with region configuration if needed
             region = os.getenv("AWS_DEFAULT_REGION")
-            if region and region != "us-east-1":
+            if region and region != "eu-west-1":
                 client.create_bucket(Bucket=bucket, CreateBucketConfiguration={"LocationConstraint": region})
             else:
                 client.create_bucket(Bucket=bucket)

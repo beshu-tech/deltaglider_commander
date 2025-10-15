@@ -34,6 +34,9 @@ export const fileMetadataSchema = z.object({
   compressed: z.boolean(),
   modified: z.string(),
   accept_ranges: z.boolean(),
+  content_type: z.string().nullable().optional(),
+  etag: z.string().nullable().optional(),
+  metadata: z.record(z.string()).optional(),
 });
 
 export const downloadPrepareSchema = z.object({

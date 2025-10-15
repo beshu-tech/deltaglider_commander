@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
+from ..sdk import FileMetadata, UploadSummary
+
 
 class ObjectSortOrder(str, Enum):
     name_asc = "name_asc"
@@ -76,26 +78,6 @@ class ObjectList:
 
 
 @dataclass(slots=True)
-class FileMetadata:
-    key: str
-    original_bytes: int
-    stored_bytes: int
-    compressed: bool
-    modified: datetime
-    accept_ranges: bool
-
-    def to_dict(self) -> dict:
-        return {
-            "key": self.key,
-            "original_bytes": self.original_bytes,
-            "stored_bytes": self.stored_bytes,
-            "compressed": self.compressed,
-            "modified": self.modified.isoformat().replace("+00:00", "Z"),
-            "accept_ranges": self.accept_ranges,
-        }
-
-
-@dataclass(slots=True)
 class DownloadPreparation:
     bucket: str
     key: str
@@ -109,40 +91,12 @@ class DownloadPreparation:
         }
 
 
-@dataclass(slots=True)
-class UploadSummary:
-    bucket: str
-    key: str
-    original_bytes: int
-    stored_bytes: int
-    compressed: bool
-    operation: str
-    physical_key: str | None = None
-    relative_path: str | None = None
-
-    @property
-    def savings_bytes(self) -> int:
-        return max(self.original_bytes - self.stored_bytes, 0)
-
-    @property
-    def savings_pct(self) -> float:
-        if self.original_bytes == 0:
-            return 0.0
-        return (self.savings_bytes / self.original_bytes) * 100.0
-
-    def to_dict(self) -> dict:
-        data = {
-            "bucket": self.bucket,
-            "key": self.key,
-            "original_bytes": self.original_bytes,
-            "stored_bytes": self.stored_bytes,
-            "compressed": self.compressed,
-            "operation": self.operation,
-            "savings_bytes": self.savings_bytes,
-            "savings_pct": self.savings_pct,
-        }
-        if self.physical_key:
-            data["physical_key"] = self.physical_key
-        if self.relative_path:
-            data["relative_path"] = self.relative_path
-        return data
+__all__ = [
+    "BucketStats",
+    "DownloadPreparation",
+    "FileMetadata",
+    "ObjectItem",
+    "ObjectList",
+    "ObjectSortOrder",
+    "UploadSummary",
+]

@@ -38,4 +38,73 @@ class ObjectListing:
     common_prefixes: list[str]
 
 
-__all__ = ["BucketSnapshot", "LogicalObject", "ObjectListing"]
+@dataclass(slots=True)
+class FileMetadata:
+    """Metadata describing an object stored through DeltaGlider."""
+
+    key: str
+    original_bytes: int
+    stored_bytes: int
+    compressed: bool
+    modified: datetime
+    accept_ranges: bool
+    content_type: str | None = None
+    etag: str | None = None
+    metadata: dict | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "key": self.key,
+            "original_bytes": self.original_bytes,
+            "stored_bytes": self.stored_bytes,
+            "compressed": self.compressed,
+            "modified": self.modified.isoformat().replace("+00:00", "Z"),
+            "accept_ranges": self.accept_ranges,
+            "content_type": self.content_type,
+            "etag": self.etag,
+            "metadata": self.metadata or {},
+        }
+
+
+@dataclass(slots=True)
+class UploadSummary:
+    """Summary returned after uploading an object."""
+
+    bucket: str
+    key: str
+    original_bytes: int
+    stored_bytes: int
+    compressed: bool
+    operation: str
+    physical_key: str | None = None
+    relative_path: str | None = None
+
+    @property
+    def savings_bytes(self) -> int:
+        return max(self.original_bytes - self.stored_bytes, 0)
+
+    @property
+    def savings_pct(self) -> float:
+        if self.original_bytes == 0:
+            return 0.0
+        return (self.savings_bytes / self.original_bytes) * 100.0
+
+    def to_dict(self) -> dict:
+        data = {
+            "bucket": self.bucket,
+            "key": self.key,
+            "original_bytes": self.original_bytes,
+            "stored_bytes": self.stored_bytes,
+            "compressed": self.compressed,
+            "operation": self.operation,
+            "savings_bytes": self.savings_bytes,
+            "savings_pct": self.savings_pct,
+        }
+        if self.physical_key:
+            data["physical_key"] = self.physical_key
+        if self.relative_path:
+            data["relative_path"] = self.relative_path
+        return data
+
+
+__all__ = ["BucketSnapshot", "FileMetadata", "LogicalObject", "ObjectListing", "UploadSummary"]

@@ -120,6 +120,19 @@ Then:
 3. Enter your S3/AWS credentials
 4. Start browsing your S3 buckets!
 
+### Working on DeltaGlider side-by-side
+
+This repository now expects a sibling checkout of the core [deltaglider](https://github.com/beshu-tech/deltaglider) library in `external/deltaglider`.  
+To work on both projects at the same time:
+
+```bash
+# Install deltaglider in editable mode so changes are picked up immediately
+make link-local-sdk
+```
+
+`dgcommander` automatically prefers the editable checkout as long as it exists.  
+Set `DGCOMM_DISABLE_LOCAL_DELTAGLIDER=1` if you need to fall back to the PyPI package.
+
 ### Local Development with Docker
 
 Use Docker Compose to bring up MinIO and the backend:

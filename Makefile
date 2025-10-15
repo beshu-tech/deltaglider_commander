@@ -17,6 +17,7 @@ help:
 	@echo "DGCommander Development Commands"
 	@echo "================================"
 	@echo "make install      - Install all dependencies"
+	@echo "make link-local-sdk - Install deltaglider checkout in editable mode"
 	@echo "make test         - Run all tests"
 	@echo "make lint         - Run all linters"
 	@echo "make format       - Format all code"
@@ -31,8 +32,16 @@ install:
 	@echo "📦 Installing backend dependencies..."
 	pip install -e .[dev,server]
 	pip install ruff mypy pytest-cov bandit safety
+	@if [ -d "external/deltaglider" ]; then \
+		echo "🔗 Installing local deltaglider checkout..."; \
+		pip install -e external/deltaglider; \
+	fi
 	@echo "📦 Installing frontend dependencies..."
 	cd frontend && pnpm install
+
+link-local-sdk:
+	@echo "🔗 Installing local deltaglider checkout..."
+	pip install -e external/deltaglider
 
 # Run all tests
 test: backend-test frontend-test

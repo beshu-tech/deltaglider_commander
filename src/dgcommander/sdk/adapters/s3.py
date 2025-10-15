@@ -7,10 +7,11 @@ import logging
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import BinaryIO
+from typing import Any, BinaryIO
 
-from ...util.types import FileMetadata, UploadSummary
-from ..models import BucketSnapshot, LogicalObject, ObjectListing
+from botocore.exceptions import ClientError
+
+from ..models import BucketSnapshot, FileMetadata, LogicalObject, ObjectListing, UploadSummary
 from ._bucket_cache import BucketStatsCache
 from ._compression import compute_compression_stats
 from .base import BaseDeltaGliderAdapter
@@ -28,6 +29,9 @@ class S3Settings:
     addressing_style: str = "path"
     verify: bool = True
     cache_dir: str | None = None
+    connect_timeout: float = 5.0
+    read_timeout: float = 10.0
+    retry_attempts: int = 2
 
 
 logger = logging.getLogger(__name__)
@@ -55,12 +59,20 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
 
     def __init__(self, settings: S3Settings) -> None:
         self._settings = settings
-        self._region = settings.region_name or "us-east-1"
+        self._region = settings.region_name or "eu-west-1"
         self._bucket_cache = BucketStatsCache()
 
         # Create boto3 S3 client with explicit credentials for bucket operations
         # that are not yet fully abstracted by deltaglider
         import boto3
+
+        retry_attempts = max(1, settings.retry_attempts)
+        client_config = boto3.session.Config(
+            s3={"addressing_style": settings.addressing_style},
+            connect_timeout=settings.connect_timeout,
+            read_timeout=settings.read_timeout,
+            retries={"max_attempts": retry_attempts, "mode": "standard"},
+        )
 
         self._boto3_client = boto3.client(
             "s3",
@@ -69,7 +81,7 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
             aws_secret_access_key=settings.secret_access_key,
             aws_session_token=settings.session_token,
             region_name=settings.region_name,
-            config=boto3.session.Config(s3={"addressing_style": settings.addressing_style}),
+            config=client_config,
             verify=settings.verify,
         )
 
@@ -112,7 +124,7 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
     def create_bucket(self, name: str) -> None:
         # Use deltaglider client's create_bucket method
         region = self._region
-        if not self._settings.endpoint_url and region != "us-east-1":
+        if not self._settings.endpoint_url and region != "eu-west-1":
             self._client.create_bucket(Bucket=name, CreateBucketConfiguration={"LocationConstraint": region})
         else:
             self._client.create_bucket(Bucket=name)
@@ -172,7 +184,14 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
 
                 response = self._client.list_objects(**list_kwargs)
 
-                self._extend_listing_response(response, objects, common_prefixes_set, normalized_prefix)
+                self._extend_listing_response(
+                    bucket,
+                    response,
+                    objects,
+                    common_prefixes_set,
+                    normalized_prefix,
+                    quick_mode,
+                )
 
                 # Check if there are more results
                 if not response.get("IsTruncated", False):
@@ -188,28 +207,63 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
                 FetchMetadata=not quick_mode,  # Skip metadata when quick_mode=True
             )
 
-            self._extend_listing_response(response, objects, common_prefixes_set, normalized_prefix)
+            self._extend_listing_response(
+                bucket,
+                response,
+                objects,
+                common_prefixes_set,
+                normalized_prefix,
+                quick_mode,
+            )
 
         return ObjectListing(objects=objects, common_prefixes=sorted(common_prefixes_set))
 
     def get_metadata(self, bucket: str, key: str) -> FileMetadata:
         normalized = self._normalize_key(key)
 
-        # Use list_objects to get metadata - it's more reliable than get_object
-        # because it doesn't try to download the file
+        # Strategy: Use list_objects with quick_mode=False to get deltaglider compression metadata,
+        # then head_object to get S3-specific metadata (ContentType, custom Metadata)
+        # Note: For delta files, this makes 2 HEAD requests (deltaglider's + ours)
+        # but it's necessary because deltaglider doesn't expose ContentType/Metadata
         listing = self.list_objects(bucket, prefix=normalized, max_items=1, quick_mode=False)
 
         # Find the exact match
         for obj in listing.objects:
             if obj.key == normalized:
-                return FileMetadata(
-                    key=obj.key,
-                    original_bytes=obj.original_bytes,
-                    stored_bytes=obj.stored_bytes,
-                    compressed=obj.compressed,
-                    modified=obj.modified,
-                    accept_ranges=False,
-                )
+                # Fetch S3-specific metadata using head_object
+                # Note: ContentType and custom Metadata are NOT included in list_objects_v2 responses
+                # See: https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
+                try:
+                    response = self._boto3_client.head_object(Bucket=bucket, Key=normalized)
+
+                    # Extract S3 metadata (only available via head_object)
+                    s3_metadata = response.get('Metadata', {})
+                    content_type = response.get('ContentType')
+                    etag = response.get('ETag', '').strip('"')  # Remove quotes from ETag
+                    accept_ranges = response.get('AcceptRanges') == 'bytes'
+
+                    # Use compression data from deltaglider (via quick_mode=False)
+                    return FileMetadata(
+                        key=obj.key,
+                        original_bytes=obj.original_bytes,
+                        stored_bytes=obj.stored_bytes,
+                        compressed=obj.compressed,
+                        modified=obj.modified,
+                        accept_ranges=accept_ranges,
+                        content_type=content_type,
+                        etag=etag,
+                        metadata=s3_metadata,
+                    )
+                except Exception:
+                    # Fallback to basic metadata if head_object fails
+                    return FileMetadata(
+                        key=obj.key,
+                        original_bytes=obj.original_bytes,
+                        stored_bytes=obj.stored_bytes,
+                        compressed=obj.compressed,
+                        modified=obj.modified,
+                        accept_ranges=False,
+                    )
 
         # If not found in listing, raise KeyError
         raise KeyError(f"Object not found: {normalized}")
@@ -349,7 +403,8 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
 
     def _refresh_bucket_stats(self, name: str) -> BucketSnapshot:
         try:
-            stats = self._client.get_bucket_stats(name, detailed_stats=True)
+            # Use 'detailed' mode and bypass caches to guarantee fresh statistics
+            stats = self._client.get_bucket_stats(name, mode='detailed', use_cache=False, refresh_cache=True)
         except Exception as exc:  # pragma: no cover - defensive logging path
             logging.getLogger(__name__).debug("Failed to refresh stats for %s: %s", name, exc)
             snapshot = self._placeholder_snapshot(name)
@@ -387,37 +442,144 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
 
     def _extend_listing_response(
         self,
+        bucket: str,
         response: dict,
         objects: list[LogicalObject],
         common_prefixes: set[str],
         normalized_prefix: str,
+        quick_mode: bool,
     ) -> None:
         for item in response.get("Contents", []):
-            objects.append(self._logical_object_from_listing(item))
+            objects.append(self._logical_object_from_listing(bucket, item, quick_mode))
 
         for p in response.get("CommonPrefixes", []):
             prefix_val = p["Prefix"]
             if prefix_val and prefix_val != "/" and prefix_val != normalized_prefix:
                 common_prefixes.add(prefix_val)
 
-    def _logical_object_from_listing(self, item: dict) -> LogicalObject:
-        key = item["Key"]
-        size = item["Size"]
-        metadata = item.get("Metadata", {})
+    def _logical_object_from_listing(self, bucket: str, item: Any, quick_mode: bool) -> LogicalObject:
+        """
+        Convert a deltaglider list_objects entry into our LogicalObject.
 
-        is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
-        original_size = int(metadata.get("deltaglider-original-size", size))
-        stored_size = size
-        modified = self._ensure_datetime(item.get("LastModified"))
+        The deltaglider client hides .delta suffixes from the public API but exposes compression
+        metadata via custom headers. When FetchMetadata=True the client should populate the
+        ``deltaglider-original-size`` attribute, however versions <=6.0.0 fail to do so because they
+        look for legacy ``file_size`` metadata. Here we patch things up by issuing a targeted
+        HEAD request to recover accurate sizes when needed.
+        """
+
+        if isinstance(item, dict):
+            display_key = item["Key"]
+            stored_size = int(item.get("Size", 0))
+            metadata = item.get("Metadata", {}) or {}
+            is_delta = metadata.get("deltaglider-is-delta", "false").lower() == "true"
+            original_size = self._safe_int(metadata.get("deltaglider-original-size")) or stored_size
+            modified = self._ensure_datetime(item.get("LastModified"))
+            physical_key_hint = display_key
+            if is_delta and not display_key.endswith(".delta"):
+                physical_key_hint = f"{display_key}.delta"
+        else:
+            original_key = item.key
+            is_delta = item.is_delta
+            stored_candidate = getattr(item, "compressed_size", None)
+            stored_size = int(stored_candidate if stored_candidate is not None else item.size)
+            original_size = item.original_size if item.original_size is not None else stored_size
+            modified = self._ensure_datetime(item.last_modified)
+            if is_delta and original_key.endswith(".delta"):
+                display_key = original_key[:-6]
+            else:
+                display_key = original_key
+            physical_key_hint = original_key
+
+        physical_key = self._normalize_key(physical_key_hint)
+
+        if is_delta:
+            if not quick_mode and original_size <= stored_size:
+                resolved_key, resolved_original, resolved_stored = self._fetch_delta_sizes(
+                    bucket, display_key
+                )
+                if resolved_key:
+                    physical_key = resolved_key
+                if resolved_original is not None:
+                    original_size = resolved_original
+                if resolved_stored is not None:
+                    stored_size = resolved_stored
+        else:
+            physical_key = self._normalize_key(display_key)
 
         return LogicalObject(
-            key=key,
-            original_bytes=original_size,
-            stored_bytes=stored_size,
+            key=display_key,
+            original_bytes=int(original_size),
+            stored_bytes=int(stored_size),
             compressed=is_delta,
             modified=modified,
-            physical_key=key,
+            physical_key=physical_key,
         )
+
+    def _fetch_delta_sizes(
+        self,
+        bucket: str,
+        display_key: str,
+    ) -> tuple[str | None, int | None, int | None]:
+        """
+        Recover accurate size information for delta-compressed objects.
+
+        DeltaGlider stores authoritative metadata on the physical .delta object. We consult S3
+        directly when list_objects fails to surface that information (observed on deltaglider 6.0.0).
+        """
+        normalized_display = self._normalize_key(display_key)
+
+        candidates: list[str] = []
+        if not normalized_display.endswith(".delta"):
+            candidates.append(f"{normalized_display}.delta")
+        candidates.append(normalized_display)
+
+        for candidate in candidates:
+            try:
+                response = self._boto3_client.head_object(Bucket=bucket, Key=candidate)
+            except ClientError as exc:
+                error_code = exc.response.get("Error", {}).get("Code", "")
+                if error_code in {"NoSuchKey", "404"}:
+                    continue
+                logger.debug(
+                    "HEAD %s/%s failed while resolving compression metadata: %s",
+                    bucket,
+                    candidate,
+                    error_code or exc,
+                    exc_info=True,
+                )
+                continue
+
+            metadata = response.get("Metadata", {}) or {}
+            original_size = self._safe_int(
+                metadata.get("dg-file-size")
+                or metadata.get("file_size")
+                or metadata.get("deltaglider-original-size")
+            )
+            stored_size = self._safe_int(
+                metadata.get("dg-delta-size")
+                or metadata.get("delta-size")
+                or metadata.get("deltaglider-delta-size")
+            )
+
+            content_length = response.get("ContentLength")
+            if stored_size is None and content_length is not None:
+                stored_size = int(content_length)
+            if original_size is None:
+                original_size = stored_size
+
+            return candidate, original_size, stored_size
+
+        return None, None, None
+
+    @staticmethod
+    def _safe_int(value: Any) -> int | None:
+        try:
+            if value is None:
+                return None
+            return int(value)
+        except (TypeError, ValueError):
+            return None
 
     @staticmethod
     def _ensure_datetime(value: datetime | str | None) -> datetime:

@@ -197,12 +197,7 @@ function BucketList({
         }}
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-red-900/90 via-red-900 to-red-900/80 text-white shadow-lg shadow-red-900/20 ring-1 ring-red-900/40">
-          <svg
-            className="h-4 w-4 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

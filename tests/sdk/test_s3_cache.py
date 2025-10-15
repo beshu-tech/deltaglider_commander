@@ -92,8 +92,15 @@ class FakeDeltaClient:
     def get_object(self, Bucket: str, Key: str):  # pragma: no cover - not used but kept for completeness
         return {"Body": io.BytesIO(b"")}
 
-    def get_bucket_stats(self, bucket: str, detailed_stats: bool = False):
-        self.stats_calls.append((bucket, detailed_stats))
+    def get_bucket_stats(
+        self,
+        bucket: str,
+        mode: str = 'quick',
+        use_cache: bool = True,
+        refresh_cache: bool = False,
+    ):
+        # Track calls for test assertions (using simplified signature for backwards compat)
+        self.stats_calls.append((bucket, mode, use_cache, refresh_cache))
         objects = self.objects.get(bucket, [])
         total_size = sum(int(obj["Metadata"]["deltaglider-original-size"]) for obj in objects)
         stored_size = sum(obj["Size"] for obj in objects)
@@ -145,7 +152,7 @@ def test_list_buckets_returns_cached_stats(fake_environment):
     # Populate bucket and trigger refresh via compute
     fake_dg.put_object(Bucket="alpha", Key="foo.txt", Body=b"hello world")
     sdk.compute_bucket_stats("alpha")
-    assert fake_dg.stats_calls == [("alpha", True)]
+    assert fake_dg.stats_calls == [("alpha", "detailed", False, True)]
 
     cached_snapshot = list(sdk.list_buckets(compute_stats=False))[0]
     assert cached_snapshot.object_count == 1
@@ -153,7 +160,7 @@ def test_list_buckets_returns_cached_stats(fake_environment):
     assert cached_snapshot.computed_at is not None
     # Subsequent quick calls reuse cache
     list(sdk.list_buckets(compute_stats=False))
-    assert fake_dg.stats_calls == [("alpha", True)]
+    assert fake_dg.stats_calls == [("alpha", "detailed", False, True)]
 
 
 def test_upload_refreshes_bucket_cache(fake_environment):
@@ -164,7 +171,7 @@ def test_upload_refreshes_bucket_cache(fake_environment):
     # Seed initial state and cache
     fake_dg.put_object(Bucket="alpha", Key="foo.txt", Body=b"hello")
     sdk.compute_bucket_stats("alpha")
-    assert fake_dg.stats_calls == [("alpha", True)]
+    assert fake_dg.stats_calls == [("alpha", "detailed", False, True)]
 
     # Upload new object through SDK (cache invalidation expected, not refresh)
     # Note: _refresh_bucket_stats() was removed because it hangs indefinitely

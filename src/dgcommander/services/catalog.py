@@ -11,15 +11,8 @@ from botocore.exceptions import ClientError
 
 from ..util.errors import APIError, NotFoundError, SDKError
 from ..util.paging import decode_cursor, encode_cursor
-from ..util.types import (
-    BucketStats,
-    FileMetadata,
-    ObjectItem,
-    ObjectList,
-    ObjectSortOrder,
-    UploadSummary,
-)
-from .deltaglider import BucketSnapshot, DeltaGliderSDK, LogicalObject
+from ..util.types import BucketStats, ObjectItem, ObjectList, ObjectSortOrder
+from .deltaglider import BucketSnapshot, DeltaGliderSDK, FileMetadata, LogicalObject, UploadSummary
 from .list_cache import ListObjectsCache
 
 logger = logging.getLogger(__name__)

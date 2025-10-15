@@ -8,6 +8,7 @@ from dgcommander.auth import SessionStore
 from dgcommander.auth.credentials import (
     InvalidCredentialsError,
     S3AccessDeniedError,
+    S3ConnectionError,
     build_s3_settings,
     create_sdk,
     validate_credentials,
@@ -62,7 +63,7 @@ def create_session():
             "credentials": {
                 "access_key_id": "...",
                 "secret_access_key": "...",
-                "region": "us-east-1",
+                "region": "eu-west-1",
                 "endpoint": "https://s3.amazonaws.com",
                 "addressing_style": "path",
                 "verify": true
@@ -74,6 +75,21 @@ def create_session():
         400: Invalid request body
         403: Invalid credentials or access denied
     """
+    # Verify g.config is properly injected
+    if not hasattr(g, "config"):
+        logger.error("g.config not found - before_request hook may not have run")
+        return (
+            jsonify({"code": "server_error", "message": "Server configuration error"}),
+            500,
+        )
+
+    if not hasattr(g, "session_store"):
+        logger.error("g.session_store not found - before_request hook may not have run")
+        return (
+            jsonify({"code": "server_error", "message": "Server configuration error"}),
+            500,
+        )
+
     data = request.get_json()
 
     logger.info("Received session creation request")
@@ -106,7 +122,9 @@ def create_session():
         validate_credentials(credentials, logger=logger)
 
         # Create SDK client
-        settings = build_s3_settings(credentials, cache_dir=g.config.s3.cache_dir)
+        cache_dir = g.config.s3.cache_dir if hasattr(g.config, "s3") and hasattr(g.config.s3, "cache_dir") else None
+        logger.debug(f"Using cache_dir: {cache_dir}")
+        settings = build_s3_settings(credentials, cache_dir=cache_dir)
         sdk = create_sdk(settings)
 
         # Create or reuse session
@@ -139,7 +157,14 @@ def create_session():
             403,
         )
 
+    except S3ConnectionError as e:
+        return (
+            jsonify({"code": "s3_connect_timeout", "message": str(e)}),
+            504,
+        )
+
     except Exception as e:
+        logger.exception("Unhandled error while creating session")
         return (
             jsonify({"code": "server_error", "message": f"Unexpected error: {str(e)}"}),
             500,

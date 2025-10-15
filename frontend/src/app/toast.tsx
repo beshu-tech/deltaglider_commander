@@ -202,7 +202,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   {toast.title}
                 </div>
                 {toast.description && (
-                  <p className={`text-sm leading-5 ${styles.description}`} title={toast.description}>
+                  <p
+                    className={`text-sm leading-5 ${styles.description}`}
+                    title={toast.description}
+                  >
                     {toast.description}
                   </p>
                 )}

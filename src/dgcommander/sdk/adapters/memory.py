@@ -7,8 +7,7 @@ from collections.abc import Iterable
 from datetime import UTC, datetime
 from typing import BinaryIO
 
-from ...util.types import FileMetadata, UploadSummary
-from ..models import BucketSnapshot, LogicalObject, ObjectListing
+from ..models import BucketSnapshot, FileMetadata, LogicalObject, ObjectListing, UploadSummary
 from .base import BaseDeltaGliderAdapter
 
 

@@ -43,7 +43,7 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: deltadmin
       AWS_SECRET_ACCESS_KEY: deltasecret
-      AWS_DEFAULT_REGION: us-east-1
+      AWS_DEFAULT_REGION: eu-west-1
       DGCOMM_S3_ENDPOINT: http://minio:9000
       DGCOMM_S3_ADDRESSING_STYLE: path
       DGCOMM_CACHE_DIR: /tmp/dgcommander-cache

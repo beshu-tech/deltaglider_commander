@@ -90,7 +90,7 @@ class BucketRepository(ABC):
         ...
 
     @abstractmethod
-    async def create_bucket(self, name: str, region: str = "us-east-1") -> BucketStats:
+    async def create_bucket(self, name: str, region: str = "eu-west-1") -> BucketStats:
         """Create a new bucket."""
         ...
 

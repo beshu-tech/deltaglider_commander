@@ -63,7 +63,7 @@ class CreateBucketRequest(BaseModel):
     """Request to create a new bucket."""
 
     name: str
-    region: str | None = "us-east-1"
+    region: str | None = "eu-west-1"
     tags: dict = Field(default_factory=dict)
 
     @field_validator("name")

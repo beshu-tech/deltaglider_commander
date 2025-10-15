@@ -6,8 +6,7 @@ import io
 from collections.abc import Iterable
 from typing import BinaryIO, Protocol
 
-from ..util.types import FileMetadata, UploadSummary
-from .models import BucketSnapshot, ObjectListing
+from .models import BucketSnapshot, FileMetadata, ObjectListing, UploadSummary
 
 
 class DeltaGliderSDK(Protocol):

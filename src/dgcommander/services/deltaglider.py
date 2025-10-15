@@ -16,19 +16,23 @@ from __future__ import annotations
 from ..sdk import (
     BucketSnapshot,
     DeltaGliderSDK,
+    FileMetadata,
     InMemoryDeltaGliderSDK,
     LogicalObject,
     ObjectListing,
     S3DeltaGliderSDK,
     S3Settings,
+    UploadSummary,
 )
 
 __all__ = [
     "BucketSnapshot",
     "DeltaGliderSDK",
+    "FileMetadata",
     "InMemoryDeltaGliderSDK",
     "LogicalObject",
     "ObjectListing",
     "S3DeltaGliderSDK",
     "S3Settings",
+    "UploadSummary",
 ]

@@ -19,7 +19,7 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
       saved || {
         accessKeyId: "",
         secretAccessKey: "",
-        region: "us-east-1",
+        region: "eu-west-1",
         endpoint: "",
       }
     );
@@ -124,7 +124,7 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
               <label htmlFor="region" className="block text-sm font-medium mb-1">
                 AWS Region
                 <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
-                  (optional, defaults to us-east-1)
+                  (optional, defaults to eu-west-1)
                 </span>
               </label>
               <input
@@ -133,7 +133,7 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
                 value={formData.region}
                 onChange={handleChange("region")}
                 className="w-full px-3 py-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
-                placeholder="us-east-1"
+                placeholder="eu-west-1"
               />
             </div>
           </div>

@@ -5,7 +5,7 @@
  * Cache entries are versioned and expire after a configurable TTL.
  */
 
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2; // Bumped to invalidate old cache with incorrect compression stats
 const CACHE_KEY_PREFIX = "dgcommander_cache_v";
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 

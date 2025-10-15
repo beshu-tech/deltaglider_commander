@@ -321,6 +321,61 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
         </dl>
       </section>
 
+      <section className="space-y-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          S3 Metadata
+        </h3>
+        <dl className="space-y-3 text-sm">
+          {metadata.content_type && (
+            <div className="space-y-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                Content-Type
+              </dt>
+              <dd className="font-mono text-xs text-slate-700 dark:text-slate-200 break-all">
+                {metadata.content_type}
+              </dd>
+            </div>
+          )}
+          {metadata.etag && (
+            <div className="space-y-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                ETag
+              </dt>
+              <dd className="font-mono text-xs text-slate-700 dark:text-slate-200 break-all">
+                {metadata.etag}
+              </dd>
+            </div>
+          )}
+          {metadata.metadata && Object.keys(metadata.metadata).length > 0 ? (
+            <div className="space-y-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                Custom Metadata
+              </dt>
+              <dd className="space-y-1">
+                {Object.entries(metadata.metadata).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="flex items-start justify-between gap-2 rounded bg-slate-50 px-2 py-1 dark:bg-slate-800"
+                  >
+                    <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                      {key}
+                    </span>
+                    <span className="font-mono text-xs text-slate-700 dark:text-slate-200 break-all text-right">
+                      {value}
+                    </span>
+                  </div>
+                ))}
+              </dd>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-dashed border-slate-200 p-3 text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">
+              <Tag className="h-4 w-4" />
+              No custom metadata
+            </div>
+          )}
+        </dl>
+      </section>
+
       <section className="space-y-2">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           Tags

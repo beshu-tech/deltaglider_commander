@@ -162,7 +162,7 @@ run_integration_tests() {
     print_status "Running integration tests..."
     export AWS_ACCESS_KEY_ID=deltadmin
     export AWS_SECRET_ACCESS_KEY=deltasecret
-    export AWS_DEFAULT_REGION=us-east-1
+    export AWS_DEFAULT_REGION=eu-west-1
     export DGCOMM_S3_ENDPOINT=http://localhost:9000
     export DGCOMM_S3_ADDRESSING_STYLE=path
     export DGCOMM_HMAC_SECRET=test-secret
