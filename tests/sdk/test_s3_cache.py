@@ -95,7 +95,7 @@ class FakeDeltaClient:
     def get_bucket_stats(
         self,
         bucket: str,
-        mode: str = 'quick',
+        mode: str = "quick",
         use_cache: bool = True,
         refresh_cache: bool = False,
     ):
