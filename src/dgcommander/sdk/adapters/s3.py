@@ -234,13 +234,37 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
                 # Note: ContentType and custom Metadata are NOT included in list_objects_v2 responses
                 # See: https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
                 try:
-                    response = self._boto3_client.head_object(Bucket=bucket, Key=normalized)
+                    # Try to get metadata using deltaglider client's head_object
+                    # Note: deltaglider's head_object has a bug where it doesn't handle logical names properly
+                    # So we need to try both the logical name and the physical name with .delta suffix
+                    response = None
+                    metadata_error = None
+                    
+                    try:
+                        # First try the logical name
+                        response = self._client.head_object(Bucket=bucket, Key=normalized)
+                    except Exception as e:
+                        metadata_error = e
+                        # If compressed, try with .delta suffix (physical name)
+                        if obj.compressed:
+                            try:
+                                response = self._client.head_object(Bucket=bucket, Key=f"{normalized}.delta")
+                            except Exception:
+                                # If both fail, re-raise the original error
+                                raise metadata_error
+
+                    if not response:
+                        raise metadata_error or Exception("Failed to get object metadata")
 
                     # Extract S3 metadata (only available via head_object)
                     s3_metadata = response.get("Metadata", {})
                     content_type = response.get("ContentType")
                     etag = response.get("ETag", "").strip('"')  # Remove quotes from ETag
                     accept_ranges = response.get("AcceptRanges") == "bytes"
+
+                    # Log metadata for debugging
+                    if s3_metadata:
+                        logger.debug(f"Found S3 metadata for {normalized}: {s3_metadata}")
 
                     # Use compression data from deltaglider (via quick_mode=False)
                     return FileMetadata(
@@ -254,8 +278,9 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
                         etag=etag,
                         metadata=s3_metadata,
                     )
-                except Exception:
+                except Exception as e:
                     # Fallback to basic metadata if head_object fails
+                    logger.warning(f"Failed to get full metadata for {normalized}: {e}")
                     return FileMetadata(
                         key=obj.key,
                         original_bytes=obj.original_bytes,
@@ -263,6 +288,7 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
                         compressed=obj.compressed,
                         modified=obj.modified,
                         accept_ranges=False,
+                        metadata={},  # Initialize empty dict instead of None
                     )
 
         # If not found in listing, raise KeyError
