@@ -5,7 +5,7 @@ import { Badge } from "../../lib/ui/Badge";
 import { EmptyState } from "../../lib/ui/EmptyState";
 import { Button } from "../../lib/ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "../../lib/ui/Table";
-import { formatBytes } from "../../lib/utils/bytes";
+import { formatBytesThin } from "../../lib/utils/bytes";
 import { Bucket } from "./types";
 import { useBuckets } from "./useBuckets";
 import { DEFAULT_OBJECTS_SEARCH_STATE } from "../objects/types";
@@ -105,7 +105,7 @@ function BucketRow({
   };
 
   const spinner = (
-    <span className="inline-flex items-center gap-1 text-slate-400">
+    <span className="inline-flex items-center gap-1 text-ui-text-subtle">
       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
       <span className="sr-only">Loading bucket stats</span>
     </span>
@@ -128,7 +128,7 @@ function BucketRow({
 
   if (variant === "card") {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-500/50 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-lg border border-ui-border bg-white p-4 shadow-sm transition hover:border-ui-border-hover dark:hover:border-ui-border-hover-dark hover:shadow-md dark:border-ui-border-dark dark:bg-ui-surface-dark">
         <button
           type="button"
           onClick={goToBucket}
@@ -136,7 +136,7 @@ function BucketRow({
         >
           <span className="flex items-center gap-3">
             <svg
-              className="w-5 h-5 text-slate-400"
+              className="w-5 h-5 text-ui-text-subtle"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -148,27 +148,27 @@ function BucketRow({
                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
               />
             </svg>
-            <span className="text-base font-semibold text-slate-900 dark:text-white">
+            <span className="text-base font-semibold text-ui-text dark:text-ui-text-dark">
               {bucket.name}
             </span>
             {bucket.pending ? (
-              <Badge className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+              <Badge className="text-xs bg-ui-surface-active text-ui-text-muted dark:bg-ui-surface-active-dark dark:text-ui-text-muted-dark">
                 Pending
               </Badge>
             ) : null}
           </span>
-          <ChevronRight className="h-4 w-4 text-slate-400" />
+          <ChevronRight className="h-4 w-4 text-ui-text-subtle" />
         </button>
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-subtle">
               Objects
             </p>
-            <div className="mt-1 text-slate-900 dark:text-slate-100">
+            <div className="mt-1 tabular-nums text-ui-text dark:text-ui-text-dark">
               {isError ? (
                 <span className="text-red-600 dark:text-red-400">Error</span>
               ) : isLoadingStats ? (
-                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Loading
                 </span>
@@ -178,45 +178,45 @@ function BucketRow({
             </div>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-subtle">
               Size
             </p>
-            <div className="mt-1 flex flex-col text-slate-900 dark:text-slate-100">
+            <div className="mt-1 flex flex-col text-ui-text dark:text-ui-text-dark">
               {isError ? (
                 <span className="text-red-600 dark:text-red-400">Error</span>
               ) : isLoadingStats ? (
-                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Loading
                 </span>
               ) : stats.stored_bytes !== stats.original_bytes ? (
                 <>
-                  <span className="font-medium">{formatBytes(stats.stored_bytes)}</span>
-                  <span className="text-xs text-slate-400 line-through">
-                    {formatBytes(stats.original_bytes)}
+                  <span className="font-medium tabular-nums">{formatBytesThin(stats.stored_bytes)}</span>
+                  <span className="text-xs text-ui-text-subtle line-through">
+                    {formatBytesThin(stats.original_bytes)}
                   </span>
                 </>
               ) : (
-                <span className="font-medium">{formatBytes(stats.original_bytes)}</span>
+                <span className="font-medium tabular-nums">{formatBytesThin(stats.original_bytes)}</span>
               )}
             </div>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-subtle">
               Savings
             </p>
-            <div className="mt-1 text-slate-900 dark:text-slate-100">
+            <div className="mt-1 tabular-nums text-ui-text dark:text-ui-text-dark">
               {isError ? (
                 <span className="text-red-600 dark:text-red-400">Error</span>
               ) : isLoadingStats ? (
-                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Loading
                 </span>
               ) : hasSavings ? (
-                `${formatBytes(savedBytes)} (${savedPct.toFixed(1)}%)`
+                `${formatBytesThin(savedBytes)} (${savedPct.toFixed(1)}%)`
               ) : (
-                "0 B (0.0%)"
+                `${formatBytesThin(0)} (0.0%)`
               )}
             </div>
           </div>
@@ -225,7 +225,7 @@ function BucketRow({
           <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
           <Button
             variant="ghost"
-            className="h-9 rounded-md border border-slate-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-slate-700 dark:text-red-400 dark:hover:bg-red-950"
+            className="h-9 rounded-md border border-ui-border px-3 py-2 text-sm text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-ui-border-dark dark:text-red-400 dark:hover:bg-red-950"
             onClick={(event) => {
               event.stopPropagation();
               const confirmed = window.confirm(
@@ -251,7 +251,7 @@ function BucketRow({
 
   return (
     <TableRow
-      className="group"
+      className="group odd:bg-black/5 dark:odd:bg-white/5 border-b border-ui-border/70 last:border-0 dark:border-ui-border-dark/70"
       role="button"
       tabIndex={0}
       onKeyDown={(event) => {
@@ -262,10 +262,10 @@ function BucketRow({
       }}
       onClick={goToBucket}
     >
-      <TableCell className="px-6 py-4 font-semibold text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors">
+      <TableCell className="px-6 py-4 font-semibold text-ui-text dark:text-ui-text-dark group-hover:text-ui-text dark:group-hover:text-ui-text-dark transition-colors">
         <span className="inline-flex items-center gap-2">
           <svg
-            className="w-4 h-4 text-slate-400"
+            className="w-4 h-4 text-ui-text-subtle"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -279,82 +279,93 @@ function BucketRow({
           </svg>
           {bucket.name}
           {bucket.pending ? (
-            <Badge className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+            <Badge className="text-xs bg-ui-surface-active text-ui-text-muted dark:bg-ui-surface-active-dark dark:text-ui-text-muted-dark">
               Pending
             </Badge>
           ) : null}
         </span>
       </TableCell>
-      <TableCell className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">
-        {isError ? errorIndicator : isLoadingStats ? spinner : displayObjectCount.toLocaleString()}
-      </TableCell>
-      <TableCell className="px-6 py-4">
+      <TableCell className="px-6 py-4 text-right font-semibold tabular-nums text-ui-text dark:text-ui-text-dark">
         {isError ? (
-          errorIndicator
+          <span className="inline-flex w-full justify-end">{errorIndicator}</span>
         ) : isLoadingStats ? (
-          spinner
+          <span className="inline-flex w-full items-center justify-end gap-1 text-ui-text-subtle">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            <span className="text-xs font-medium">Loading</span>
+          </span>
+        ) : (
+          displayObjectCount.toLocaleString()
+        )}
+      </TableCell>
+      <TableCell className="px-6 py-4 text-right text-ui-text dark:text-ui-text-dark">
+        {isError ? (
+          <span className="inline-flex w-full justify-end">{errorIndicator}</span>
+        ) : isLoadingStats ? (
+          <div className="flex justify-end text-ui-text-subtle">{spinner}</div>
         ) : stats.stored_bytes !== stats.original_bytes ? (
-          <span className="flex flex-col text-sm">
-            <span className="font-medium text-slate-900 dark:text-slate-100">
-              {formatBytes(stats.stored_bytes)}
+          <span className="flex flex-col items-end text-sm tabular-nums">
+            <span className="font-semibold text-ui-text dark:text-ui-text-dark">
+              {formatBytesThin(stats.stored_bytes)}
             </span>
-            <span className="text-xs text-slate-400 line-through">
-              {formatBytes(stats.original_bytes)}
+            <span className="text-xs text-ui-text-subtle line-through">
+              {formatBytesThin(stats.original_bytes)}
             </span>
           </span>
         ) : (
-          <span className="font-medium text-slate-600 dark:text-slate-300">
-            {formatBytes(stats.original_bytes)}
+          <span className="font-medium tabular-nums text-ui-text-muted dark:text-ui-text-muted-dark">
+            {formatBytesThin(stats.original_bytes)}
           </span>
         )}
       </TableCell>
-      <TableCell className="px-6 py-4">
+      <TableCell className="px-6 py-4 text-right">
         {isError ? (
           errorIndicator
         ) : (
-          <span
-            className={
-              hasSavings
-                ? "inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                : "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-300"
-            }
-          >
-            {isLoadingStats ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                <span className="sr-only">Loading bucket savings</span>
-              </>
-            ) : hasSavings ? (
-              <>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 10h12M4 14h8M4 18h4"
-                  />
-                </svg>
-                {`${formatBytes(savedBytes)} (${savedPct.toFixed(1)}%)`}
-              </>
-            ) : (
-              <>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="6" strokeWidth={2} />
-                  <path strokeWidth={2} strokeLinecap="round" d="M9 12h6" />
-                </svg>
-                0 B (0.0%)
-              </>
-            )}
-          </span>
+          <div className="flex justify-end">
+            <span
+              className={
+                hasSavings
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 tabular-nums dark:bg-emerald-900/30 dark:text-emerald-300"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-ui-surface-active px-2.5 py-1 text-xs font-medium text-ui-text-muted tabular-nums dark:bg-ui-surface-active-dark dark:text-ui-text-muted-dark"
+              }
+            >
+              {isLoadingStats ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  <span className="sr-only">Loading bucket savings</span>
+                </>
+              ) : hasSavings ? (
+                <>
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 10h12M4 14h8M4 18h4"
+                    />
+                  </svg>
+                  {`${formatBytesThin(savedBytes)} (${savedPct.toFixed(1)}%)`}
+                </>
+              ) : (
+                <>
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="6" strokeWidth={2} />
+                    <path strokeWidth={2} strokeLinecap="round" d="M9 12h6" />
+                  </svg>
+                  {`${formatBytesThin(0)} (0.0%)`}
+                </>
+              )}
+            </span>
+          </div>
         )}
       </TableCell>
       <TableCell
-        className="px-6 py-4 text-right"
+        className="px-6 py-4"
         onClick={(event) => {
           event.stopPropagation();
         }}
       >
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-2 pr-1">
           <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
           <Button
             variant="ghost"
@@ -390,7 +401,7 @@ export function BucketsPanel() {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-ui-text-subtle" />
       </div>
     );
   }
@@ -406,17 +417,17 @@ export function BucketsPanel() {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-surface-elevated shadow-elevation-md dark:border-slate-800 dark:bg-slate-900 dark:shadow-elevation-md-dark">
-      <div className="bg-slate-50 dark:bg-slate-900/50 px-group py-3 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+    <div className="overflow-hidden rounded-xl border border-ui-border bg-surface-elevated shadow-elevation-md dark:border-ui-border-dark dark:bg-ui-surface-dark dark:shadow-elevation-md-dark">
+      <div className="bg-ui-bg-subtle dark:bg-ui-surface-dark/50 px-group py-3 border-b border-ui-border dark:border-ui-border-dark flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-title-sm text-slate-900 dark:text-white">Storage Buckets</h2>
-          <p className="text-body-sm text-slate-600 dark:text-slate-400 mt-1">
+          <h2 className="text-title-sm text-ui-text dark:text-ui-text-dark">Storage Buckets</h2>
+          <p className="text-body-sm text-ui-text-muted dark:text-ui-text-subtle mt-1">
             Manage and optimize your object storage containers
           </p>
         </div>
         <Button
-          variant="secondary"
-          className="gap-2"
+          variant="outline"
+          className="h-9 gap-2 px-4 text-sm font-semibold"
           disabled={refreshMutation.isPending}
           onClick={() => refreshMutation.mutate("sampled")}
         >
@@ -436,25 +447,25 @@ export function BucketsPanel() {
       <div className="hidden md:block">
         <Table className="min-w-full">
           <TableHead>
-            <tr className="bg-slate-50 dark:bg-slate-900/50">
-              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <tr className="bg-ui-bg-subtle dark:bg-ui-surface-dark/50">
+              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Name
               </th>
-              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <th className="px-6 py-3 text-right text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Objects
               </th>
-              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <th className="px-6 py-3 text-right text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Size
               </th>
-              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <th className="px-6 py-3 text-right text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Savings
               </th>
-              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400 text-right">
+              <th className="px-6 py-3 text-right text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Actions
               </th>
             </tr>
           </TableHead>
-          <TableBody>
+          <TableBody className="divide-y-0">
             {data.map((bucket) => (
               <BucketRow
                 key={`${bucket.name}-table`}
@@ -465,7 +476,7 @@ export function BucketsPanel() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex flex-col gap-3 border-t border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40 md:hidden">
+      <div className="flex flex-col gap-3 border-t border-ui-border bg-white p-4 dark:border-ui-border-dark dark:bg-ui-bg-dark/40 md:hidden">
         {data.map((bucket) => (
           <BucketRow
             key={`${bucket.name}-card`}

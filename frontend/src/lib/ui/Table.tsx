@@ -5,7 +5,7 @@ export function Table({ className, ...rest }: TableHTMLAttributes<HTMLTableEleme
   return (
     <table
       className={twMerge(
-        "min-w-full divide-y divide-slate-200 overflow-hidden bg-white text-sm dark:divide-slate-700 dark:bg-slate-900",
+        "min-w-full divide-y divide-ui-border overflow-hidden bg-ui-surface text-sm dark:divide-ui-border-dark dark:bg-ui-surface-dark",
         className,
       )}
       {...rest}
@@ -17,7 +17,7 @@ export function TableHead({ className, ...rest }: HTMLAttributes<HTMLTableSectio
   return (
     <thead
       className={twMerge(
-        "bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300",
+        "bg-ui-bg-subtle text-left text-xs font-semibold uppercase tracking-wide text-ui-text-muted dark:bg-ui-surface-dark dark:text-ui-text-muted-dark",
         className,
       )}
       {...rest}
@@ -28,7 +28,7 @@ export function TableHead({ className, ...rest }: HTMLAttributes<HTMLTableSectio
 export function TableBody({ className, ...rest }: HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <tbody
-      className={twMerge("divide-y divide-slate-100 dark:divide-slate-800", className)}
+      className={twMerge("divide-y divide-ui-border-subtle dark:divide-ui-border-subtle-dark", className)}
       {...rest}
     />
   );
@@ -38,7 +38,7 @@ export function TableRow({ className, ...rest }: HTMLAttributes<HTMLTableRowElem
   return (
     <tr
       className={twMerge(
-        "cursor-pointer transition hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:bg-slate-800",
+        "cursor-pointer transition hover:bg-ui-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:bg-ui-surface-hover-dark",
         className,
       )}
       {...rest}

@@ -20,19 +20,19 @@ export function ObjectsSelectionBar({
   onBulkDelete,
 }: ObjectsSelectionBarProps) {
   return (
-    <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
+    <div className="flex flex-col gap-3 border-b border-ui-border bg-ui-bg-subtle px-3 py-3 text-sm text-ui-text-muted dark:border-ui-border-dark dark:bg-ui-surface-active-dark dark:text-ui-text-dark sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <span className="text-sm font-semibold text-ui-text dark:text-ui-text-dark">
           {totalSelected}
         </span>
         <span>selected</span>
-        <Badge className="bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+        <Badge className="bg-ui-border text-ui-text dark:bg-ui-surface-active-dark dark:text-ui-text-dark">
           {pageSelected} on this page
         </Badge>
         <button
           type="button"
           onClick={onClear}
-          className="text-xs font-medium uppercase tracking-wide text-brand-600 transition hover:text-brand-500"
+          className="text-xs font-medium uppercase tracking-wide text-primary-600 transition hover:text-primary-500 dark:text-primary-500 dark:hover:text-primary-400"
         >
           Clear
         </button>

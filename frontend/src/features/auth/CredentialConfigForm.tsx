@@ -57,7 +57,7 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto w-full max-w-md space-y-4 rounded-xl bg-white/70 p-4 shadow-sm dark:bg-slate-900/60 sm:p-6"
+      className="mx-auto w-full max-w-md space-y-4 rounded-xl bg-white/70 p-4 shadow-sm dark:bg-ui-surface-dark/60 sm:p-6"
       autoComplete="on"
     >
       <div>
@@ -66,13 +66,16 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
         </label>
         <input
           id="accessKeyId"
-          name="username"
+          name="aws-access-key-id"
           type="text"
           required
           value={formData.accessKeyId}
           onChange={handleChange("accessKeyId")}
-          autoComplete="username"
-          className="w-full px-3 py-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+          autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          data-form-type="other"
+          className="w-full px-3 py-2 border rounded-md dark:bg-ui-surface-active-dark dark:border-ui-border-dark"
           placeholder="AKIAIOSFODNN7EXAMPLE"
         />
       </div>
@@ -83,23 +86,26 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
         </label>
         <input
           id="secretAccessKey"
-          name="password"
+          name="aws-secret-access-key"
           type="password"
           required
           value={formData.secretAccessKey}
           onChange={handleChange("secretAccessKey")}
-          autoComplete="current-password"
-          className="w-full px-3 py-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+          autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          data-form-type="other"
+          className="w-full px-3 py-2 border rounded-md dark:bg-ui-surface-active-dark dark:border-ui-border-dark"
           placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         />
       </div>
 
       {/* Advanced Options */}
-      <div className="border-t pt-4 dark:border-slate-700">
+      <div className="border-t pt-4 dark:border-ui-border-dark">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+          className="flex items-center gap-2 text-sm text-ui-text-muted hover:text-ui-text dark:text-ui-text-subtle dark:hover:text-ui-text-dark"
         >
           {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           Advanced Options (for custom S3 endpoints)
@@ -110,7 +116,7 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
             <div>
               <label htmlFor="endpoint" className="block text-sm font-medium mb-1">
                 Custom S3 Endpoint URL
-                <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+                <span className="ml-1 text-xs text-ui-text-muted dark:text-ui-text-subtle">
                   (optional, leave empty for AWS S3)
                 </span>
               </label>
@@ -119,7 +125,7 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
                 type="text"
                 value={formData.endpoint}
                 onChange={handleChange("endpoint")}
-                className="w-full px-3 py-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                className="w-full px-3 py-2 border rounded-md dark:bg-ui-surface-active-dark dark:border-ui-border-dark"
                 placeholder="http://localhost:9000 or https://minio.example.com"
               />
             </div>
@@ -127,7 +133,7 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
             <div>
               <label htmlFor="region" className="block text-sm font-medium mb-1">
                 AWS Region
-                <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+                <span className="ml-1 text-xs text-ui-text-muted dark:text-ui-text-subtle">
                   (optional, defaults to eu-west-1)
                 </span>
               </label>
@@ -136,7 +142,7 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
                 type="text"
                 value={formData.region}
                 onChange={handleChange("region")}
-                className="w-full px-3 py-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                className="w-full px-3 py-2 border rounded-md dark:bg-ui-surface-active-dark dark:border-ui-border-dark"
                 placeholder="eu-west-1"
               />
             </div>

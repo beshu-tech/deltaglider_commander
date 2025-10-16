@@ -68,7 +68,9 @@ describe("BucketsPanel", () => {
     const user = userEvent.setup();
     render(<BucketsPanel />);
 
-    const row = screen.getByText("alpha").closest("tr")!;
+    // Use getByRole to find the table, then query within it to avoid duplicate matches
+    const table = screen.getByRole("table");
+    const row = within(table).getByText("alpha").closest("tr")!;
     await user.click(row);
 
     expect(navigateMock).toHaveBeenCalledWith({
@@ -84,7 +86,8 @@ describe("BucketsPanel", () => {
     const user = userEvent.setup();
     render(<BucketsPanel />);
 
-    const row = screen.getByText("alpha").closest("tr")!;
+    const table = screen.getByRole("table");
+    const row = within(table).getByText("alpha").closest("tr")!;
     const button = within(row).getByRole("button", { name: /compute savings/i });
     await user.click(button);
 
@@ -98,7 +101,8 @@ describe("BucketsPanel", () => {
     const user = userEvent.setup();
     render(<BucketsPanel />);
 
-    const row = screen.getByText("alpha").closest("tr")!;
+    const table = screen.getByRole("table");
+    const row = within(table).getByText("alpha").closest("tr")!;
     const deleteButton = within(row).getByRole("button", { name: /delete/i });
     await user.click(deleteButton);
 

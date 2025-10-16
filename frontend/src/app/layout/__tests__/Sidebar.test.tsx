@@ -3,6 +3,7 @@ import { describe, expect, it, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Sidebar } from "../Sidebar";
+import { LayoutProvider } from "../LayoutContext";
 
 const navigateMock = vi.fn();
 const useMatchMock = vi.fn();
@@ -33,6 +34,9 @@ vi.mock("@tanstack/react-router", () => ({
   },
   useMatch: (options: unknown) => useMatchMock(options),
   useNavigate: () => navigateMock,
+  useRouterState: () => ({
+    location: { pathname: "/", search: "", hash: "" },
+  }),
 }));
 
 vi.mock("../../../features/buckets/useBuckets", () => ({
@@ -63,6 +67,21 @@ const sampleBuckets = [
 ];
 
 beforeEach(() => {
+  // Mock window.matchMedia
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+
   navigateMock.mockReset();
   useMatchMock.mockReturnValue({ params: { bucket: null } });
   useBucketsMock.mockReturnValue({
@@ -80,7 +99,11 @@ beforeEach(() => {
 describe("Sidebar", () => {
   it("filters buckets based on search input", async () => {
     const user = userEvent.setup();
-    render(<Sidebar />);
+    render(
+      <LayoutProvider>
+        <Sidebar />
+      </LayoutProvider>,
+    );
 
     expect(screen.getByText("alpha")).toBeInTheDocument();
     expect(screen.getByText("beta")).toBeInTheDocument();
@@ -98,9 +121,14 @@ describe("Sidebar", () => {
     useCreateBucketMock.mockReturnValue({ mutateAsync, isPending: false });
     const user = userEvent.setup();
 
-    render(<Sidebar />);
+    render(
+      <LayoutProvider>
+        <Sidebar />
+      </LayoutProvider>,
+    );
 
-    await user.click(screen.getByText("Create Bucket"));
+    // Click the create bucket button (using aria-label since it's icon-only now)
+    await user.click(screen.getByRole("button", { name: /create bucket/i }));
 
     const nameInput = screen.getByPlaceholderText("e.g. images-prod");
     await user.type(nameInput, " new-bucket ");

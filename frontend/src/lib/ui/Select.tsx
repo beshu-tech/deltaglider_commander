@@ -4,10 +4,10 @@ import { twMerge } from "tailwind-merge";
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {}
 
 const baseStyles =
-  "rounded-md border px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-400/60 disabled:cursor-not-allowed disabled:opacity-60";
+  "rounded-md border px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary-600/20 disabled:cursor-not-allowed disabled:opacity-60";
 
 const themeStyles =
-  "border-slate-300 bg-white text-slate-700 focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100";
+  "border-ui-border bg-ui-surface text-ui-text focus:border-primary-600 dark:border-ui-border-dark dark:bg-ui-surface-dark dark:text-ui-text-dark";
 
 export const Select = forwardRef(function Select(
   { className, ...rest }: SelectProps,

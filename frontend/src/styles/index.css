@@ -19,3 +19,32 @@ body,
 body {
   @apply antialiased;
 }
+
+
+@keyframes savings-wave {
+  0% {
+    transform: translateY(0);
+    opacity: 0.85;
+  }
+
+  50% {
+    transform: translateY(-4%);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 0.85;
+  }
+}
+
+.animate-savings-wave {
+  animation: savings-wave 1.25s ease-out;
+  animation-fill-mode: both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-savings-wave {
+    animation: none;
+  }
+}

@@ -48,7 +48,7 @@ export function DropdownMenu({ trigger, children, align = "right", className }: 
       {isOpen && (
         <div
           className={twMerge(
-            "absolute top-full z-50 mt-2 min-w-[200px] rounded-lg border border-slate-200 bg-white py-1 shadow-elevation-md dark:border-slate-700 dark:bg-slate-800 dark:shadow-elevation-md-dark",
+            "absolute top-full z-50 mt-2 min-w-[200px] rounded-lg border border-ui-border bg-ui-surface py-1 shadow-elevation-md dark:border-ui-border-dark dark:bg-ui-surface-dark dark:shadow-elevation-md-dark",
             align === "right" ? "right-0" : "left-0",
           )}
         >
@@ -74,8 +74,8 @@ export function DropdownMenuItem({
         "flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition",
         disabled
           ? "cursor-not-allowed opacity-50"
-          : "hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none dark:hover:bg-slate-700 dark:focus-visible:bg-slate-700",
-        "text-slate-700 dark:text-slate-200",
+          : "hover:bg-ui-surface-hover focus-visible:bg-ui-surface-hover focus-visible:outline-none dark:hover:bg-ui-surface-hover-dark dark:focus-visible:bg-ui-surface-hover-dark",
+        "text-ui-text dark:text-ui-text-dark",
         className,
       )}
     >

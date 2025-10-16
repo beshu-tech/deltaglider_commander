@@ -23,3 +23,10 @@ export const DEFAULT_OBJECTS_SEARCH_STATE: ObjectsSearchState = {
   limit: 100,
   compression: "all",
 };
+
+export interface CompressionStats {
+  variant: "none" | "savings" | "growth";
+  percentage: number;
+  effectiveSize: number;
+  deltaBytes: number;
+}

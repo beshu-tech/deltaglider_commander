@@ -89,7 +89,11 @@ describe("FilePanel", () => {
     expect(screen.getByText("example.txt")).toBeInTheDocument();
     expect(screen.getByText(/compressed/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /download object/i }));
+    // Click the dropdown button first
+    await user.click(screen.getByRole("button", { name: /download & share/i }));
+
+    // Then click the download option in the dropdown
+    await user.click(screen.getByText("Download object"));
 
     expect(mockDownloadObject).toHaveBeenCalledWith(
       "test-bucket",

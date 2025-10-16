@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { StatsSummary } from "./useStats";
-import { formatBytes } from "../../lib/utils/bytes";
+import { formatBytesThin } from "../../lib/utils/bytes";
 
 type Tone = "blue" | "purple" | "amber" | "emerald";
 
@@ -17,6 +17,8 @@ interface StatCardProps extends StatCardConfig {
   fillProgress: number;
   assistiveText: string;
   isAnalyzing: boolean;
+  isSavings?: boolean;
+  animateSavings?: boolean;
 }
 
 const tonePalette: Record<
@@ -32,20 +34,20 @@ const tonePalette: Record<
 > = {
   blue: {
     cardClass:
-      "border border-blue-500/15 bg-white/60 text-slate-900 shadow-elevation-sm dark:border-blue-500/20 dark:bg-slate-950/72 dark:text-slate-100 dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-blue-500 to-blue-600",
-    iconShadow: "0 18px 44px rgba(59, 130, 246, 0.35)",
+      "border border-blue-500/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-blue-500/20 dark:bg-ui-bg-dark/72 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+    iconClass: "bg-gradient-to-br from-blue-400 to-blue-500",
+    iconShadow: "0 14px 36px rgba(59, 130, 246, 0.28)",
     air: {
-      lightTop: "rgba(248, 251, 255, 0.55)",
-      lightBottom: "rgba(226, 232, 240, 0.35)",
-      darkTop: "rgba(11, 17, 32, 0.5)",
-      darkBottom: "rgba(23, 35, 63, 0.32)",
+      lightTop: "rgba(248, 251, 255, 0.48)",
+      lightBottom: "rgba(226, 232, 240, 0.28)",
+      darkTop: "rgba(11, 17, 32, 0.42)",
+      darkBottom: "rgba(23, 35, 63, 0.26)",
     },
     water: {
-      lightTop: "rgba(96, 165, 250, 0.7)",
-      lightBottom: "rgba(29, 78, 216, 0.55)",
-      darkTop: "rgba(37, 99, 235, 0.6)",
-      darkBottom: "rgba(15, 63, 150, 0.5)",
+      lightTop: "rgba(96, 165, 250, 0.48)",
+      lightBottom: "rgba(29, 78, 216, 0.32)",
+      darkTop: "rgba(37, 99, 235, 0.42)",
+      darkBottom: "rgba(15, 63, 150, 0.32)",
     },
     gloss: {
       light:
@@ -55,20 +57,20 @@ const tonePalette: Record<
   },
   purple: {
     cardClass:
-      "border border-purple-500/15 bg-white/60 text-slate-900 shadow-elevation-sm dark:border-purple-500/20 dark:bg-slate-950/78 dark:text-slate-100 dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-purple-500 to-purple-600",
-    iconShadow: "0 18px 44px rgba(147, 51, 234, 0.35)",
+      "border border-purple-500/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-purple-500/20 dark:bg-ui-bg-dark/78 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+    iconClass: "bg-gradient-to-br from-purple-400 to-purple-500",
+    iconShadow: "0 14px 36px rgba(147, 51, 234, 0.28)",
     air: {
-      lightTop: "rgba(250, 245, 255, 0.55)",
-      lightBottom: "rgba(233, 213, 255, 0.38)",
-      darkTop: "rgba(26, 16, 40, 0.5)",
-      darkBottom: "rgba(37, 17, 52, 0.32)",
+      lightTop: "rgba(250, 245, 255, 0.48)",
+      lightBottom: "rgba(233, 213, 255, 0.3)",
+      darkTop: "rgba(26, 16, 40, 0.42)",
+      darkBottom: "rgba(37, 17, 52, 0.26)",
     },
     water: {
-      lightTop: "rgba(192, 132, 252, 0.7)",
-      lightBottom: "rgba(124, 58, 237, 0.55)",
-      darkTop: "rgba(139, 92, 246, 0.6)",
-      darkBottom: "rgba(91, 33, 182, 0.5)",
+      lightTop: "rgba(192, 132, 252, 0.5)",
+      lightBottom: "rgba(124, 58, 237, 0.34)",
+      darkTop: "rgba(139, 92, 246, 0.44)",
+      darkBottom: "rgba(91, 33, 182, 0.32)",
     },
     gloss: {
       light:
@@ -78,20 +80,20 @@ const tonePalette: Record<
   },
   amber: {
     cardClass:
-      "border border-amber-500/15 bg-white/65 text-slate-900 shadow-elevation-sm dark:border-amber-500/20 dark:bg-slate-950/78 dark:text-slate-100 dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-amber-400 to-amber-500",
-    iconShadow: "0 18px 44px rgba(217, 119, 6, 0.32)",
+      "border border-ui-border bg-ui-surface text-ui-text shadow-elevation-sm dark:border-ui-border-dark dark:bg-ui-surface-dark dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+    iconClass: "bg-gradient-to-br from-primary-400 to-primary-500",
+    iconShadow: "0 14px 36px rgba(217, 119, 6, 0.26)",
     air: {
-      lightTop: "rgba(255, 247, 237, 0.55)",
-      lightBottom: "rgba(253, 230, 138, 0.37)",
-      darkTop: "rgba(33, 19, 6, 0.48)",
-      darkBottom: "rgba(44, 26, 12, 0.3)",
+      lightTop: "rgba(255, 247, 237, 0.48)",
+      lightBottom: "rgba(253, 230, 138, 0.28)",
+      darkTop: "rgba(33, 19, 6, 0.4)",
+      darkBottom: "rgba(44, 26, 12, 0.26)",
     },
     water: {
-      lightTop: "rgba(251, 191, 36, 0.7)",
-      lightBottom: "rgba(217, 119, 6, 0.55)",
-      darkTop: "rgba(234, 138, 26, 0.62)",
-      darkBottom: "rgba(180, 83, 9, 0.5)",
+      lightTop: "rgba(251, 191, 36, 0.48)",
+      lightBottom: "rgba(217, 119, 6, 0.32)",
+      darkTop: "rgba(234, 138, 26, 0.44)",
+      darkBottom: "rgba(180, 83, 9, 0.32)",
     },
     gloss: {
       light:
@@ -101,20 +103,20 @@ const tonePalette: Record<
   },
   emerald: {
     cardClass:
-      "border border-emerald-500/15 bg-white/60 text-slate-900 shadow-elevation-sm dark:border-emerald-500/20 dark:bg-slate-950/78 dark:text-slate-100 dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-emerald-500 to-green-600",
-    iconShadow: "0 18px 44px rgba(16, 185, 129, 0.35)",
+      "border border-emerald-500/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-emerald-500/20 dark:bg-ui-bg-dark/78 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+    iconClass: "bg-gradient-to-br from-emerald-400 to-emerald-500",
+    iconShadow: "0 14px 36px rgba(16, 185, 129, 0.28)",
     air: {
-      lightTop: "rgba(240, 253, 244, 0.55)",
-      lightBottom: "rgba(187, 247, 208, 0.38)",
-      darkTop: "rgba(15, 31, 26, 0.48)",
-      darkBottom: "rgba(19, 41, 35, 0.3)",
+      lightTop: "rgba(240, 253, 244, 0.48)",
+      lightBottom: "rgba(187, 247, 208, 0.3)",
+      darkTop: "rgba(15, 31, 26, 0.42)",
+      darkBottom: "rgba(19, 41, 35, 0.26)",
     },
     water: {
-      lightTop: "rgba(52, 211, 153, 0.7)",
-      lightBottom: "rgba(4, 120, 87, 0.55)",
-      darkTop: "rgba(15, 157, 104, 0.62)",
-      darkBottom: "rgba(6, 95, 70, 0.5)",
+      lightTop: "rgba(52, 211, 153, 0.48)",
+      lightBottom: "rgba(4, 120, 87, 0.32)",
+      darkTop: "rgba(15, 157, 104, 0.44)",
+      darkBottom: "rgba(6, 95, 70, 0.32)",
     },
     gloss: {
       light:
@@ -235,6 +237,8 @@ function StatCard({
   fillProgress,
   assistiveText,
   isAnalyzing,
+  isSavings = false,
+  animateSavings = false,
 }: StatCardProps) {
   const palette = tonePalette[tone];
 
@@ -246,6 +250,7 @@ function StatCard({
 
   const baseProgress = clampProgress(animatedFill);
   const effectiveProgress = baseProgress > 0 ? baseProgress : isAnalyzing ? 0.12 : 0;
+  const savingsActive = isSavings && animateSavings;
 
   return (
     <article
@@ -276,13 +281,19 @@ function StatCard({
           >
             <div className="absolute inset-0 overflow-hidden rounded-b-2xl">
               <div
-                className="absolute inset-0 rounded-b-2xl dark:hidden"
+                className={joinClasses(
+                  "absolute inset-0 rounded-b-2xl dark:hidden",
+                  savingsActive ? "animate-savings-wave" : "",
+                )}
                 style={{
                   backgroundImage: `linear-gradient(180deg, ${palette.water.lightTop} 0%, ${palette.water.lightBottom} 100%)`,
                 }}
               />
               <div
-                className="absolute inset-0 hidden rounded-b-2xl dark:block"
+                className={joinClasses(
+                  "absolute inset-0 hidden rounded-b-2xl dark:block",
+                  savingsActive ? "animate-savings-wave" : "",
+                )}
                 style={{
                   backgroundImage: `linear-gradient(180deg, ${palette.water.darkTop} 0%, ${palette.water.darkBottom} 100%)`,
                 }}
@@ -332,13 +343,13 @@ function StatCard({
           {icon}
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="text-[1.8rem] font-semibold uppercase tracking-[0.24em] text-slate-700 drop-shadow-[0_1px_2px_rgba(255,255,255,0.55)] dark:text-slate-200 dark:drop-shadow-[0_1px_4px_rgba(8,15,35,0.55)]">
+          <span className="text-left text-[1.45rem] font-semibold uppercase tracking-[0.18em] text-ui-text/90 drop-shadow-[0_1px_2px_rgba(255,255,255,0.35)] dark:text-ui-text-dark dark:drop-shadow-[0_1px_4px_rgba(8,15,35,0.45)]">
             {label}
           </span>
-          <div className="mt-3 text-[2.3rem] font-semibold leading-tight tracking-tight text-slate-900 drop-shadow-[0_4px_12px_rgba(15,23,42,0.25)] dark:text-white dark:drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)] md:text-[2.6rem]">
+          <div className="mt-3 text-left text-[2.2rem] font-semibold leading-tight tracking-tight text-ui-text tabular-nums drop-shadow-[0_4px_12px_rgba(15,23,42,0.22)] dark:text-white dark:drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] md:text-[2.5rem]">
             {value}
           </div>
-          <p className="mt-2 text-base font-medium leading-snug text-slate-700 drop-shadow-[0_1px_3px_rgba(15,23,42,0.3)] dark:text-slate-200 dark:drop-shadow-[0_1px_4px_rgba(2,6,23,0.45)]">
+          <p className="mt-2 text-left text-base font-normal leading-snug text-ui-text-muted tabular-nums dark:text-ui-text-dark/90">
             {description}
           </p>
         </div>
@@ -355,6 +366,13 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
   const progress = clampProgress(summary.analysisCoverage);
   const hasActiveBuckets = activeBucketCount > 0;
   const hasAnalyzingBuckets = summary.analyzingCount > 0;
+  const [animateSavings, setAnimateSavings] = useState(false);
+
+  useEffect(() => {
+    setAnimateSavings(true);
+    const timeout = window.setTimeout(() => setAnimateSavings(false), 1600);
+    return () => window.clearTimeout(timeout);
+  }, [summary.savingsPct, summary.storedBytes, summary.originalBytes]);
 
   const assistiveText = hasActiveBuckets
     ? `${summary.analyzedBucketCount} of ${activeBucketCount} active ${pluralize(activeBucketCount, "bucket")} analyzed. ${summary.analyzingCount} ${pluralize(summary.analyzingCount, "bucket")} still in progress.`
@@ -466,7 +484,7 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
         </svg>
       ),
       value: animatedObjectCount.toLocaleString(),
-      description: `${formatBytes(Math.max(0, Math.round(animatedStoredBytes)))} stored`,
+      description: `${formatBytesThin(Math.max(0, Math.round(animatedStoredBytes)))} stored`,
     },
     {
       id: "ratio",
@@ -512,7 +530,7 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
         </svg>
       ),
       value: `${Math.max(animatedSavingsPct, 0).toFixed(1)}%`,
-      description: `${formatBytes(Math.max(0, Math.round(savedBytes)))} saved`,
+      description: `${formatBytesThin(Math.max(0, Math.round(savedBytes)))} saved`,
     },
   ];
 
@@ -527,6 +545,8 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
           fillProgress={card.id === "savings" ? cardFillTarget : progress}
           assistiveText={assistiveText}
           isAnalyzing={hasAnalyzingBuckets}
+          isSavings={card.id === "savings"}
+          animateSavings={card.id === "savings" ? animateSavings : false}
         />
       ))}
     </div>

@@ -25,46 +25,46 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-auto bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-full flex-col overflow-auto bg-ui-bg-subtle dark:bg-ui-bg-subtle-dark">
       <div className="mx-auto w-full max-w-2xl p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Settings</h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          <h1 className="text-3xl font-bold text-ui-text dark:text-ui-text-dark">Settings</h1>
+          <p className="mt-2 text-sm text-ui-text-muted dark:text-ui-text-muted-dark">
             Manage your AWS credentials and connection settings
           </p>
         </div>
 
-        <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-900">
+        <div className="rounded-lg bg-ui-surface p-6 shadow-sm dark:bg-ui-surface-dark">
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            <h2 className="text-xl font-semibold text-ui-text dark:text-ui-text-dark">
               AWS Credentials
             </h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-sm text-ui-text-muted dark:text-ui-text-muted-dark">
               Update your AWS credentials to connect to a different S3 endpoint
             </p>
           </div>
 
           {currentCredentials && (
-            <div className="mb-6 rounded-md bg-slate-100 p-4 dark:bg-slate-800">
-              <h3 className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+            <div className="mb-6 rounded-md bg-ui-surface-active p-4 dark:bg-ui-surface-hover-dark">
+              <h3 className="mb-3 text-sm font-medium text-ui-text dark:text-ui-text-dark">
                 Current Configuration
               </h3>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-slate-600 dark:text-slate-400">S3 Endpoint:</dt>
-                  <dd className="font-mono text-slate-900 dark:text-slate-100">
+                  <dt className="text-ui-text-muted dark:text-ui-text-muted-dark">S3 Endpoint:</dt>
+                  <dd className="font-mono text-ui-text dark:text-ui-text-dark">
                     {currentCredentials.endpoint || "Default AWS"}
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-600 dark:text-slate-400">Region:</dt>
-                  <dd className="font-mono text-slate-900 dark:text-slate-100">
+                  <dt className="text-ui-text-muted dark:text-ui-text-muted-dark">Region:</dt>
+                  <dd className="font-mono text-ui-text dark:text-ui-text-dark">
                     {currentCredentials.region}
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-600 dark:text-slate-400">Access Key:</dt>
-                  <dd className="font-mono text-slate-900 dark:text-slate-100">
+                  <dt className="text-ui-text-muted dark:text-ui-text-muted-dark">Access Key:</dt>
+                  <dd className="font-mono text-ui-text dark:text-ui-text-dark">
                     {currentCredentials.accessKeyId.slice(0, 8)}...
                   </dd>
                 </div>
@@ -72,7 +72,7 @@ export function SettingsPage() {
             </div>
           )}
 
-          <div className="border-t border-slate-200 pt-6 dark:border-slate-700">
+          <div className="border-t border-ui-border pt-6 dark:border-ui-border-dark">
             <CredentialConfigForm onSuccess={handleCredentialUpdate} />
           </div>
         </div>
@@ -81,7 +81,7 @@ export function SettingsPage() {
           <button
             onClick={() => navigate({ to: "/buckets" })}
             disabled={isUpdating}
-            className="text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            className="text-sm text-ui-text-muted hover:text-ui-text dark:text-ui-text-muted-dark dark:hover:text-ui-text-dark"
           >
             ← Back to Buckets
           </button>

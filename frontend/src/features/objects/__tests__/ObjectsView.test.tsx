@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ObjectsView } from "../ObjectsView";
@@ -52,10 +52,12 @@ vi.mock("../useObjectsCache", () => ({
     isLoading: false,
     isError: false,
     isFetching: false,
+    isLoadingFull: false,
     error: null,
     refetch: vi.fn(),
     directoryFileCounts: new Map(),
     isLoadingCounts: false,
+    fetchProgress: null,
   })),
 }));
 
@@ -109,9 +111,13 @@ describe("ObjectsView", () => {
     const onRowClick = vi.fn();
     setup({ onRowClick });
 
-    expect(await screen.findByText("file.txt")).toBeInTheDocument();
+    // Wait for table to appear and get all instances
+    const table = await screen.findByRole("table");
+    const fileLinks = within(table).getAllByText("file.txt");
+    expect(fileLinks.length).toBeGreaterThan(0);
 
-    await userEvent.click(screen.getByText("file.txt"));
+    // Click the first occurrence in the table
+    await userEvent.click(fileLinks[0]);
     expect(onRowClick).toHaveBeenCalledWith(expect.objectContaining({ key: "folder/file.txt" }));
   });
 
@@ -119,6 +125,11 @@ describe("ObjectsView", () => {
     const onSearchChange = vi.fn();
     const { user } = setup({ onSearchChange });
 
+    // First, click the search button to expand the search field
+    const searchButton = screen.getByLabelText("Open search");
+    await user.click(searchButton);
+
+    // Now the search input should be visible
     const searchInput = screen.getByPlaceholderText("Search files...");
     await user.clear(searchInput);
     await user.type(searchInput, "documents{enter}");
@@ -139,7 +150,9 @@ describe("ObjectsView", () => {
 
   it("expands selected folders recursively during bulk download", async () => {
     const { user } = setup();
-    const folderCheckbox = await screen.findByLabelText("Select folder folder");
+    // Get all checkboxes with this label and use the first one (in the table body)
+    const folderCheckboxes = await screen.findAllByLabelText("Select folder folder");
+    const folderCheckbox = folderCheckboxes[0];
     const now = new Date().toISOString();
 
     fetchObjectsMock.mockImplementationOnce(async () => ({

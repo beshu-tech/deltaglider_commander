@@ -12,3 +12,13 @@ export function formatBytes(n: number): string {
   const digits = value < 10 ? 2 : value < 100 ? 1 : 0;
   return `${value.toFixed(digits)} ${units[index]}`;
 }
+
+const THIN_SPACE_PATTERN = /\s(?=[A-Z%]+)/;
+
+function withThinSpace(value: string): string {
+  return value.replace(THIN_SPACE_PATTERN, "\u2009");
+}
+
+export function formatBytesThin(n: number): string {
+  return withThinSpace(formatBytes(n));
+}

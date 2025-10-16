@@ -34,7 +34,7 @@ export default {
 
       // 5 Functional Color Tones - 2025 Modern Aesthetic (Light + Dark Mode)
       colors: {
-        // Brand/Accent - Primary interactive color
+        // Brand/Accent - Primary interactive color (cyan-blue)
         brand: {
           50: "#f2fbff",
           100: "#e6f5ff",
@@ -48,22 +48,54 @@ export default {
           900: "#003a5c",
         },
 
-        // 2025 Neutral Dark - Professional dark theme base
-        "neutral-dark": "#1E1F22",
+        // Primary Action - Red gradient for primary buttons
+        primary: {
+          50: "#fef2f2",
+          100: "#fee2e2",
+          200: "#fecaca",
+          300: "#fca5a5",
+          400: "#f87171",
+          500: "#ef4444",
+          600: "#dc2626",
+          700: "#b91c1c",
+          800: "#991b1b",
+          900: "#7f1d1d",
+          950: "#450a0a",
+        },
 
         // Semantic tones for light/dark mode consistency
         ui: {
           // Background - Main application background
-          bg: "#F7F8FA", // Light mode
+          bg: "#F5F6F8", // Light mode (toned down from #F7F8FA)
           "bg-dark": "#1E1F22", // Dark mode (neutral brownish-gray)
 
+          // Background subtle - Slightly different background (for zebra striping)
+          "bg-subtle": "#F7F8FA", // Light mode (very subtle zebra stripe)
+          "bg-subtle-dark": "#2D2E31", // Dark mode (barely lighter than surface-dark for subtle zebra)
+
           // Surface - Elevated cards and panels
-          surface: "#FFFFFF", // Light mode
+          surface: "#FAFBFC", // Light mode (toned down from #FFFFFF pure white)
           "surface-dark": "#2B2D30", // Dark mode (slightly lighter than neutral-dark)
 
+          // Surface hover states
+          "surface-hover": "#F0F2F5", // Light mode (toned down from #f8fafc)
+          "surface-hover-dark": "#374151", // Dark mode (gray-700)
+
+          // Surface active/pressed states
+          "surface-active": "#E8EBF0", // Light mode (toned down from #f1f5f9)
+          "surface-active-dark": "#1f2937", // Dark mode (gray-800)
+
           // Border - Dividers and outlines
-          border: "#e2e8f0", // Light mode (slate-200)
+          border: "#D8DCE3", // Light mode (toned down from #e2e8f0)
           "border-dark": "#334155", // Dark mode (slate-700)
+
+          // Border subtle
+          "border-subtle": "#E8EBF0", // Light mode (toned down from #f1f5f9)
+          "border-subtle-dark": "#1e293b", // Dark mode (slate-800)
+
+          // Border hover
+          "border-hover": "#B8BFC8", // Light mode (toned down from #cbd5e1)
+          "border-hover-dark": "#475569", // Dark mode (slate-600)
 
           // Text Primary - Main content text
           text: "#0f172a", // Light mode (slate-900)
@@ -72,6 +104,18 @@ export default {
           // Text Secondary - Supporting text
           "text-muted": "#64748b", // Light mode (slate-500)
           "text-muted-dark": "#94a3b8", // Dark mode (slate-400)
+
+          // Text Tertiary - Less prominent text
+          "text-subtle": "#94a3b8", // Light mode (slate-400)
+          "text-subtle-dark": "#64748b", // Dark mode (slate-500)
+
+          // Icon colors
+          icon: "#64748b", // Light mode (slate-500)
+          "icon-dark": "#94a3b8", // Dark mode (slate-400)
+
+          // Icon subtle
+          "icon-subtle": "#cbd5e1", // Light mode (slate-300)
+          "icon-subtle-dark": "#475569", // Dark mode (slate-600)
         },
 
         // Legacy surface colors for backward compatibility
@@ -80,6 +124,9 @@ export default {
           elevated: "#FFFFFF",
           subtle: "#F1F3F5",
         },
+
+        // Neutral dark background for sidebar
+        "neutral-dark": "#1E1F22",
       },
 
       // Layered Elevation System - Subtle shadows for depth

@@ -14,13 +14,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   if (!hasCredentials) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
-        <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg dark:bg-slate-900">
+      <div className="flex h-screen w-screen items-center justify-center bg-ui-surface-active dark:bg-ui-bg-dark">
+        <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg dark:bg-ui-surface-dark">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <h1 className="text-2xl font-bold text-ui-text dark:text-ui-text-dark">
               Welcome to DeltaGlider Commander
             </h1>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-2 text-sm text-ui-text-muted dark:text-ui-text-subtle">
               Configure your AWS credentials to get started
             </p>
           </div>

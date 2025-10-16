@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.hasError) {
       return (
         this.props.fallback ?? (
-          <div className="flex h-screen flex-col items-center justify-center gap-2 bg-slate-100 text-center text-slate-700 dark:bg-slate-950 dark:text-slate-200">
+          <div className="flex h-screen flex-col items-center justify-center gap-2 bg-ui-surface-active text-center text-ui-text dark:bg-ui-bg-dark dark:text-ui-text-dark">
             <h1 className="text-lg font-semibold">Something went wrong</h1>
             <p className="text-sm">Please refresh the page to continue.</p>
           </div>

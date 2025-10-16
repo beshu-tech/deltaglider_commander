@@ -4,11 +4,11 @@ import { StatsSummary } from "./useStats";
 export function SummaryCard({ summary }: { summary: StatsSummary | null }) {
   if (!summary) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-sm">
+      <div className="rounded-xl border border-ui-border bg-white p-6 text-sm text-ui-text-muted dark:border-ui-border-dark dark:bg-ui-surface-dark dark:text-ui-text-muted-dark shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-lg bg-ui-surface-active dark:bg-ui-surface-active-dark flex items-center justify-center">
             <svg
-              className="w-6 h-6 text-slate-400"
+              className="w-6 h-6 text-ui-text-subtle"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -22,8 +22,8 @@ export function SummaryCard({ summary }: { summary: StatsSummary | null }) {
             </svg>
           </div>
           <div>
-            <p className="font-medium text-slate-900 dark:text-white">No storage data available</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="font-medium text-ui-text dark:text-ui-text-dark">No storage data available</p>
+            <p className="text-xs text-ui-text-muted dark:text-ui-text-subtle mt-1">
               Connect to your S3-compatible storage to view metrics
             </p>
           </div>
@@ -35,7 +35,7 @@ export function SummaryCard({ summary }: { summary: StatsSummary | null }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
       {/* Buckets Card */}
-      <div className="rounded-xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
+      <div className="rounded-xl bg-gradient-to-br from-white to-ui-bg-subtle dark:from-ui-surface-dark dark:to-ui-surface-active-dark border border-ui-border dark:border-ui-border-dark p-6 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between mb-4">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
             <svg
@@ -52,18 +52,18 @@ export function SummaryCard({ summary }: { summary: StatsSummary | null }) {
               />
             </svg>
           </div>
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+          <span className="text-xs font-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle bg-ui-surface-active dark:bg-ui-surface-active-dark px-2 py-1 rounded-md">
             Buckets
           </span>
         </div>
         <div className="space-y-1">
-          <div className="text-3xl font-bold text-slate-900 dark:text-white">
+          <div className="text-3xl font-bold text-ui-text dark:text-ui-text-dark">
             {summary.bucketCount.toLocaleString()}
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-ui-text-muted dark:text-ui-text-subtle">
             {summary.pendingCount > 0 ? (
               <span className="inline-flex items-center gap-1">
-                <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                <span className="w-2 h-2 bg-primary-600 dark:bg-primary-500 rounded-full animate-pulse"></span>
                 {summary.pendingCount} pending {summary.pendingCount === 1 ? "job" : "jobs"}
               </span>
             ) : (
@@ -74,7 +74,7 @@ export function SummaryCard({ summary }: { summary: StatsSummary | null }) {
       </div>
 
       {/* Objects Card */}
-      <div className="rounded-xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
+      <div className="rounded-xl bg-gradient-to-br from-white to-ui-bg-subtle dark:from-ui-surface-dark dark:to-ui-surface-active-dark border border-ui-border dark:border-ui-border-dark p-6 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between mb-4">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
             <svg
@@ -91,15 +91,15 @@ export function SummaryCard({ summary }: { summary: StatsSummary | null }) {
               />
             </svg>
           </div>
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+          <span className="text-xs font-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle bg-ui-surface-active dark:bg-ui-surface-active-dark px-2 py-1 rounded-md">
             Objects
           </span>
         </div>
         <div className="space-y-1">
-          <div className="text-3xl font-bold text-slate-900 dark:text-white">
+          <div className="text-3xl font-bold text-ui-text dark:text-ui-text-dark">
             {summary.objectCount.toLocaleString()}
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-ui-text-muted dark:text-ui-text-subtle">
             <span className="font-semibold">{formatBytes(summary.storedBytes)}</span> stored
           </p>
         </div>
@@ -131,7 +131,7 @@ export function SummaryCard({ summary }: { summary: StatsSummary | null }) {
           <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
             {summary.savingsPct.toFixed(1)}%
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-ui-text-muted dark:text-ui-text-subtle">
             <span className="font-semibold text-emerald-700 dark:text-emerald-300">
               {formatBytes(summary.originalBytes - summary.storedBytes)}
             </span>{" "}
