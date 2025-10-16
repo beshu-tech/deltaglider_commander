@@ -13,6 +13,7 @@ import {
   uploadResponseSchema,
   UploadResponse,
   UploadResult,
+  refreshBucketStatsResponseSchema,
 } from "./schemas";
 
 // Re-export types from schemas
@@ -50,6 +51,15 @@ export async function fetchBucketStats(
   );
   const parsed = bucketStatsResponseSchema.parse(data);
   return parsed.bucket;
+}
+
+export async function refreshBucketStats(mode: BucketStatsMode = "sampled"): Promise<Bucket[]> {
+  const data = await apiWithAuth<unknown>("/api/buckets/cache/refresh", {
+    method: "POST",
+    body: JSON.stringify({ mode }),
+  });
+  const parsed = refreshBucketStatsResponseSchema.parse(data);
+  return parsed.buckets;
 }
 
 export async function createBucket(name: string): Promise<void> {

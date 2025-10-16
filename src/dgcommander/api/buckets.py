@@ -33,6 +33,9 @@ def list_buckets():
             "original_bytes": bucket_stats.original_bytes,
             "stored_bytes": bucket_stats.stored_bytes,
             "savings_pct": bucket_stats.savings_pct,
+            "stats_mode": bucket_stats.stats_mode,
+            "stats_loaded": bucket_stats.stats_loaded,
+            "object_count_is_limited": bucket_stats.object_count_is_limited,
         }
 
         pending_job = jobs.pending(bucket_stats.name) if jobs else False
@@ -70,6 +73,8 @@ def compute_savings(bucket: str):
 
     from flask import g
 
+    from ..services.catalog import CatalogService
+
     logger = logging.getLogger(__name__)
     logger.info(f"[COMPUTE-SAVINGS] Endpoint called for bucket: {bucket}")
 
@@ -77,9 +82,16 @@ def compute_savings(bucket: str):
     sdk = g.sdk_client
     logger.info(f"[COMPUTE-SAVINGS] SDK type: {type(sdk).__name__}")
 
+    catalog_service = CatalogService(sdk=sdk)
+
     if not sdk.bucket_exists(bucket):
         logger.error(f"[COMPUTE-SAVINGS] Bucket not found: {bucket}")
         raise NotFoundError("bucket", "bucket_not_found")
+
+    try:
+        catalog_service.invalidate_bucket_stats(bucket)
+    except Exception:
+        logger.debug(f"[COMPUTE-SAVINGS] Failed to invalidate catalog cache for {bucket}", exc_info=True)
 
     # Pass session SDK to job so it uses the correct credentials
     container = get_container()
@@ -87,6 +99,43 @@ def compute_savings(bucket: str):
     task_id = container.jobs.enqueue(bucket, sdk=sdk)
     logger.info(f"[COMPUTE-SAVINGS] Job enqueued with task_id: {task_id}")
     return json_response({"status": "accepted", "bucket": bucket, "task_id": task_id}, status=202)
+
+
+@bp.post("/cache/refresh")
+@require_session_or_env
+def refresh_bucket_cache():
+    from flask import g
+
+    from ..contracts.buckets import BucketStats as BucketStatsContract
+    from ..services.catalog import CatalogService
+    from ..services.deltaglider import StatsMode
+
+    payload = request.get_json(silent=True) or {}
+    mode_param = (payload.get("mode") or "sampled").lower()
+    try:
+        mode = StatsMode(mode_param)
+    except ValueError as exc:
+        raise APIError(code="invalid_stats_mode", message="Unsupported stats mode", http_status=400) from exc
+
+    catalog = CatalogService(sdk=g.sdk_client)
+    stats_list = catalog.refresh_all_bucket_stats(mode=mode)
+    buckets = [
+        BucketStatsContract(
+            name=stats.name,
+            object_count=stats.object_count,
+            original_bytes=stats.original_bytes,
+            stored_bytes=stats.stored_bytes,
+            savings_pct=stats.savings_pct,
+            pending=stats.pending,
+            computed_at=stats.computed_at,
+            stats_mode=stats.stats_mode,
+            stats_loaded=stats.stats_loaded,
+            object_count_is_limited=stats.object_count_is_limited,
+        ).model_dump(mode="json")
+        for stats in stats_list
+    ]
+
+    return json_response({"status": "refreshed", "mode": mode.value, "buckets": buckets})
 
 
 @bp.get("/<bucket>/stats")
@@ -115,6 +164,9 @@ def bucket_stats(bucket: str):
         savings_pct=stats.savings_pct,
         pending=False,
         computed_at=stats.computed_at,
+        stats_mode=stats.stats_mode,
+        stats_loaded=stats.stats_loaded,
+        object_count_is_limited=stats.object_count_is_limited,
     )
     return json_response({"bucket": contract.model_dump(mode="json")})
 

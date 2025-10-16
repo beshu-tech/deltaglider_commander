@@ -416,6 +416,16 @@ export function ObjectsView({
     clearSelection();
     // Trigger a refetch by updating the query (bypasses localStorage)
     cacheQuery.refetch();
+    queryClient.invalidateQueries({ queryKey: qk.buckets });
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        query.queryKey[0] === "bucket-stats" &&
+        query.queryKey[1] === bucket,
+    });
+    queryClient.invalidateQueries({
+      predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "stats",
+    });
   }, [
     bucket,
     search.prefix,
@@ -424,6 +434,7 @@ export function ObjectsView({
     toast,
     totalSelectedCount,
     cacheQuery,
+    queryClient,
   ]);
 
   const canGoPrevious = cacheQuery.hasPreviousPage;

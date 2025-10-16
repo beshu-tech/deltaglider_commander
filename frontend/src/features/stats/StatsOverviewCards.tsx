@@ -14,7 +14,7 @@ interface StatCardConfig {
 }
 
 interface StatCardProps extends StatCardConfig {
-  progress: number;
+  fillProgress: number;
   assistiveText: string;
   isAnalyzing: boolean;
 }
@@ -232,12 +232,20 @@ function StatCard({
   icon,
   value,
   description,
-  progress,
+  fillProgress,
   assistiveText,
   isAnalyzing,
 }: StatCardProps) {
   const palette = tonePalette[tone];
-  const effectiveProgress = progress > 0 ? progress : isAnalyzing ? 0.12 : 0;
+
+  const animatedFill = useAnimatedNumber(clampProgress(fillProgress), {
+    precision: 3,
+    minDuration: 700,
+    maxDuration: 1800,
+  });
+
+  const baseProgress = clampProgress(animatedFill);
+  const effectiveProgress = baseProgress > 0 ? baseProgress : isAnalyzing ? 0.12 : 0;
 
   return (
     <article
@@ -508,13 +516,15 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
     },
   ];
 
+  const cardFillTarget = clampProgress(Math.max(0, summary.savingsPct) / 100);
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
         <StatCard
           key={card.id}
           {...card}
-          progress={progress}
+          fillProgress={card.id === "savings" ? cardFillTarget : progress}
           assistiveText={assistiveText}
           isAnalyzing={hasAnalyzingBuckets}
         />

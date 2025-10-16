@@ -37,7 +37,8 @@ class BaseDeltaGliderAdapter:
         total_stored = sum(obj.stored_bytes for obj in object_list)
         savings_pct = 0.0
         if total_original:
-            savings_pct = (1.0 - (total_stored / total_original)) * 100.0
+            ratio = 1.0 - (total_stored / total_original)
+            savings_pct = max(0.0, min(100.0, ratio * 100.0))
 
         return BucketSnapshot(
             name=bucket,
@@ -46,6 +47,7 @@ class BaseDeltaGliderAdapter:
             stored_bytes=total_stored,
             savings_pct=savings_pct,
             computed_at=computed_at or datetime.now(UTC),
+            object_count_is_limited=False,
         )
 
 

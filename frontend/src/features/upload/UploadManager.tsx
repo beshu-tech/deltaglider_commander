@@ -296,11 +296,19 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
 
         onCompleted?.(payload.results);
       } catch (error) {
-        const message = isApiError(error)
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : String(error);
+        let message: string;
+        let title = "Upload failed";
+        if (isApiError(error) && error.code === "s3_access_denied") {
+          title = "Permission denied";
+          message =
+            "AWS rejected the upload. This user is missing the required S3 permissions for this bucket.";
+        } else if (isApiError(error)) {
+          message = error.message;
+        } else if (error instanceof Error) {
+          message = error.message;
+        } else {
+          message = String(error);
+        }
         setQueue((prev) =>
           prev.map((item) =>
             ids.has(item.id)
@@ -308,7 +316,7 @@ export function UploadManager({ bucket, prefix, onCompleted }: UploadManagerProp
               : item,
           ),
         );
-        toast.push({ title: "Upload failed", description: message, level: "error" });
+        toast.push({ title, description: message, level: "error" });
       } finally {
         activeUploads.current -= 1;
         updateUploadingState();

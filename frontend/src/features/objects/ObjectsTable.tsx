@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useRef } from "react";
-import { ArrowUpDown, ChevronDown, ChevronUp, FileText, Folder, Loader2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Folder,
+  Loader2,
+} from "lucide-react";
 import { Table, TableBody, TableCell, TableHead } from "../../lib/ui/Table";
+import { Tooltip } from "../../lib/ui/Tooltip";
 import { formatBytes } from "../../lib/utils/bytes";
 import { formatDateTime } from "../../lib/utils/dates";
 import { ObjectItem, ObjectSortKey } from "./types";
@@ -51,11 +60,22 @@ export function ObjectsTable({
 
   const getCompressionStats = (item: ObjectItem) => {
     if (!item.compressed || item.original_bytes === 0) {
-      return { percentage: 0, effectiveSize: item.original_bytes };
+      return {
+        variant: "none" as const,
+        percentage: 0,
+        effectiveSize: item.original_bytes,
+        deltaBytes: 0,
+      };
     }
-    const saved = item.original_bytes - item.stored_bytes;
-    const percentage = (saved / item.original_bytes) * 100;
-    return { percentage, effectiveSize: item.stored_bytes };
+    const diff = item.original_bytes - item.stored_bytes;
+    const deltaBytes = Math.abs(diff);
+    const percentage = (deltaBytes / item.original_bytes) * 100;
+    return {
+      variant: diff >= 0 ? ("savings" as const) : ("growth" as const),
+      percentage,
+      effectiveSize: item.stored_bytes,
+      deltaBytes,
+    };
   };
 
   useEffect(() => {
@@ -212,6 +232,7 @@ export function ObjectsTable({
                 isHighlighted || objectSelected ? "bg-brand-50/70 dark:bg-slate-800" : ""
               }`;
               const name = item.key.split("/").pop() ?? item.key;
+              const compressionStats = getCompressionStats(item);
               return (
                 <tr
                   key={item.key}
@@ -254,7 +275,7 @@ export function ObjectsTable({
                   <TableCell>
                     {(() => {
                       // original_bytes is always available in preview data, so show it immediately
-                      const { effectiveSize } = getCompressionStats(item);
+                      const { effectiveSize } = compressionStats;
                       if (
                         !isLoadingMetadata &&
                         item.compressed &&
@@ -286,12 +307,27 @@ export function ObjectsTable({
                       </div>
                     ) : (
                       (() => {
-                        const { percentage } = getCompressionStats(item);
-                        if (!item.compressed) {
+                        const { variant, percentage } = compressionStats;
+                        if (!item.compressed || variant === "none") {
                           return (
                             <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300">
                               Original
                             </span>
+                          );
+                        }
+
+                        if (variant === "growth") {
+                          const original = formatBytes(item.original_bytes);
+                          const stored = formatBytes(item.stored_bytes);
+                          return (
+                            <Tooltip
+                              label={`Delta compression increased this object. The stored delta (${stored}) is larger than the original (${original}). This typically happens when the reference no longer matches closely or the source is already compressed. Re-upload without delta compression or refresh the reference to recover savings.`}
+                            >
+                              <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-1 text-xs font-medium text-rose-800 dark:bg-rose-900 dark:text-rose-200">
+                                <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                                Growth {percentage.toFixed(1)}%
+                              </span>
+                            </Tooltip>
                           );
                         }
 

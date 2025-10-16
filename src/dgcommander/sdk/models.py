@@ -29,6 +29,7 @@ class BucketSnapshot:
     stored_bytes: int
     savings_pct: float
     computed_at: datetime | None
+    object_count_is_limited: bool = False
 
 
 @dataclass(slots=True)

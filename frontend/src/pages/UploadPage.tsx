@@ -46,6 +46,16 @@ export function UploadPage() {
         Array.isArray(query.queryKey) &&
         (query.queryKey[0] === "objects" || query.queryKey[0] === "objects-full"),
     });
+    queryClient.invalidateQueries({ queryKey: qk.buckets });
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        query.queryKey[0] === "bucket-stats" &&
+        query.queryKey[1] === bucket,
+    });
+    queryClient.invalidateQueries({
+      predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "stats",
+    });
   }, [bucket, currentSearch.prefix, queryClient]);
 
   return (

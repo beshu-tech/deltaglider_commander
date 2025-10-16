@@ -24,7 +24,7 @@ from .list_cache import ListObjectsCache
 
 logger = logging.getLogger(__name__)
 
-OBJECT_COUNT_LIMIT = 10_000
+OBJECT_COUNT_LIMIT = 5_000
 
 
 def _clamp_savings_pct(original_bytes: int, stored_bytes: int) -> float:
@@ -42,8 +42,11 @@ def _build_bucket_stats(
     pending: bool,
     force_loaded: bool = False,
 ) -> BucketStats:
-    object_count = min(snapshot.object_count, OBJECT_COUNT_LIMIT)
-    limited = snapshot.object_count > OBJECT_COUNT_LIMIT
+    limited_from_snapshot = getattr(snapshot, "object_count_is_limited", False)
+    limited = limited_from_snapshot or snapshot.object_count > OBJECT_COUNT_LIMIT
+    object_count = snapshot.object_count
+    if limited and object_count > OBJECT_COUNT_LIMIT:
+        object_count = OBJECT_COUNT_LIMIT
     savings_pct = _clamp_savings_pct(snapshot.original_bytes, snapshot.stored_bytes)
     stats_loaded = force_loaded or bool(snapshot.computed_at)
 
@@ -75,6 +78,26 @@ class CatalogService:
     sdk: DeltaGliderSDK
     list_cache: ListObjectsCache | None = None
 
+    def _invalidate_bucket_stats_cache(self, bucket: str) -> None:
+        invalidator = getattr(self.sdk, "invalidate_bucket_cache", None)
+        if callable(invalidator):
+            try:
+                invalidator(bucket)
+            except Exception:  # pragma: no cover - defensive
+                logger.debug("Failed to invalidate stats cache for bucket %s", bucket, exc_info=True)
+
+    def _clear_bucket_stats_cache(self) -> None:
+        clearer = getattr(self.sdk, "clear_bucket_cache", None)
+        if callable(clearer):
+            try:
+                clearer()
+            except Exception:  # pragma: no cover - defensive
+                logger.debug("Failed to clear stats cache", exc_info=True)
+
+    def invalidate_bucket_stats(self, bucket: str) -> None:
+        """Expose cache invalidation for other components."""
+        self._invalidate_bucket_stats_cache(bucket)
+
     def list_buckets(self, compute_stats: bool = False) -> list[BucketStats]:
         stats: list[BucketStats] = []
         try:
@@ -86,17 +109,16 @@ class CatalogService:
             details = {"reason": _summarize_exception(exc)}
             raise SDKError("Unable to list DeltaGlider buckets", details=details) from exc
 
+        mode = StatsMode.detailed if compute_stats else StatsMode.quick
         for snapshot in snapshots:
-            base = BucketStats(
-                name=snapshot.name,
-                object_count=snapshot.object_count,
-                original_bytes=snapshot.original_bytes,
-                stored_bytes=snapshot.stored_bytes,
-                savings_pct=snapshot.savings_pct,
-                pending=False,
-                computed_at=snapshot.computed_at,
+            stats.append(
+                _build_bucket_stats(
+                    snapshot,
+                    mode=mode,
+                    pending=False,
+                    force_loaded=compute_stats,
+                )
             )
-            stats.append(base)
 
         return stats
 
@@ -111,14 +133,11 @@ class CatalogService:
             details = {"reason": _summarize_exception(exc)}
             raise SDKError("Unable to compute bucket statistics", details=details) from exc
 
-        return BucketStats(
-            name=snapshot.name,
-            object_count=snapshot.object_count,
-            original_bytes=snapshot.original_bytes,
-            stored_bytes=snapshot.stored_bytes,
-            savings_pct=snapshot.savings_pct,
+        return _build_bucket_stats(
+            snapshot,
+            mode=mode,
             pending=False,
-            computed_at=snapshot.computed_at,
+            force_loaded=True,
         )
 
     def bucket_exists(self, bucket: str) -> bool:
@@ -163,6 +182,9 @@ class CatalogService:
     def delete_bucket(self, name: str) -> None:
         try:
             self.sdk.delete_bucket(name)
+            self._invalidate_bucket_stats_cache(name)
+            if self.list_cache is not None:
+                self.list_cache.invalidate_bucket(name)
         except ClientError as exc:
             error_code = exc.response.get("Error", {}).get("Code", "")
             if error_code in {"NoSuchBucket", "NotFound"}:
@@ -277,6 +299,7 @@ class CatalogService:
             # Invalidate cache for this bucket
             if self.list_cache is not None:
                 self.list_cache.invalidate_bucket(bucket)
+            self._invalidate_bucket_stats_cache(bucket)
         except ClientError as exc:
             error_code = exc.response.get("Error", {}).get("Code", "")
             if error_code in {"NoSuchKey", "NotFound"}:
@@ -298,6 +321,7 @@ class CatalogService:
             # Invalidate cache for this bucket after successful delete
             if self.list_cache is not None:
                 self.list_cache.invalidate_bucket(bucket)
+            self._invalidate_bucket_stats_cache(bucket)
         except NotFoundError:
             # If NotFoundError is raised, we don't know which key(s) failed, so mark all as not found
             for key in keys:
@@ -325,8 +349,22 @@ class CatalogService:
             # Invalidate cache for this bucket after successful upload
             if self.list_cache is not None:
                 self.list_cache.invalidate_bucket(bucket)
+            self._invalidate_bucket_stats_cache(bucket)
         except APIError:
             raise
+        except ClientError as exc:
+            error = exc.response.get("Error", {}) if hasattr(exc, "response") else {}
+            error_code = str(error.get("Code", "") or "")
+            if error_code == "AccessDenied":
+                raise APIError(
+                    code="s3_access_denied",
+                    message="AWS denied permission to upload objects. Please verify your S3 access policy.",
+                    http_status=403,
+                ) from exc
+            details = {"reason": _summarize_exception(exc)}
+            if error_code:
+                details["aws_code"] = error_code
+            raise SDKError("Unable to upload object", details=details) from exc
         except Exception as exc:
             details = {"reason": _summarize_exception(exc)}
             raise SDKError("Unable to upload object", details=details) from exc
@@ -335,6 +373,47 @@ class CatalogService:
             summary.relative_path = relative_path
 
         return summary
+
+    def refresh_all_bucket_stats(self, mode: StatsMode = StatsMode.sampled) -> list[BucketStats]:
+        """Clear cached stats and recompute for every bucket."""
+
+        self._clear_bucket_stats_cache()
+        if self.list_cache is not None:
+            self.list_cache.clear()
+
+        try:
+            snapshots = list(self.sdk.list_buckets(compute_stats=False))
+        except Exception as exc:
+            if isinstance(exc, APIError):
+                raise
+            details = {"reason": _summarize_exception(exc)}
+            raise SDKError("Unable to list DeltaGlider buckets", details=details) from exc
+
+        refreshed: list[BucketStats] = []
+        for base_snapshot in snapshots:
+            try:
+                snapshot = self.sdk.compute_bucket_stats(base_snapshot.name, mode=mode)
+            except Exception as exc:
+                logger.error("Failed to recompute stats for %s: %s", base_snapshot.name, exc, exc_info=True)
+                raise SDKError(
+                    "Unable to recompute bucket statistics",
+                    details={"bucket": base_snapshot.name, "reason": _summarize_exception(exc)},
+                ) from exc
+            updater = getattr(self.sdk, "update_cached_bucket_stats", None)
+            if callable(updater):
+                try:
+                    updater(snapshot)
+                except Exception:  # pragma: no cover - defensive
+                    logger.debug("Failed to update SDK cache for %s", snapshot.name, exc_info=True)
+            refreshed.append(
+                _build_bucket_stats(
+                    snapshot,
+                    mode=mode,
+                    pending=False,
+                    force_loaded=True,
+                )
+            )
+        return refreshed
 
     def update_savings(self, bucket: str, snapshot: BucketSnapshot) -> BucketStats:
         """Update bucket statistics after a savings computation job."""

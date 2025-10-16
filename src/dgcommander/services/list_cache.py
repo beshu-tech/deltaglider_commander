@@ -243,11 +243,11 @@ class ListObjectsCache:
         """Clear all cache entries."""
         with self._lock:
             self._cache.clear()
-            self._hits = 0
-            self._misses = 0
             self._bucket_index.clear()
             self._prefix_index.clear()
             self._key_index.clear()
+            self._hits = 0
+            self._misses = 0
             logger.info("Cache cleared")
 
     def stats(self) -> dict[str, int | float]:

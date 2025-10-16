@@ -12,6 +12,15 @@ export function useSavings(bucket: string) {
     onSuccess: () => {
       toast.push({ title: "Savings job started", description: `Bucket ${bucket}`, level: "info" });
       void queryClient.invalidateQueries({ queryKey: qk.buckets });
+      void queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === "bucket-stats" &&
+          query.queryKey[1] === bucket,
+      });
+      void queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "stats",
+      });
     },
     onError: (error) => {
       toast.push({

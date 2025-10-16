@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, RefreshCcw, Trash2 } from "lucide-react";
 import { Badge } from "../../lib/ui/Badge";
 import { EmptyState } from "../../lib/ui/EmptyState";
 import { Button } from "../../lib/ui/Button";
@@ -12,6 +12,7 @@ import { DEFAULT_OBJECTS_SEARCH_STATE } from "../objects/types";
 import { BucketSavingsButton } from "../savings/BucketSavingsButton";
 import { useDeleteBucket } from "./useBucketManagement";
 import { useBucketStats } from "./useBucketStats";
+import { useRefreshBucketStats } from "./useRefreshBucketStats";
 
 function BucketRow({
   bucket,
@@ -259,6 +260,7 @@ function BucketRow({
 export function BucketsPanel() {
   const { data, isLoading, isError, error } = useBuckets();
   const deleteMutation = useDeleteBucket();
+  const refreshMutation = useRefreshBucketStats();
 
   if (isLoading) {
     return (
@@ -280,11 +282,31 @@ export function BucketsPanel() {
 
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-surface-elevated shadow-elevation-md dark:border-slate-800 dark:bg-slate-900 dark:shadow-elevation-md-dark">
-      <div className="bg-slate-50 dark:bg-slate-900/50 px-group py-3 border-b border-slate-200 dark:border-slate-800">
-        <h2 className="text-title-sm text-slate-900 dark:text-white">Storage Buckets</h2>
-        <p className="text-body-sm text-slate-600 dark:text-slate-400 mt-1">
-          Manage and optimize your object storage containers
-        </p>
+      <div className="bg-slate-50 dark:bg-slate-900/50 px-group py-3 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-title-sm text-slate-900 dark:text-white">Storage Buckets</h2>
+          <p className="text-body-sm text-slate-600 dark:text-slate-400 mt-1">
+            Manage and optimize your object storage containers
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          className="gap-2"
+          disabled={refreshMutation.isPending}
+          onClick={() => refreshMutation.mutate("sampled")}
+        >
+          {refreshMutation.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+              Rebuild stats
+            </>
+          )}
+        </Button>
       </div>
       <Table className="min-w-full">
         <TableHead>

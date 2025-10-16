@@ -41,5 +41,11 @@ class BucketStatsCache:
         with self._lock:
             self._snapshots.pop(name, None)
 
+    def clear(self) -> None:
+        """Remove all cached snapshots."""
+
+        with self._lock:
+            self._snapshots.clear()
+
 
 __all__ = ["BucketStatsCache"]

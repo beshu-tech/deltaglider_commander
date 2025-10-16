@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, ExternalLink, FileText, Loader2, Share2, Tag, Trash2, X } from "lucide-react";
+import {
+  AlertTriangle,
+  Download,
+  ExternalLink,
+  FileText,
+  Loader2,
+  Share2,
+  Tag,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useToast } from "../../app/toast";
 import { Button } from "../../lib/ui/Button";
 import { formatBytes } from "../../lib/utils/bytes";
@@ -39,10 +49,11 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
 
   const metadata = query.data;
   const savings = useMemo(() => {
-    if (!metadata) return { bytes: 0, pct: 0 };
-    const bytes = metadata.original_bytes - metadata.stored_bytes;
-    const pct = metadata.original_bytes === 0 ? 0 : (bytes / metadata.original_bytes) * 100;
-    return { bytes, pct };
+    if (!metadata) return { bytes: 0, pct: 0, isGrowth: false };
+    const diff = metadata.original_bytes - metadata.stored_bytes;
+    const absBytes = Math.abs(diff);
+    const pct = metadata.original_bytes === 0 ? 0 : (absBytes / metadata.original_bytes) * 100;
+    return { bytes: absBytes, pct, isGrowth: diff < 0 };
   }, [metadata]);
 
   const fileName = useMemo(() => {
@@ -249,13 +260,47 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
         <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
           {/* Main savings highlight */}
           <div className="mb-3 text-center">
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="mb-1 inline-flex items-center justify-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {savings.isGrowth ? (
+                <>
+                  <AlertTriangle
+                    className="h-3 w-3 text-amber-500 dark:text-amber-300"
+                    aria-hidden="true"
+                  />
+                  Growth
+                </>
+              ) : (
+                "Savings"
+              )}
+            </div>
+            <div
+              className={`text-2xl font-bold ${
+                savings.isGrowth
+                  ? "text-rose-600 dark:text-rose-300"
+                  : "text-emerald-600 dark:text-emerald-400"
+              }`}
+            >
               {savings.pct.toFixed(1)}%
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400">
-              {formatBytes(savings.bytes)} saved
+              {formatBytes(savings.bytes)} {savings.isGrowth ? "growth" : "saved"}
             </div>
           </div>
+
+          {savings.isGrowth ? (
+            <div className="mb-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-left text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              <div className="space-y-1">
+                <p className="font-semibold">Delta increased this object</p>
+                <p>
+                  The stored delta ({formatBytes(metadata.stored_bytes)}) is larger than the
+                  original ({formatBytes(metadata.original_bytes)}). This usually happens when the
+                  reference no longer matches closely or the source archive is already compressed.
+                  Re-upload without delta compression or refresh the reference to restore savings.
+                </p>
+              </div>
+            </div>
+          ) : null}
 
           {/* Compact stats grid */}
           <div className="grid grid-cols-2 gap-3 text-xs">

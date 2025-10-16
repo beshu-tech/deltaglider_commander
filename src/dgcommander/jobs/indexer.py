@@ -61,6 +61,16 @@ class SavingsJobRunner:
 
         try:
             logger.info(f"[JOB {task_id}] Computing bucket stats")
+            invalidator = getattr(sdk, "invalidate_bucket_cache", None)
+            if callable(invalidator):
+                try:
+                    invalidator(bucket)
+                except Exception:
+                    logger.debug(f"[JOB {task_id}] Failed to invalidate SDK cache for {bucket}", exc_info=True)
+            try:
+                self._catalog.invalidate_bucket_stats(bucket)
+            except Exception:
+                logger.debug(f"[JOB {task_id}] Failed to invalidate catalog cache for {bucket}", exc_info=True)
             snapshot = None
             if hasattr(sdk, "compute_bucket_stats"):
                 try:

@@ -42,6 +42,16 @@ export function useDeleteObject(bucket: string | null) {
             query.queryKey[1] === bucket,
         });
         void queryClient.removeQueries({ queryKey: qk.metadata(bucket, key) });
+        void queryClient.invalidateQueries({ queryKey: qk.buckets });
+        void queryClient.invalidateQueries({
+          predicate: (query) =>
+            Array.isArray(query.queryKey) &&
+            query.queryKey[0] === "bucket-stats" &&
+            query.queryKey[1] === bucket,
+        });
+        void queryClient.invalidateQueries({
+          predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "stats",
+        });
       }
     },
     onError: (error, key) => {

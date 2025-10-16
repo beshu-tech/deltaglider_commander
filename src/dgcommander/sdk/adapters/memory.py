@@ -152,6 +152,17 @@ class InMemoryDeltaGliderSDK(BaseDeltaGliderAdapter):
         else:
             self._buckets.append(snapshot)
 
+    def invalidate_bucket_cache(self, bucket: str) -> None:
+        """Recompute the in-memory snapshot for the given bucket."""
+        # Only update if bucket still exists
+        if self.bucket_exists(bucket):
+            self._update_bucket_snapshot(bucket)
+
+    def clear_bucket_cache(self) -> None:
+        """Recompute snapshots for all buckets to emulate clearing a cache."""
+        for bucket in list(self._buckets):
+            self._update_bucket_snapshot(bucket.name)
+
     def compute_bucket_stats(self, bucket: str, mode: StatsMode = StatsMode.detailed) -> BucketSnapshot:
         objects = self._objects.get(bucket)
         if objects is None:

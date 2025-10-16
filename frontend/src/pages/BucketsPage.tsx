@@ -1,15 +1,9 @@
-import { useEffect, useRef } from "react";
 import { BucketsPanel } from "../features/buckets/BucketsPanel";
 import { useStats } from "../features/stats/useStats";
 import { StatsOverviewCards } from "../features/stats/StatsOverviewCards";
 
 export function BucketsPage() {
-  const headingRef = useRef<HTMLHeadingElement>(null);
   const { summary } = useStats();
-
-  useEffect(() => {
-    headingRef.current?.focus();
-  }, []);
 
   return (
     <div className="flex flex-1 flex-col overflow-auto">
@@ -25,11 +19,7 @@ export function BucketsPage() {
                   Smart Object Storage Platform
                 </span>
               </div>
-              <h1
-                ref={headingRef}
-                tabIndex={-1}
-                className="text-4xl font-bold text-slate-900 dark:text-white/90 mb-3 tracking-tight"
-              >
+              <h1 className="text-4xl font-bold text-slate-900 dark:text-white/90 mb-3 tracking-tight">
                 Object Storage Console
               </h1>
               <p className="text-lg text-slate-600 dark:text-white/70 max-w-3xl">

@@ -395,6 +395,9 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
     def invalidate_bucket_cache(self, bucket: str) -> None:
         self._bucket_cache.remove(bucket)
 
+    def clear_bucket_cache(self) -> None:
+        self._bucket_cache.clear()
+
     def _update_cache(self, snapshot: BucketSnapshot) -> None:
         self._bucket_cache.put(snapshot)
 
@@ -406,7 +409,8 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
             # Use supplied mode and bypass caches to guarantee fresh statistics
             stats = self._client.get_bucket_stats(name, mode=mode.value, use_cache=False, refresh_cache=True)
         except Exception as exc:  # pragma: no cover - defensive logging path
-            logging.getLogger(__name__).debug("Failed to refresh stats for %s: %s", name, exc)
+            # Log at ERROR level so we can see what's actually failing
+            logging.getLogger(__name__).error("Failed to refresh stats for %s: %s", name, exc, exc_info=True)
             snapshot = self._placeholder_snapshot(name)
             self.invalidate_bucket_cache(name)
             return snapshot
@@ -415,7 +419,8 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
         stored_total = stats.compressed_size
         savings_pct = 0.0
         if original_total:
-            savings_pct = (1.0 - (stored_total / original_total)) * 100.0
+            ratio = 1.0 - (stored_total / original_total)
+            savings_pct = max(0.0, min(100.0, ratio * 100.0))
 
         snapshot = BucketSnapshot(
             name=name,
@@ -424,6 +429,7 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
             stored_bytes=stored_total,
             savings_pct=savings_pct,
             computed_at=datetime.now(UTC),
+            object_count_is_limited=getattr(stats, "object_limit_reached", False),
         )
         self._update_cache(snapshot)
         return snapshot
@@ -436,6 +442,7 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
             stored_bytes=0,
             savings_pct=0.0,
             computed_at=None,
+            object_count_is_limited=False,
         )
 
     # -- helpers --------------------------------------------------------
