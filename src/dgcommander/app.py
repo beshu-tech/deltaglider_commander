@@ -19,9 +19,11 @@ from .deps import (
     DGCommanderConfig,
     ServiceContainer,
     build_default_sdk,
+    build_housekeeping_sdk,
     build_services,
     load_config,
 )
+from .jobs.purge_scheduler import PurgeScheduler
 from .services.deltaglider import DeltaGliderSDK
 from .util.errors import register_error_handlers
 
@@ -110,6 +112,32 @@ def create_app(
     )
     app.extensions["session_store"] = session_store
 
+    # Initialize purge scheduler for cleaning up temporary files
+    # Try to use housekeeping SDK first, fall back to main SDK if available
+    if not cfg.test_mode:
+        housekeeping_sdk = build_housekeeping_sdk()
+        purge_sdk = housekeeping_sdk if housekeeping_sdk else sdk
+
+        if purge_sdk is not None:
+            purge_interval_hours = int(os.environ.get("DGCOMM_PURGE_INTERVAL_HOURS", "1"))  # Default 1 hour
+            purge_scheduler = PurgeScheduler(sdk=purge_sdk, interval_hours=purge_interval_hours)
+            app.extensions["purge_scheduler"] = purge_scheduler
+
+            # Start the purge scheduler when the app starts
+            # Filesystem locking ensures only one process runs the scheduler
+            if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
+                if purge_scheduler.start():
+                    sdk_type = "housekeeping" if housekeeping_sdk else "default"
+                    app.logger.info(
+                        f"Started purge scheduler with {sdk_type} SDK, interval {purge_interval_hours} hour(s)"
+                    )
+                else:
+                    app.logger.info("Purge scheduler not started (another process already has the lock)")
+        else:
+            app.logger.info("Purge scheduler disabled - no SDK configured (set DGCOMM_HOUSEKEEPING_* env vars)")
+    else:
+        app.logger.info("Purge scheduler disabled in test mode")
+
     register_error_handlers(app)
 
     # CORS configuration
@@ -186,6 +214,14 @@ def create_app(
             status=200,
             mimetype="application/json",
         )
+
+    # Register cleanup handler for purge scheduler
+    @app.teardown_appcontext
+    def stop_purge_scheduler(error=None):
+        if "purge_scheduler" in app.extensions:
+            purge_scheduler = app.extensions["purge_scheduler"]
+            app.logger.info("Stopping purge scheduler on shutdown...")
+            purge_scheduler.stop()
 
     return app
 

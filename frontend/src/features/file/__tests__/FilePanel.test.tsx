@@ -23,7 +23,7 @@ vi.mock("../../../lib/utils/download", () => ({
   downloadObject: mockDownloadObject,
 }));
 
-const prepareDownloadMock = vi.spyOn(endpoints, "prepareDownload");
+const generatePresignedUrlMock = vi.spyOn(endpoints, "generatePresignedUrl");
 const getApiUrlMock = vi.spyOn(env, "getApiUrl");
 const clipboardWriteMock = vi.fn().mockResolvedValue(undefined);
 
@@ -49,8 +49,15 @@ beforeEach(() => {
     isPending: false,
   });
   mockDownloadObject.mockClear();
-  prepareDownloadMock.mockReset();
-  prepareDownloadMock.mockResolvedValue({ download_token: "token-123", estimated_bytes: 1024 });
+  generatePresignedUrlMock.mockReset();
+  generatePresignedUrlMock.mockResolvedValue({
+    bucket: "test-bucket",
+    key: "folder/example.txt",
+    download_url: "https://api.test/download/presigned-url-123",
+    expires_in: 3600,
+    expires_at: Date.now() + 3600000,
+    estimated_bytes: 1024,
+  });
   getApiUrlMock.mockReturnValue("https://api.test");
   clipboardWriteMock.mockClear();
 });
@@ -115,10 +122,10 @@ describe("FilePanel", () => {
 
     await user.click(copyButton);
 
-    // Wait for prepareDownload to be called
+    // Wait for generatePresignedUrl to be called
     await waitFor(
       () => {
-        expect(prepareDownloadMock).toHaveBeenCalledWith("test-bucket", "folder/example.txt");
+        expect(generatePresignedUrlMock).toHaveBeenCalledWith("test-bucket", "folder/example.txt");
       },
       { timeout: 3000 },
     );
@@ -127,7 +134,7 @@ describe("FilePanel", () => {
     await waitFor(
       () => {
         expect(clipboardWriteMock).toHaveBeenCalledWith([
-          "https://api.test/api/download/token-123",
+          "https://api.test/download/presigned-url-123",
         ]);
       },
       { timeout: 3000 },

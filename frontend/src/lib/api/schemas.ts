@@ -52,8 +52,12 @@ export const fileMetadataSchema = z.object({
   metadata: z.record(z.string()).optional(),
 });
 
-export const downloadPrepareSchema = z.object({
-  download_token: z.string(),
+export const presignedUrlSchema = z.object({
+  bucket: z.string(),
+  key: z.string(),
+  download_url: z.string().url(),
+  expires_in: z.number().int().positive(),
+  expires_at: z.number().int().positive(),
   estimated_bytes: z.number().int().nonnegative(),
 });
 
@@ -101,7 +105,7 @@ export type RefreshBucketStatsResponse = z.infer<typeof refreshBucketStatsRespon
 export type ObjectItem = z.infer<typeof objectItemSchema>;
 export type ObjectList = z.infer<typeof objectListSchema>;
 export type FileMetadata = z.infer<typeof fileMetadataSchema>;
-export type DownloadPrepare = z.infer<typeof downloadPrepareSchema>;
+export type PresignedUrl = z.infer<typeof presignedUrlSchema>;
 export type ApiErrorPayload = z.infer<typeof apiErrorSchema>;
 export type UploadResult = z.infer<typeof uploadResultSchema>;
 export type UploadStats = z.infer<typeof uploadStatsSchema>;

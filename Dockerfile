@@ -5,7 +5,17 @@
 #   DGCOMM_HMAC_SECRET - Secret for signing download tokens (required)
 # Optional environment variables:
 #   DGCOMM_LOG_LEVEL - Logging verbosity: DEBUG, INFO, WARNING, ERROR (default: INFO)
+#   DGCOMM_PURGE_INTERVAL_HOURS - Hours between purge runs (default: 1)
 #   CACHE_ENABLED - Set to "false" to bypass in-process caches during debugging
+#
+# Housekeeping job credentials (optional, falls back to main credentials if not set):
+#   DGCOMM_HOUSEKEEPING_S3_ACCESS_KEY - AWS access key for purge job
+#   DGCOMM_HOUSEKEEPING_S3_SECRET_KEY - AWS secret key for purge job
+#   DGCOMM_HOUSEKEEPING_S3_ENDPOINT - S3 endpoint for purge job
+#   DGCOMM_HOUSEKEEPING_S3_REGION - AWS region for purge job
+#   DGCOMM_HOUSEKEEPING_S3_SESSION_TOKEN - AWS session token for purge job (optional)
+#   DGCOMM_HOUSEKEEPING_S3_ADDRESSING_STYLE - S3 addressing style (default: path)
+#   DGCOMM_HOUSEKEEPING_S3_VERIFY_SSL - Verify SSL certificates (default: true)
 #
 # S3/AWS credentials are configured through the web UI at runtime,
 # not via environment variables. See /settings in the application.
@@ -52,8 +62,7 @@ COPY pyproject.toml README.md /app/
 COPY src /app/src
 
 # Copy built frontend from previous stage
-# Note: Vite builds to ../src/dgcommander/static from the frontend directory
-COPY --from=frontend-builder /src/dgcommander/static /app/src/dgcommander/static
+COPY --from=frontend-builder /frontend/dist /app/src/dgcommander/static
 
 RUN pip install --upgrade pip \
     && pip install .[server]
@@ -69,6 +78,18 @@ ENV DGCOMM_CACHE_DIR="/tmp/dgcommander-cache"
 ENV DGCOMM_OBJECT_RATE_LIMIT="10"
 ENV DGCOMM_OBJECT_RATE_WINDOW="1.0"
 ENV DGCOMM_DOWNLOAD_TTL="300"
+ENV DGCOMM_PURGE_INTERVAL_HOURS="6"
 ENV CACHE_ENABLED="true"
 
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "dgcommander.app:create_app()", "--worker-class", "gthread", "--threads", "4"]
+# Housekeeping job defaults (empty = use main credentials or none)
+ENV DGCOMM_HOUSEKEEPING_S3_ACCESS_KEY=""
+ENV DGCOMM_HOUSEKEEPING_S3_SECRET_KEY=""
+ENV DGCOMM_HOUSEKEEPING_S3_ENDPOINT=""
+ENV DGCOMM_HOUSEKEEPING_S3_REGION=""
+ENV DGCOMM_HOUSEKEEPING_S3_SESSION_TOKEN=""
+ENV DGCOMM_HOUSEKEEPING_S3_ADDRESSING_STYLE="path"
+ENV DGCOMM_HOUSEKEEPING_S3_VERIFY_SSL="true"
+
+# Run with 4 worker processes
+# The filesystem-based purge scheduler lock ensures only one worker runs the scheduler
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "-w", "4", "dgcommander.app:create_app()"]

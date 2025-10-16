@@ -3,11 +3,11 @@ import { apiWithAuth } from "./authInterceptor";
 import {
   Bucket,
   bucketStatsResponseSchema,
-  DownloadPrepare,
+  PresignedUrl,
   FileMetadata,
   ObjectList,
   bucketsResponseSchema,
-  downloadPrepareSchema,
+  presignedUrlSchema,
   fileMetadataSchema,
   objectListSchema,
   uploadResponseSchema,
@@ -188,19 +188,21 @@ export async function triggerSavings(bucket: string): Promise<void> {
   });
 }
 
-export async function prepareDownload(bucket: string, key: string): Promise<DownloadPrepare> {
-  const data = await apiWithAuth<unknown>("/api/download/prepare", {
+export async function generatePresignedUrl(
+  bucket: string,
+  key: string,
+  expiresIn: number = 3600,
+): Promise<PresignedUrl> {
+  const data = await apiWithAuth<unknown>("/api/download/presigned-url", {
     method: "POST",
-    body: JSON.stringify({ bucket, key }),
+    body: JSON.stringify({
+      bucket,
+      key,
+      expires_in: expiresIn,
+      with_rehydration: true,
+    }),
   });
-  return downloadPrepareSchema.parse(data);
-}
-
-export async function fetchDownload(token: string): Promise<ArrayBuffer> {
-  return apiWithAuth<ArrayBuffer>(`/api/download/${encodeURIComponent(token)}`, {
-    timeoutMs: null,
-    parseAs: "arrayBuffer",
-  });
+  return presignedUrlSchema.parse(data);
 }
 
 export function isApiError(error: unknown): error is ApiError {

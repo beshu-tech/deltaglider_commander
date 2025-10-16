@@ -239,7 +239,7 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
                     # So we need to try both the logical name and the physical name with .delta suffix
                     response = None
                     metadata_error = None
-                    
+
                     try:
                         # First try the logical name
                         response = self._client.head_object(Bucket=bucket, Key=normalized)

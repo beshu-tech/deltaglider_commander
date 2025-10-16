@@ -20,6 +20,7 @@ import { Badge } from "../../lib/ui/Badge";
 import { Button } from "../../lib/ui/Button";
 import { Input } from "../../lib/ui/Input";
 import { SessionManager } from "../../services/sessionManager";
+import { useLayoutContext } from "./LayoutContext";
 
 function SidebarHeader() {
   return null;
@@ -325,6 +326,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
 }
 
 export function Sidebar() {
+  const { isDesktop, sidebarOpen, closeSidebar } = useLayoutContext();
   const settingsMatch = useMatch({ from: "/settings", shouldThrow: false });
   const isOnSettingsPage = !!settingsMatch;
 
@@ -382,71 +384,111 @@ export function Sidebar() {
     }
   };
 
+  const sidebarClasses = [
+    "flex h-full w-72 min-w-[18rem] flex-col justify-between bg-neutral-dark text-slate-100 border-slate-700/30 transition-transform duration-200 ease-in-out",
+    isDesktop
+      ? "relative z-0 border-r px-6 py-section"
+      : "fixed inset-y-0 left-0 z-50 border-r px-6 py-8 shadow-2xl",
+    !isDesktop && !sidebarOpen ? "-translate-x-full pointer-events-none" : "translate-x-0",
+  ].join(" ");
+
+  const overlay = isDesktop ? null : (
+    <div
+      className={`fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-200 ${
+        sidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
+      }`}
+      aria-hidden="true"
+      onClick={closeSidebar}
+    />
+  );
+
   return (
-    <aside className="flex h-full w-72 min-w-[18rem] flex-col justify-between bg-neutral-dark px-6 py-section text-slate-100 border-r border-slate-700/30">
-      <div className="space-y-3">
-        <SidebarHeader />
-        {showCreateForm && (
-          <CreateBucketForm
-            value={bucketName}
-            validationError={validationError}
-            isSubmitting={createBucketMutation.isPending}
-            onValueChange={(value) => {
-              setBucketName(value);
-              setValidationError(null);
-            }}
-            onSubmit={handleCreateSubmit}
-            onCancel={handleCancelCreate}
-          />
-        )}
-        <div className="space-y-item">
-          <button
-            type="button"
-            onClick={() => setBucketsExpanded(!bucketsExpanded)}
-            className="flex w-full items-center gap-2 px-2 py-1 rounded-md hover:bg-slate-800/50 transition-colors focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-red-900"
-          >
-            {bucketsExpanded ? (
-              <ChevronDown className="h-4 w-4 text-slate-400" />
-            ) : (
-              <ChevronRight className="h-4 w-4 text-slate-400" />
-            )}
-            <svg
-              className="h-3 w-3 text-slate-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-              />
-            </svg>
-            <span className="text-label-sm uppercase tracking-wide text-slate-400">
-              Your Buckets {buckets && buckets.length > 0 ? `(${buckets.length})` : ""}
-            </span>
-            <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>
-          </button>
-          {bucketsExpanded && (
-            <div className="space-y-3 pt-2">
-              <BucketFilter filter={filter} onFilterChange={setFilter} />
-              <BucketList
-                buckets={buckets}
-                isLoading={isLoading}
-                error={isError ? error : null}
-                filter={filter}
-                activeBucket={activeBucket}
-                onCreateClick={() => {
-                  setShowCreateForm(true);
-                  setTimeout(() => setValidationError(null), 0);
-                }}
-              />
+    <>
+      {overlay}
+      <aside className={sidebarClasses} aria-hidden={!isDesktop && !sidebarOpen}>
+        <div className="space-y-3 overflow-y-auto">
+          {!isDesktop ? (
+            <div className="-mx-6 mb-4 flex items-center justify-between px-6">
+              <span className="text-sm font-semibold uppercase tracking-wide text-slate-300">
+                Navigation
+              </span>
+              <button
+                type="button"
+                onClick={closeSidebar}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-800/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900"
+              >
+                <span className="sr-only">Close sidebar</span>
+                <X className="h-4 w-4" />
+              </button>
             </div>
+          ) : null}
+
+          <SidebarHeader />
+          {showCreateForm && (
+            <CreateBucketForm
+              value={bucketName}
+              validationError={validationError}
+              isSubmitting={createBucketMutation.isPending}
+              onValueChange={(value) => {
+                setBucketName(value);
+                setValidationError(null);
+              }}
+              onSubmit={handleCreateSubmit}
+              onCancel={handleCancelCreate}
+            />
           )}
+          <div className="space-y-item">
+            <button
+              type="button"
+              onClick={() => setBucketsExpanded(!bucketsExpanded)}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-slate-800/50 focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-red-900"
+            >
+              {bucketsExpanded ? (
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              )}
+              <svg
+                className="h-3 w-3 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                />
+              </svg>
+              <span className="text-label-sm uppercase tracking-wide text-slate-400">
+                Your Buckets {buckets && buckets.length > 0 ? `(${buckets.length})` : ""}
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>
+            </button>
+            {bucketsExpanded && (
+              <div className="space-y-3 pt-2">
+                <BucketFilter filter={filter} onFilterChange={setFilter} />
+                <BucketList
+                  buckets={buckets}
+                  isLoading={isLoading}
+                  error={isError ? error : null}
+                  filter={filter}
+                  activeBucket={activeBucket}
+                  onCreateClick={() => {
+                    setShowCreateForm(true);
+                    setTimeout(() => setValidationError(null), 0);
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      <SidebarFooter onSignOut={handleSignOut} />
-    </aside>
+        <SidebarFooter
+          onSignOut={handleSignOut}
+          className={!isDesktop ? "mt-8 border-t border-slate-700/40 pt-6" : undefined}
+        />
+      </aside>
+    </>
   );
 }

@@ -1,24 +1,21 @@
-"""Download endpoints."""
+"""Download endpoints using presigned URLs."""
 
 from __future__ import annotations
 
-import os
-from collections.abc import Generator
-
-from flask import Blueprint, Response, g, request, stream_with_context
+from flask import Blueprint, g, request
 
 from ..auth.middleware import require_session_or_env
-from ..services.downloads import DownloadService
+from ..services.presigned import PresignedUrlService
 from ..util.errors import APIError
 from ..util.json import json_response
-from . import get_container
 
 bp = Blueprint("downloads", __name__, url_prefix="/api/download")
 
 
-@bp.post("/prepare")
+@bp.post("/presigned-url")
 @require_session_or_env
-def prepare_download():
+def generate_presigned_url():
+    """Generate a presigned URL for downloading an object."""
     import logging
 
     logger = logging.getLogger(__name__)
@@ -26,45 +23,28 @@ def prepare_download():
     payload = request.get_json(silent=True) or {}
     bucket = payload.get("bucket")
     key = payload.get("key")
+    expires_in = payload.get("expires_in", 3600)  # Default 1 hour
+    with_rehydration = payload.get("with_rehydration", True)
+
     if not bucket or not key:
         raise APIError(code="invalid_request", message="bucket and key are required", http_status=400)
 
-    # Use session SDK and embed credentials in token
+    # Validate expires_in
+    if not isinstance(expires_in, int) or expires_in < 60 or expires_in > 604800:  # 1 min to 7 days
+        raise APIError(
+            code="invalid_request", message="expires_in must be between 60 and 604800 seconds", http_status=400
+        )
+
+    # Use session SDK
     sdk = g.sdk_client
-    credentials = g.credentials  # Get credentials from session
 
-    logger.info(f"Prepare download - credentials keys: {credentials.keys() if credentials else 'None'}")
-    logger.info(f"Prepare download - endpoint: {credentials.get('endpoint') if credentials else 'None'}")
-    logger.info(f"Prepare download - region: {credentials.get('region') if credentials else 'None'}")
+    logger.info(f"Generate presigned URL - bucket: {bucket}, key: {key}")
+    logger.info(f"Expires in: {expires_in} seconds, with_rehydration: {with_rehydration}")
 
-    container = get_container()
-    downloads = DownloadService(
-        sdk=sdk, secret_key=container.downloads.secret_key, ttl_seconds=container.downloads.ttl_seconds
+    presigned_service = PresignedUrlService(sdk=sdk)
+
+    response = presigned_service.generate_presigned_url(
+        bucket=bucket, key=key, expires_in=expires_in, with_rehydration=with_rehydration
     )
 
-    preparation = downloads.prepare(bucket, key, credentials=credentials)
-    return json_response(preparation.to_dict())
-
-
-@bp.get("/<token>")
-def download(token: str):
-    # Token-based download doesn't need session - token is already signed
-    container = get_container()
-    bucket, key, stream = container.downloads.resolve_token(token)
-
-    def iterator(chunk_size: int = 8 * 1024 * 1024) -> Generator[bytes, None, None]:
-        try:
-            while True:
-                chunk = stream.read(chunk_size)
-                if not chunk:
-                    break
-                yield chunk
-        finally:
-            stream.close()
-
-    response = Response(stream_with_context(iterator()), mimetype="application/octet-stream")
-    filename = os.path.basename(key) or "download"
-    response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
-    response.headers["X-DG-Logical-ETag"] = token
-    response.headers["Accept-Ranges"] = "none"
-    return response
+    return json_response(response.to_dict())

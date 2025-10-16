@@ -11,8 +11,8 @@ from .middleware.rate_limit import FixedWindowRateLimiter, RateLimiterMiddleware
 from .sdk.adapters.memory import InMemoryDeltaGliderSDK
 from .services.catalog import CatalogService
 from .services.deltaglider import DeltaGliderSDK, S3DeltaGliderSDK, S3Settings
-from .services.downloads import DownloadService
 from .services.list_cache import ListObjectsCache
+from .services.presigned import PresignedUrlService
 
 
 @dataclass(slots=True)
@@ -38,7 +38,6 @@ class S3Config:
 @dataclass(slots=True)
 class DGCommanderConfig:
     hmac_secret: str
-    download_token_ttl: int = 300
     objects_rate_limit: int = 10
     objects_rate_window: float = 1.0
     session_max_size: int = 20
@@ -53,7 +52,7 @@ class DGCommanderConfig:
 @dataclass(slots=True)
 class ServiceContainer:
     catalog: CatalogService
-    downloads: DownloadService
+    presigned: PresignedUrlService
     jobs: SavingsJobRunner
     rate_limiter: RateLimiterMiddleware
 
@@ -61,7 +60,6 @@ class ServiceContainer:
 def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
     env = env or os.environ
     secret = env.get("DGCOMM_HMAC_SECRET") or secrets.token_hex(32)
-    ttl = int(env.get("DGCOMM_DOWNLOAD_TTL", "300"))
     limit = int(env.get("DGCOMM_OBJECT_RATE_LIMIT", "10"))
     window = float(env.get("DGCOMM_OBJECT_RATE_WINDOW", "1.0"))
     session_max = int(env.get("DGCOMM_SESSION_MAX_SIZE", "20"))
@@ -81,7 +79,6 @@ def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
     )
     return DGCommanderConfig(
         hmac_secret=secret,
-        download_token_ttl=ttl,
         objects_rate_limit=limit,
         objects_rate_window=window,
         session_max_size=session_max,
@@ -105,13 +102,13 @@ def build_services(config: DGCommanderConfig, sdk: DeltaGliderSDK | None = None)
         list_cache = ListObjectsCache(ttl_seconds=config.list_cache_ttl, max_size=config.list_cache_max_size)
 
     catalog = CatalogService(sdk=sdk, list_cache=list_cache)
-    downloads = DownloadService(sdk=sdk, secret_key=config.hmac_secret, ttl_seconds=config.download_token_ttl)
+    presigned = PresignedUrlService(sdk=sdk)
     jobs = SavingsJobRunner(catalog=catalog, sdk=sdk)
     limiter = FixedWindowRateLimiter(limit=config.objects_rate_limit, window_seconds=config.objects_rate_window)
     middleware = RateLimiterMiddleware(limiter)
     return ServiceContainer(
         catalog=catalog,
-        downloads=downloads,
+        presigned=presigned,
         jobs=jobs,
         rate_limiter=middleware,
     )
@@ -127,6 +124,34 @@ def build_default_sdk(config: DGCommanderConfig) -> DeltaGliderSDK:
         addressing_style=config.s3.addressing_style,
         verify=config.s3.verify,
         cache_dir=config.s3.cache_dir,
+    )
+    return S3DeltaGliderSDK(settings)
+
+
+def build_housekeeping_sdk(env: dict[str, str] | None = None) -> DeltaGliderSDK | None:
+    """Build SDK from housekeeping environment variables.
+
+    Returns None if no housekeeping credentials are configured.
+    """
+    if env is None:
+        env = os.environ
+
+    # Check if housekeeping credentials are provided
+    access_key = env.get("DGCOMM_HOUSEKEEPING_S3_ACCESS_KEY")
+    secret_key = env.get("DGCOMM_HOUSEKEEPING_S3_SECRET_KEY")
+
+    if not access_key or not secret_key:
+        return None
+
+    settings = S3Settings(
+        endpoint_url=env.get("DGCOMM_HOUSEKEEPING_S3_ENDPOINT"),
+        region_name=env.get("DGCOMM_HOUSEKEEPING_S3_REGION"),
+        access_key_id=access_key,
+        secret_access_key=secret_key,
+        session_token=env.get("DGCOMM_HOUSEKEEPING_S3_SESSION_TOKEN"),
+        addressing_style=env.get("DGCOMM_HOUSEKEEPING_S3_ADDRESSING_STYLE", "path"),
+        verify=_coerce_bool(env.get("DGCOMM_HOUSEKEEPING_S3_VERIFY_SSL", "true"), default=True),
+        cache_dir=env.get("DGCOMM_CACHE_DIR"),  # Share cache dir with main app
     )
     return S3DeltaGliderSDK(settings)
 

@@ -31,7 +31,9 @@
       "env": {
         "FLASK_APP": "src/dgcommander/app.py",
         "FLASK_DEBUG": "0",
-        "DGCOMM_HMAC_SECRET": "beshutech"
+        "DGCOMM_HMAC_SECRET": "beshutech",
+        "DGCOMM_PURGE_INTERVAL_HOURS": "1",
+        "DGCOMM_AWS_ADDRESSING_STYLE": "path"
       },
       "args": [
         "--listen", "0.0.0.0:5678",

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, RefreshCcw, Trash2 } from "lucide-react";
+import { ChevronRight, Loader2, RefreshCcw, Trash2 } from "lucide-react";
 import { Badge } from "../../lib/ui/Badge";
 import { EmptyState } from "../../lib/ui/EmptyState";
 import { Button } from "../../lib/ui/Button";
@@ -17,9 +17,11 @@ import { useRefreshBucketStats } from "./useRefreshBucketStats";
 function BucketRow({
   bucket,
   deleteMutation,
+  variant = "table",
 }: {
   bucket: Bucket;
   deleteMutation: ReturnType<typeof useDeleteBucket>;
+  variant?: "table" | "card";
 }) {
   const navigate = useNavigate();
   const statsQuery = useBucketStats(bucket, "sampled");
@@ -123,6 +125,129 @@ function BucketRow({
   const savedBytes = rawSavedBytes;
   const savedPct = originalBytes === 0 ? 0 : Math.min(100, (savedBytes / originalBytes) * 100);
   const hasSavings = savedBytes > 0;
+
+  if (variant === "card") {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-500/50 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+        <button
+          type="button"
+          onClick={goToBucket}
+          className="flex w-full items-center justify-between text-left"
+        >
+          <span className="flex items-center gap-3">
+            <svg
+              className="w-5 h-5 text-slate-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
+            </svg>
+            <span className="text-base font-semibold text-slate-900 dark:text-white">
+              {bucket.name}
+            </span>
+            {bucket.pending ? (
+              <Badge className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                Pending
+              </Badge>
+            ) : null}
+          </span>
+          <ChevronRight className="h-4 w-4 text-slate-400" />
+        </button>
+        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Objects
+            </p>
+            <div className="mt-1 text-slate-900 dark:text-slate-100">
+              {isError ? (
+                <span className="text-red-600 dark:text-red-400">Error</span>
+              ) : isLoadingStats ? (
+                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Loading
+                </span>
+              ) : (
+                displayObjectCount.toLocaleString()
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Size
+            </p>
+            <div className="mt-1 flex flex-col text-slate-900 dark:text-slate-100">
+              {isError ? (
+                <span className="text-red-600 dark:text-red-400">Error</span>
+              ) : isLoadingStats ? (
+                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Loading
+                </span>
+              ) : stats.stored_bytes !== stats.original_bytes ? (
+                <>
+                  <span className="font-medium">{formatBytes(stats.stored_bytes)}</span>
+                  <span className="text-xs text-slate-400 line-through">
+                    {formatBytes(stats.original_bytes)}
+                  </span>
+                </>
+              ) : (
+                <span className="font-medium">{formatBytes(stats.original_bytes)}</span>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Savings
+            </p>
+            <div className="mt-1 text-slate-900 dark:text-slate-100">
+              {isError ? (
+                <span className="text-red-600 dark:text-red-400">Error</span>
+              ) : isLoadingStats ? (
+                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Loading
+                </span>
+              ) : hasSavings ? (
+                `${formatBytes(savedBytes)} (${savedPct.toFixed(1)}%)`
+              ) : (
+                "0 B (0.0%)"
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+          <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
+          <Button
+            variant="ghost"
+            className="h-9 rounded-md border border-slate-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-slate-700 dark:text-red-400 dark:hover:bg-red-950"
+            onClick={(event) => {
+              event.stopPropagation();
+              const confirmed = window.confirm(
+                `Delete bucket "${bucket.name}"? This cannot be undone.`,
+              );
+              if (!confirmed) return;
+              deleteMutation.mutate(bucket.name);
+            }}
+            disabled={pendingDelete}
+            aria-label={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
+            title={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
+          >
+            {pendingDelete ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TableRow
@@ -308,32 +433,48 @@ export function BucketsPanel() {
           )}
         </Button>
       </div>
-      <Table className="min-w-full">
-        <TableHead>
-          <tr className="bg-slate-50 dark:bg-slate-900/50">
-            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              Name
-            </th>
-            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              Objects
-            </th>
-            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              Size
-            </th>
-            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              Savings
-            </th>
-            <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400 text-right">
-              Actions
-            </th>
-          </tr>
-        </TableHead>
-        <TableBody>
-          {data.map((bucket) => (
-            <BucketRow key={bucket.name} bucket={bucket} deleteMutation={deleteMutation} />
-          ))}
-        </TableBody>
-      </Table>
+      <div className="hidden md:block">
+        <Table className="min-w-full">
+          <TableHead>
+            <tr className="bg-slate-50 dark:bg-slate-900/50">
+              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                Name
+              </th>
+              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                Objects
+              </th>
+              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                Size
+              </th>
+              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                Savings
+              </th>
+              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-slate-600 dark:text-slate-400 text-right">
+                Actions
+              </th>
+            </tr>
+          </TableHead>
+          <TableBody>
+            {data.map((bucket) => (
+              <BucketRow
+                key={`${bucket.name}-table`}
+                bucket={bucket}
+                deleteMutation={deleteMutation}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex flex-col gap-3 border-t border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40 md:hidden">
+        {data.map((bucket) => (
+          <BucketRow
+            key={`${bucket.name}-card`}
+            bucket={bucket}
+            deleteMutation={deleteMutation}
+            variant="card"
+          />
+        ))}
+      </div>
     </div>
   );
 }

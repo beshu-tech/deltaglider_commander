@@ -2,16 +2,13 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import {
   AlertTriangle,
   Download,
-  ExternalLink,
   FileText,
   Loader2,
-  Share2,
   Tag,
   Trash2,
   X,
   ChevronDown,
   Clock,
-  Link,
   Copy,
 } from "lucide-react";
 import { useToast } from "../../app/toast";
@@ -21,14 +18,14 @@ import { formatDateTime } from "../../lib/utils/dates";
 import { downloadObject } from "../../lib/utils/download";
 import { useDeleteObject } from "./useDeleteObject";
 import { useFile } from "./useFile";
-import { prepareDownload } from "../../lib/api/endpoints";
-import { getApiUrl } from "../../lib/config/env";
+import { generatePresignedUrl } from "../../lib/api/endpoints";
 
 interface FilePanelProps {
   bucket: string | null;
   objectKey: string | null;
   onClose?: () => void;
   onDeleted?: (key: string) => void;
+  displayMode?: "inline" | "overlay";
 }
 
 interface ManualCopyFallback {
@@ -36,7 +33,13 @@ interface ManualCopyFallback {
   label: string;
 }
 
-export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelProps) {
+export function FilePanel({
+  bucket,
+  objectKey,
+  onClose,
+  onDeleted,
+  displayMode = "inline",
+}: FilePanelProps) {
   const toast = useToast();
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const query = useFile(bucket, objectKey);
@@ -49,7 +52,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
   // Format deltaglider metadata values for better readability
   const formatMetadataValue = (key: string, value: string): string => {
     // Format dates
-    if (key === "dg-created-at" && value.includes("T")) {
+    if ((key === "dg-created-at" || key === "dg-expires-at") && value.includes("T")) {
       return formatDateTime(value);
     }
     // Format file sizes
@@ -177,22 +180,23 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
     return null;
   }
 
-  const handleCopyDownloadLink = async () => {
-    try {
-      setIsCopyingLink(true);
-      const { download_token } = await prepareDownload(bucket, metadata.key);
-      const apiUrl = getApiUrl() || window.location.origin;
-      const link = `${apiUrl}/api/download/${download_token}`;
-      
-      await handleCopyWithFallback(link, "link", "Download link copied", "Download link");
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Copy download link failed", error);
-      toast.push({ title: "Failed to generate link", description: String(error), level: "error" });
-    } finally {
-      setIsCopyingLink(false);
-    }
-  };
+  const isOverlay = displayMode === "overlay";
+  const headerPadding = isOverlay ? "p-4 sm:p-5" : "p-4";
+  const contentPadding = isOverlay ? "p-4 sm:p-5" : "p-4";
+  const footerPadding = isOverlay ? "p-4 sm:p-5" : "p-4";
+  const panelClasses = [
+    "flex h-full flex-col border-slate-200 bg-white shadow-xl transition-transform duration-200 ease-out dark:border-slate-800 dark:bg-slate-900",
+    isOverlay
+      ? "fixed inset-y-0 right-0 z-50 w-full max-w-[420px] border-l sm:w-[420px]"
+      : "w-[380px] border-l",
+  ].join(" ");
+  const backdrop = isOverlay ? (
+    <div
+      className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm transition-opacity duration-200"
+      aria-hidden="true"
+      onClick={() => onClose?.()}
+    />
+  ) : null;
 
   const handleDownload = async () => {
     try {
@@ -216,43 +220,53 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
   // Generate and copy presigned URL with custom expiration
   const handleCopyPresignedUrl = async (expirationHours: number) => {
     try {
-      // TODO: Replace with actual API call to generate presigned URL
-      // For now, we'll show a placeholder
-      const mockUrl = `https://s3.example.com/presigned/${bucket}/${metadata.key}?expires=${expirationHours}h`;
+      setIsCopyingLink(true);
+
+      // Convert hours to seconds for the API
+      const expiresInSeconds = expirationHours * 3600;
+      const presignedUrl = await generatePresignedUrl(bucket, metadata.key, expiresInSeconds);
+      const link = presignedUrl.download_url;
+
       const expirationLabel = expirationHours === 24 ? "24 hours" : "1 week";
-      
+
       await handleCopyWithFallback(
-        mockUrl, 
+        link,
         `presigned-${expirationHours}`,
         `Signed URL copied (valid for ${expirationLabel})`,
-        `Signed URL (${expirationLabel})`
+        `Signed URL (${expirationLabel})`,
       );
-      
-      // Remove this toast when actual implementation is ready
-      toast.push({
-        title: "Note: This is a demo URL",
-        description: "Real presigned URL generation coming soon",
-        level: "info",
-      });
     } catch (error) {
-      toast.push({ 
-        title: "Failed to generate signed URL", 
-        description: String(error), 
-        level: "error" 
+      // eslint-disable-next-line no-console
+      console.error("Generate presigned URL failed", error);
+      toast.push({
+        title: "Failed to generate signed URL",
+        description: String(error),
+        level: "error",
       });
+    } finally {
+      setIsCopyingLink(false);
     }
   };
 
-  return (
-    <aside className="flex h-full w-[380px] flex-col border-l border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
+  const panel = (
+    <aside
+      className={panelClasses}
+      role={isOverlay ? "dialog" : undefined}
+      aria-modal={isOverlay ? true : undefined}
+      aria-label="File details"
+    >
       {/* Fixed Header */}
-      <div className="flex items-start justify-between border-b border-slate-200 p-4 dark:border-slate-800">
+      <div
+        className={`flex items-start justify-between border-b border-slate-200 ${headerPadding} dark:border-slate-800`}
+      >
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
             <FileText className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-lg font-semibold text-slate-900 dark:text-slate-100">{fileName}</h2>
+            <h2 className="truncate text-lg font-semibold text-slate-900 dark:text-slate-100">
+              {fileName}
+            </h2>
             <p className="truncate text-xs text-slate-500 dark:text-slate-400">{filePath}</p>
           </div>
         </div>
@@ -267,7 +281,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+      <div className={`flex-1 space-y-4 overflow-y-auto ${contentPadding}`}>
         {/* Dropdown Action Button */}
         <div className="relative" ref={dropdownRef}>
           <Button
@@ -278,7 +292,9 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
               <Download className="h-4 w-4" />
               Download & Share
             </span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+            />
           </Button>
 
           {/* Dropdown Menu */}
@@ -295,22 +311,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
                   <Download className="h-4 w-4" />
                   Download object
                 </button>
-                
-                <button
-                  onClick={() => {
-                    handleCopyDownloadLink();
-                    setIsDropdownOpen(false);
-                  }}
-                  disabled={isCopyingLink}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                >
-                  <Link className="h-4 w-4" />
-                  Copy download link
-                  {copiedField === "link" && (
-                    <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">Copied</span>
-                  )}
-                </button>
-                
+
                 <button
                   onClick={() => {
                     handleCopy(`s3://${bucket}/${metadata.key}`, "uri");
@@ -321,7 +322,9 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
                   <Copy className="h-4 w-4" />
                   Copy S3 URI
                   {copiedField === "uri" && (
-                    <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">Copied</span>
+                    <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
+                      Copied
+                    </span>
                   )}
                 </button>
 
@@ -332,26 +335,32 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
                     handleCopyPresignedUrl(24);
                     setIsDropdownOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  disabled={isCopyingLink}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   <Clock className="h-4 w-4" />
                   Share signed URL (24h)
                   {copiedField === "presigned-24" && (
-                    <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">Copied</span>
+                    <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
+                      Copied
+                    </span>
                   )}
                 </button>
-                
+
                 <button
                   onClick={() => {
                     handleCopyPresignedUrl(168); // 1 week = 168 hours
                     setIsDropdownOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  disabled={isCopyingLink}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   <Clock className="h-4 w-4" />
                   Share signed URL (1w)
                   {copiedField === "presigned-168" && (
-                    <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">Copied</span>
+                    <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
+                      Copied
+                    </span>
                   )}
                 </button>
               </div>
@@ -431,8 +440,8 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
                   <p className="font-semibold">Delta increased this object</p>
                   <p className="text-xs">
                     The stored delta ({formatBytes(metadata.stored_bytes)}) is larger than the
-                    original ({formatBytes(metadata.original_bytes)}). Re-upload without delta compression
-                    or refresh the reference to restore savings.
+                    original ({formatBytes(metadata.original_bytes)}). Re-upload without delta
+                    compression or refresh the reference to restore savings.
                   </p>
                 </div>
               </div>
@@ -475,17 +484,13 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
           </h3>
           <dl className="space-y-2 text-xs">
             <div className="rounded bg-slate-50 p-2 dark:bg-slate-800">
-              <dt className="font-medium text-slate-600 dark:text-slate-400">
-                Last modified
-              </dt>
+              <dt className="font-medium text-slate-600 dark:text-slate-400">Last modified</dt>
               <dd className="mt-0.5 text-slate-700 dark:text-slate-200">
                 {formatDateTime(metadata.modified)}
               </dd>
             </div>
             <div className="rounded bg-slate-50 p-2 dark:bg-slate-800">
-              <dt className="font-medium text-slate-600 dark:text-slate-400">
-                Accept-Ranges
-              </dt>
+              <dt className="font-medium text-slate-600 dark:text-slate-400">Accept-Ranges</dt>
               <dd className="mt-0.5 text-slate-700 dark:text-slate-200">
                 {metadata.accept_ranges ? "Enabled" : "Disabled"}
               </dd>
@@ -500,9 +505,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
           <dl className="space-y-1 text-xs">
             {metadata.content_type && (
               <div className="rounded bg-slate-50 p-2 dark:bg-slate-800">
-                <dt className="font-medium text-slate-600 dark:text-slate-400">
-                  Content-Type
-                </dt>
+                <dt className="font-medium text-slate-600 dark:text-slate-400">Content-Type</dt>
                 <dd className="mt-0.5 font-mono text-slate-700 dark:text-slate-200">
                   {metadata.content_type}
                 </dd>
@@ -510,9 +513,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
             )}
             {metadata.etag && (
               <div className="rounded bg-slate-50 p-2 dark:bg-slate-800">
-                <dt className="font-medium text-slate-600 dark:text-slate-400">
-                  ETag
-                </dt>
+                <dt className="font-medium text-slate-600 dark:text-slate-400">ETag</dt>
                 <dd className="mt-0.5 break-all font-mono text-slate-700 dark:text-slate-200">
                   {metadata.etag}
                 </dd>
@@ -538,16 +539,15 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
                   const formattedValue = formatMetadataValue(key, value);
                   const isLongValue = formattedValue.length > 60;
                   const isCommand = key === "dg-delta-cmd";
-                  
+
                   return (
-                    <div
-                      key={key}
-                      className="rounded bg-slate-50 p-2 dark:bg-slate-800"
-                    >
+                    <div key={key} className="rounded bg-slate-50 p-2 dark:bg-slate-800">
                       <dt className="font-medium capitalize text-slate-600 dark:text-slate-400">
                         {displayKey}
                       </dt>
-                      <dd className={`mt-0.5 text-slate-700 dark:text-slate-200 ${!key.includes("size") && !key.includes("created") ? 'font-mono text-xs' : ''}`}>
+                      <dd
+                        className={`mt-0.5 text-slate-700 dark:text-slate-200 ${!key.includes("size") && !key.includes("created") ? "font-mono text-xs" : ""}`}
+                      >
                         {isCommand || isLongValue ? (
                           <details className="cursor-pointer">
                             <summary className="select-none hover:underline">
@@ -581,13 +581,8 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
               {customMetadata.length > 0 ? (
                 <dl className="space-y-1 text-xs">
                   {customMetadata.map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="rounded bg-slate-50 p-2 dark:bg-slate-800"
-                    >
-                      <dt className="font-medium text-slate-600 dark:text-slate-400">
-                        {key}
-                      </dt>
+                    <div key={key} className="rounded bg-slate-50 p-2 dark:bg-slate-800">
+                      <dt className="font-medium text-slate-600 dark:text-slate-400">{key}</dt>
                       <dd className="mt-0.5 break-all font-mono text-slate-700 dark:text-slate-200">
                         {value}
                       </dd>
@@ -616,7 +611,7 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
       </div>
 
       {/* Fixed Footer */}
-      <div className="border-t border-slate-200 p-4 dark:border-slate-800">
+      <div className={`border-t border-slate-200 ${footerPadding} dark:border-slate-800`}>
         <Button
           variant="ghost"
           className="w-full justify-center gap-2 border border-slate-200 text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-slate-700 dark:text-red-300 dark:hover:bg-red-900"
@@ -640,5 +635,14 @@ export function FilePanel({ bucket, objectKey, onClose, onDeleted }: FilePanelPr
         </Button>
       </div>
     </aside>
+  );
+
+  return isOverlay ? (
+    <>
+      {backdrop}
+      {panel}
+    </>
+  ) : (
+    panel
   );
 }

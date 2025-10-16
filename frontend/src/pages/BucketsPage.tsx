@@ -9,20 +9,20 @@ export function BucketsPage() {
     <div className="flex flex-1 flex-col overflow-auto">
       {/* Unified Hero Section with Stats */}
       <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-850 border-b border-slate-200 dark:border-slate-800">
-        <div className="px-8 py-8">
-          <div className="max-w-7xl mx-auto">
+        <div className="px-4 py-6 sm:px-8 sm:py-8">
+          <div className="mx-auto max-w-7xl">
             {/* Header Section */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-1 w-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full"></div>
-                <span className="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <div className="mb-8 space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="h-1 w-12 rounded-full bg-gradient-to-r from-red-500 to-red-600 sm:w-16"></div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 sm:text-sm">
                   Smart Object Storage Platform
                 </span>
               </div>
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-white/90 mb-3 tracking-tight">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white/90 sm:text-4xl">
                 Object Storage Console
               </h1>
-              <p className="text-lg text-slate-600 dark:text-white/70 max-w-3xl">
+              <p className="max-w-3xl text-base text-slate-600 dark:text-white/70 sm:text-lg">
                 Powered by{" "}
                 <a
                   href="https://pypi.org/project/deltaglider/"
@@ -82,7 +82,7 @@ export function BucketsPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="px-8 py-8">
+      <div className="px-4 py-6 sm:px-8 sm:py-8">
         <BucketsPanel />
       </div>
     </div>

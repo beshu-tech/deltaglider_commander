@@ -1,39 +1,74 @@
-from __future__ import annotations
-
-from itsdangerous import URLSafeTimedSerializer
+"""Test download API endpoints."""
 
 
-def test_prepare_and_download_round_trip(app, client):
+def test_generate_presigned_url(app, client):
+    """Test generating a presigned URL for download."""
     response = client.post(
-        "/api/download/prepare",
-        json={"bucket": "releases", "key": "releases/v1.0.0/app.zip"},
+        "/api/download/presigned-url",
+        json={"bucket": "releases", "key": "releases/v1.0.0/app.zip", "expires_in": 3600},
     )
     assert response.status_code == 200
-    payload = response.get_json()
-    token = payload["download_token"]
-    estimated = payload["estimated_bytes"]
+    data = response.get_json()
+    assert "download_url" in data
+    assert "expires_in" in data
+    assert "expires_at" in data
+    assert "estimated_bytes" in data
+    assert data["bucket"] == "releases"
+    assert data["key"] == "releases/v1.0.0/app.zip"
+    assert data["expires_in"] == 3600
+    # URL should be a valid S3 presigned URL
+    assert data["download_url"].startswith("https://")
+    assert "releases/v1.0.0/app.zip" in data["download_url"]
 
-    download = client.get(f"/api/download/{token}")
-    assert download.status_code == 200
-    body = download.data
-    assert len(body) == estimated
-    assert download.headers["Content-Disposition"].endswith('app.zip"')
-    assert download.headers["Accept-Ranges"] == "none"
 
-
-def test_prepare_unknown_object_returns_404(client):
+def test_generate_presigned_url_unknown_object_returns_404(client):
+    """Test that generating presigned URL for unknown object returns 404."""
     response = client.post(
-        "/api/download/prepare",
-        json={"bucket": "releases", "key": "missing.zip"},
+        "/api/download/presigned-url",
+        json={"bucket": "releases", "key": "unknown.txt"},
     )
     assert response.status_code == 404
-    payload = response.get_json()
-    assert payload["error"]["code"] == "key_not_found"
+    data = response.get_json()
+    assert data["error"]["code"] == "key_not_found"
 
 
-def test_download_with_invalid_token(app, client):
-    serializer = URLSafeTimedSerializer("wrong", salt="dg-download")
-    fake_token = serializer.dumps({"bucket": "releases", "key": "releases/v1.0.0/app.zip"})
-    response = client.get(f"/api/download/{fake_token}")
+def test_generate_presigned_url_invalid_expires_in(client):
+    """Test that invalid expires_in values are rejected."""
+    # Too short
+    response = client.post(
+        "/api/download/presigned-url",
+        json={"bucket": "releases", "key": "app.zip", "expires_in": 30},
+    )
     assert response.status_code == 400
-    assert response.get_json()["error"]["code"] == "invalid_token"
+    data = response.get_json()
+    assert "expires_in must be between" in data["error"]["message"]
+
+    # Too long
+    response = client.post(
+        "/api/download/presigned-url",
+        json={"bucket": "releases", "key": "app.zip", "expires_in": 1000000},
+    )
+    assert response.status_code == 400
+    data = response.get_json()
+    assert "expires_in must be between" in data["error"]["message"]
+
+
+def test_generate_presigned_url_missing_parameters(client):
+    """Test that missing required parameters are rejected."""
+    # Missing bucket
+    response = client.post(
+        "/api/download/presigned-url",
+        json={"key": "app.zip"},
+    )
+    assert response.status_code == 400
+    data = response.get_json()
+    assert "bucket and key are required" in data["error"]["message"]
+
+    # Missing key
+    response = client.post(
+        "/api/download/presigned-url",
+        json={"bucket": "releases"},
+    )
+    assert response.status_code == 400
+    data = response.get_json()
+    assert "bucket and key are required" in data["error"]["message"]

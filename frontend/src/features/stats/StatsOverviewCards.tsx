@@ -250,7 +250,7 @@ function StatCard({
   return (
     <article
       className={joinClasses(
-        "group relative overflow-hidden rounded-2xl px-6 py-6 transition-shadow duration-500 hover:shadow-elevation-md motion-reduce:transition-none",
+        "group relative overflow-hidden rounded-2xl px-4 py-4 transition-shadow duration-500 hover:shadow-elevation-md motion-reduce:transition-none sm:px-6 sm:py-6",
         palette.cardClass,
       )}
     >
@@ -519,7 +519,7 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
   const cardFillTarget = clampProgress(Math.max(0, summary.savingsPct) / 100);
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
         <StatCard
           key={card.id}

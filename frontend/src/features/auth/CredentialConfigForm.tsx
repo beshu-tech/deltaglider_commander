@@ -55,7 +55,11 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
     };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-6" autoComplete="on">
+    <form
+      onSubmit={handleSubmit}
+      className="mx-auto w-full max-w-md space-y-4 rounded-xl bg-white/70 p-4 shadow-sm dark:bg-slate-900/60 sm:p-6"
+      autoComplete="on"
+    >
       <div>
         <label htmlFor="accessKeyId" className="block text-sm font-medium mb-1">
           AWS Access Key ID

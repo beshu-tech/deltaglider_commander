@@ -164,9 +164,167 @@ export function ObjectsTable({
       );
     });
 
+  const renderDirectoryCards = () =>
+    directories.map((prefix) => {
+      const fullPath = prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+      const label = fullPath.startsWith(currentPrefix)
+        ? fullPath.slice(currentPrefix.length)
+        : fullPath;
+      const counts = directoryFileCounts.get(prefix);
+      const target: SelectionTarget = { type: "prefix", key: prefix };
+      const directorySelected = isSelected(target);
+
+      return (
+        <div
+          key={`dir-card-${prefix}`}
+          className={`rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 dark:border-slate-800 dark:bg-slate-900 ${
+            directorySelected ? "ring-2 ring-brand-500" : ""
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4 flex-shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
+              checked={directorySelected}
+              onChange={() => onToggleSelect(target)}
+              aria-checked={directorySelected}
+              aria-label={`Select folder ${label}`}
+            />
+            <button
+              type="button"
+              onClick={() => onEnterDirectory(prefix)}
+              className="flex flex-1 items-center justify-between rounded-md px-1 py-1 text-left transition hover:bg-slate-100/70 focus-visible:outline-focus focus-visible:outline-offset-0 focus-visible:outline-brand-500 dark:hover:bg-slate-800/70"
+            >
+              <span className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                  <Folder className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  {label || "/"}
+                </span>
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Open</span>
+            </button>
+          </div>
+          <div className="mt-3 pl-8 text-xs text-slate-600 dark:text-slate-400">
+            <DirectoryCountsCell counts={counts} />
+          </div>
+        </div>
+      );
+    });
+
+  const renderObjectCards = () =>
+    objects.map((item) => {
+      const target: SelectionTarget = { type: "object", key: item.key };
+      const objectSelected = isSelected(target);
+      const objectActive = selectedKey === item.key;
+      const name = item.key.includes("/") ? (item.key.split("/").pop() ?? item.key) : item.key;
+      const storedSize = formatBytes(item.stored_bytes);
+      const originalSize = formatBytes(item.original_bytes);
+      const compression = getCompressionStats(item);
+
+      return (
+        <div
+          key={`obj-card-${item.key}`}
+          className={`rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition dark:border-slate-800 dark:bg-slate-900 ${
+            objectSelected ? "ring-2 ring-brand-500" : ""
+          } ${objectActive ? "border-brand-500/60 dark:border-brand-400/50" : ""}`}
+        >
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4 flex-shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
+              checked={objectSelected}
+              onChange={() => onToggleSelect(target)}
+              aria-checked={objectSelected}
+              aria-label={`Select object ${name}`}
+            />
+            <button
+              type="button"
+              onClick={() => onRowClick(item)}
+              className="flex flex-1 flex-col rounded-md px-1 py-1 text-left transition hover:bg-slate-100/70 focus-visible:outline-focus focus-visible:outline-offset-0 focus-visible:outline-brand-500 dark:hover:bg-slate-800/70"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                    <FileText className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="max-w-[14rem] truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {name}
+                  </span>
+                </span>
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {formatDateTime(item.modified)}
+                </span>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  {storedSize}
+                </span>
+                {compression.variant !== "none" ? (
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium ${
+                      compression.variant === "savings"
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+                        : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200"
+                    }`}
+                  >
+                    {compression.variant === "savings" ? "Saved" : "Growth"}{" "}
+                    {compression.percentage.toFixed(1)}%
+                  </span>
+                ) : null}
+                {compression.variant === "savings" ? (
+                  <span className="text-slate-400 line-through dark:text-slate-500">
+                    {originalSize}
+                  </span>
+                ) : null}
+                {compression.variant === "growth" ? (
+                  <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-300">
+                    <AlertTriangle className="h-3 w-3" />
+                    Larger delta
+                  </span>
+                ) : null}
+              </div>
+            </button>
+          </div>
+        </div>
+      );
+    });
+
   return (
     <div className="flex h-full flex-col">
-      <div className="relative flex-1 overflow-auto">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-1 pb-4 md:hidden">
+        {!selectionDisabled ? (
+          <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <span className="text-slate-600 dark:text-slate-300">{pageSelectedCount} selected</span>
+            <button
+              type="button"
+              onClick={onToggleSelectAll}
+              className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600 transition hover:bg-slate-100 focus-visible:outline-focus focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              {allSelected ? "Clear" : "Select all"}
+            </button>
+          </div>
+        ) : null}
+        {directories.length === 0 && objects.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-4 text-center text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+            No objects in this directory
+          </div>
+        ) : (
+          <>
+            {renderDirectoryCards()}
+            {renderObjectCards()}
+          </>
+        )}
+        {isFetching || isLoadingMetadata ? (
+          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Updating…
+          </div>
+        ) : null}
+      </div>
+      <div className="relative hidden flex-1 overflow-auto md:block">
         <Table className="min-w-full">
           <TableHead className="sticky top-0 z-10 shadow-elevation-sm dark:shadow-elevation-sm-dark">
             <tr className="bg-white dark:bg-slate-900">

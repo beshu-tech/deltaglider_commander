@@ -20,8 +20,8 @@ export function ObjectsSelectionBar({
   onBulkDelete,
 }: ObjectsSelectionBarProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-5 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           {totalSelected}
         </span>
@@ -37,12 +37,12 @@ export function ObjectsSelectionBar({
           Clear
         </button>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
         <Button
           variant="secondary"
           onClick={onBulkDownload}
           disabled={isFetching}
-          className="min-w-[140px]"
+          className="w-full min-w-[140px] sm:w-auto"
         >
           <Download className="h-4 w-4" />
           Download
@@ -50,7 +50,7 @@ export function ObjectsSelectionBar({
         <Button
           variant="ghost"
           onClick={onBulkDelete}
-          className="text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:hover:bg-red-900"
+          className="w-full text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:hover:bg-red-900 sm:w-auto"
         >
           <Trash2 className="h-4 w-4" />
           Delete

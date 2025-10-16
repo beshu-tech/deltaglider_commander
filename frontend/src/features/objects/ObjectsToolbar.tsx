@@ -95,8 +95,8 @@ export function ObjectsToolbar({
   }, [breadcrumbs]);
 
   return (
-    <div className="flex h-14 items-center justify-between gap-group border-b border-slate-200 px-5 dark:border-slate-800">
-      <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+    <div className="flex flex-col gap-3 border-b border-slate-200 px-3 py-3 dark:border-slate-800 sm:h-14 sm:flex-row sm:items-center sm:justify-between sm:gap-group sm:px-5 sm:py-0">
+      <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto sm:overflow-visible">
         {visibleBreadcrumbs.items.map((crumb, index) => {
           const isActive = crumb === breadcrumbs[breadcrumbs.length - 1];
           const canNavigate = crumb.value !== null || crumb.isHome;
@@ -146,14 +146,14 @@ export function ObjectsToolbar({
           );
         })}
       </nav>
-      <div className="flex flex-wrap items-center gap-item">
-        <form onSubmit={handleSubmit} className="relative">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+        <form onSubmit={handleSubmit} className="relative w-full sm:w-auto sm:min-w-[16rem]">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             value={searchValue}
             onChange={(event) => handleSearchChange(event.target.value)}
             placeholder="Search files..."
-            className="w-64 pl-9"
+            className="w-full pl-9 sm:w-64"
             aria-label={`Search objects in ${bucket}`}
           />
         </form>

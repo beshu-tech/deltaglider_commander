@@ -4,6 +4,7 @@ import { ObjectsView } from "../features/objects/ObjectsView";
 import { ObjectsSearchState } from "../features/objects/types";
 import { normalizeObjectsSearch, serializeObjectsSearch } from "../features/objects/search";
 import { FilePanel } from "../features/file/FilePanel";
+import { useLayoutContext } from "../app/layout/LayoutContext";
 
 interface BucketObjectsContentProps {
   selectedKey: string | null;
@@ -17,6 +18,7 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
   const objectMatch = useMatch({ from: "/b/$bucket/o/$objectKey+", shouldThrow: false });
   const matchedObjectKey = objectMatch?.params?.["objectKey+"] ?? null;
   const effectiveSelectedKey = selectedKey ?? matchedObjectKey;
+  const { isDesktop } = useLayoutContext();
 
   const currentSearch = useMemo(() => normalizeObjectsSearch(rawSearch), [rawSearch]);
 
@@ -94,7 +96,7 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
   const showDetails = Boolean(effectiveSelectedKey);
 
   return (
-    <div className="flex h-full w-full overflow-hidden">
+    <div className="relative flex h-full w-full overflow-hidden">
       <div className="flex flex-1 flex-col overflow-hidden">
         <ObjectsView
           bucket={bucket}
@@ -114,6 +116,7 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
           objectKey={effectiveSelectedKey}
           onClose={handleCloseDetails}
           onDeleted={handleObjectDeleted}
+          displayMode={isDesktop ? "inline" : "overlay"}
         />
       ) : null}
     </div>

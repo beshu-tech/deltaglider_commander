@@ -30,6 +30,14 @@ services:
       # NOTE: S3 credentials are now configured via the web UI at runtime.
       # For local development testing with MinIO, navigate to http://localhost:8000/settings
       # and enter: Access Key: deltadmin, Secret: deltasecret, Endpoint: http://minio:9000
+      
+      # Optional: Separate credentials for housekeeping job (purge)
+      # If not set, the job won't run unless credentials are provided via UI
+      # DGCOMM_HOUSEKEEPING_S3_ACCESS_KEY: deltadmin
+      # DGCOMM_HOUSEKEEPING_S3_SECRET_KEY: deltasecret
+      # DGCOMM_HOUSEKEEPING_S3_ENDPOINT: http://minio:9000
+      # DGCOMM_HOUSEKEEPING_S3_ADDRESSING_STYLE: path
+      # DGCOMM_PURGE_INTERVAL_HOURS: 1
     depends_on:
       - minio-setup
     ports:

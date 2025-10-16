@@ -81,22 +81,28 @@ class ObjectList:
 
 
 @dataclass(slots=True)
-class DownloadPreparation:
+class PresignedUrlResponse:
     bucket: str
     key: str
-    download_token: str
+    download_url: str
+    expires_in: int
+    expires_at: int
     estimated_bytes: int
 
     def to_dict(self) -> dict:
         return {
-            "download_token": self.download_token,
+            "bucket": self.bucket,
+            "key": self.key,
+            "download_url": self.download_url,
+            "expires_in": self.expires_in,
+            "expires_at": self.expires_at,
             "estimated_bytes": self.estimated_bytes,
         }
 
 
 __all__ = [
     "BucketStats",
-    "DownloadPreparation",
+    "PresignedUrlResponse",
     "FileMetadata",
     "ObjectItem",
     "ObjectList",
