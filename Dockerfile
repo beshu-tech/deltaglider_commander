@@ -99,4 +99,4 @@ ENV DGCOMM_OBJECT_COUNT_LIMIT="15000"
 
 # Run with the configured worker count
 # The filesystem-based purge scheduler lock ensures only one worker runs the scheduler
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "-w", "${DGCOMM_WORKER_COUNT}", "--limit-request-line", "${DGCOMM_OBJECT_COUNT_LIMIT}", "dgcommander.app:create_app()"]
+CMD gunicorn -b 0.0.0.0:8000 -w ${DGCOMM_WORKER_COUNT} --limit-request-line ${DGCOMM_OBJECT_COUNT_LIMIT} "dgcommander.app:create_app()"
