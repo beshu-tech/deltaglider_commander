@@ -24,7 +24,7 @@ from .list_cache import ListObjectsCache
 
 logger = logging.getLogger(__name__)
 
-OBJECT_COUNT_LIMIT = 5_000
+OBJECT_COUNT_LIMIT = 15_000
 
 
 def _clamp_savings_pct(original_bytes: int, stored_bytes: int) -> float:

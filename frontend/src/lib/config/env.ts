@@ -45,9 +45,9 @@ export function getApiUrl(): string {
   const hostname = window.location.hostname;
   const port = window.location.port;
 
-  // Development: Vite dev server on localhost:5173
+  // Development: Vite dev server on localhost:5173 or 5174
   const isLocalDevelopment =
-    (hostname === "localhost" || hostname === "127.0.0.1") && port === "5173";
+    (hostname === "localhost" || hostname === "127.0.0.1") && (port === "5173" || port === "5174");
 
   return isLocalDevelopment ? "http://localhost:8000" : "";
 }

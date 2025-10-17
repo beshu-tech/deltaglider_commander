@@ -2,6 +2,11 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { StatsSummary } from "./useStats";
 import { formatBytesThin } from "../../lib/utils/bytes";
 
+// Water background opacity multiplier - adjust this value to control all water backgrounds
+// Range: 0.0 (transparent) to 1.0 (fully opaque)
+// Current: 0.50 = 50% opacity
+const WATER_OPACITY = 0.50;
+
 type Tone = "primary" | "secondary";
 
 interface StatCardConfig {
@@ -21,6 +26,22 @@ interface StatCardProps extends StatCardConfig {
   isAnalyzing: boolean;
   isSavings?: boolean;
   animateSavings?: boolean;
+}
+
+// Coefficients for adjusting gradient opacity based on theme
+const LIGHT_MODE_COEFFICIENT = 0.60;
+const DARK_MODE_COEFFICIENT = 0.45;
+
+// Helper function to create water gradient colors with adjustable opacity
+function createWaterGradient(baseOpacity: number) {
+  return {
+    // Light mode: Full opacity with warmer tones
+    lightTop: `rgba(76, 5, 25, ${baseOpacity * LIGHT_MODE_COEFFICIENT})`,
+    lightBottom: `rgba(63, 7, 19, ${baseOpacity * LIGHT_MODE_COEFFICIENT})`,
+    // Dark mode: Reduced opacity with cooler tones for better visibility
+    darkTop: `rgba(90, 15, 40, ${baseOpacity * DARK_MODE_COEFFICIENT})`,
+    darkBottom: `rgba(75, 12, 30, ${baseOpacity * DARK_MODE_COEFFICIENT})`,
+  };
 }
 
 const tonePalette: Record<
@@ -45,12 +66,7 @@ const tonePalette: Record<
       darkTop: "rgba(76, 5, 25, 0.08)",
       darkBottom: "rgba(63, 7, 19, 0.06)",
     },
-    water: {
-      lightTop: "rgba(76, 5, 25, 0.18)",
-      lightBottom: "rgba(63, 7, 19, 0.12)",
-      darkTop: "rgba(76, 5, 25, 0.25)",
-      darkBottom: "rgba(63, 7, 19, 0.18)",
-    },
+    water: createWaterGradient(WATER_OPACITY),
     gloss: {
       light:
         "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0) 100%)",
@@ -68,12 +84,7 @@ const tonePalette: Record<
       darkTop: "rgba(76, 5, 25, 0.08)",
       darkBottom: "rgba(63, 7, 19, 0.06)",
     },
-    water: {
-      lightTop: "rgba(76, 5, 25, 0.18)",
-      lightBottom: "rgba(63, 7, 19, 0.12)",
-      darkTop: "rgba(76, 5, 25, 0.25)",
-      darkBottom: "rgba(63, 7, 19, 0.18)",
-    },
+    water: createWaterGradient(WATER_OPACITY),
     gloss: {
       light:
         "linear-gradient(180deg, rgba(255,255,255,0.48) 0%, rgba(255,255,255,0.1) 55%, rgba(255,255,255,0) 100%)",
@@ -210,6 +221,13 @@ function StatCard({
   const effectiveProgress = baseProgress > 0 ? baseProgress : isAnalyzing ? 0.12 : 0;
   const savingsActive = isSavings && animateSavings;
 
+  console.log(`[StatCard ${label}]`, {
+    fillProgress,
+    animatedFill,
+    effectiveProgress,
+    'effectiveProgress%': `${(effectiveProgress * 100).toFixed(1)}%`,
+  });
+
   return (
     <article
       className={joinClasses(
@@ -331,7 +349,6 @@ function StatCard({
 
 export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
   const { activeBucketCount } = summary;
-  const progress = clampProgress(summary.analysisCoverage);
   const hasActiveBuckets = activeBucketCount > 0;
   const hasAnalyzingBuckets = summary.analyzingCount > 0;
   const [animateSavings, setAnimateSavings] = useState(false);
@@ -341,6 +358,20 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
     const timeout = window.setTimeout(() => setAnimateSavings(false), 1600);
     return () => window.clearTimeout(timeout);
   }, [summary.savingsPct, summary.storedBytes, summary.originalBytes]);
+
+  // Animate the analysis coverage progress (0.0 to 1.0)
+  const animatedProgress = useAnimatedNumber(clampProgress(summary.analysisCoverage), {
+    precision: 3,
+    minDuration: 800,
+    maxDuration: 2200,
+  });
+
+  console.log('[StatsOverviewCards] Raw values:', {
+    analysisCoverage: summary.analysisCoverage,
+    animatedProgress,
+    savingsPct: summary.savingsPct,
+    objectCount: summary.objectCount,
+  });
 
   const assistiveText = hasActiveBuckets
     ? `${summary.analyzedBucketCount} of ${activeBucketCount} active ${pluralize(activeBucketCount, "bucket")} analyzed. ${summary.analyzingCount} ${pluralize(summary.analyzingCount, "bucket")} still in progress.`
@@ -377,6 +408,22 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
     precision: 1,
     minDuration: 900,
     maxDuration: 2200,
+  });
+
+  // Animate the savings percentage for water fill (0.0 to 1.0)
+  const animatedSavingsFillProgress = useAnimatedNumber(
+    clampProgress(Math.max(0, summary.savingsPct) / 100),
+    {
+      precision: 3,
+      minDuration: 900,
+      maxDuration: 2200,
+    }
+  );
+
+  console.log('[StatsOverviewCards] Animated values:', {
+    animatedSavingsPct,
+    animatedSavingsFillProgress,
+    animatedObjectCount,
   });
 
   const savedBytes = Math.max(0, animatedOriginalBytes - animatedStoredBytes);
@@ -417,17 +464,7 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
         </svg>
       ),
       value: animatedObjectCount.toLocaleString(),
-      description: `${formatBytesThin(Math.max(0, Math.round(animatedStoredBytes)))} stored`,
-      subMetric: (
-        <>
-          <span className="text-sm font-semibold text-ui-text/80 dark:text-ui-text-dark/80">
-            {animatedBucketCount.toLocaleString()}
-          </span>
-          <span className="text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
-            {pluralize(summary.bucketCount, "bucket")}
-          </span>
-        </>
-      ),
+      description: `${formatBytesThin(Math.max(0, Math.round(animatedStoredBytes)))} stored in ${animatedBucketCount.toLocaleString()} ${pluralize(summary.bucketCount, "bucket")}`,
     },
     {
       id: "compression",
@@ -450,21 +487,14 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
         </svg>
       ),
       value: `${Math.max(animatedSavingsPct, 0).toFixed(1)}%`,
-      description: `${formatBytesThin(Math.max(0, Math.round(savedBytes)))} saved`,
-      sideMetric: (
-        <>
-          <span className="text-xl font-bold text-ui-text/80 dark:text-ui-text-dark/80 tabular-nums">
-            {ratioValue}
-          </span>
-          <span className="text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
-            ratio
-          </span>
-        </>
-      ),
+      description: `${formatBytesThin(Math.max(0, Math.round(savedBytes)))} saved (${ratioValue} ratio)`,
     },
   ];
 
-  const cardFillTarget = clampProgress(Math.max(0, summary.savingsPct) / 100);
+  console.log('[StatsOverviewCards] fillProgress values:', {
+    compression: animatedSavingsFillProgress,
+    objects: animatedProgress,
+  });
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
@@ -472,7 +502,7 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
         <StatCard
           key={card.id}
           {...card}
-          fillProgress={card.id === "compression" ? cardFillTarget : progress}
+          fillProgress={card.id === "compression" ? animatedSavingsFillProgress : animatedProgress}
           assistiveText={assistiveText}
           isAnalyzing={hasAnalyzingBuckets}
           isSavings={card.id === "compression"}
