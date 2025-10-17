@@ -202,10 +202,7 @@ function StatCard({
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 opacity-95 transition-opacity duration-500">
           <div
-            className={joinClasses(
-              "absolute inset-0 rounded-b-2xl",
-              palette.airGradientClass
-            )}
+            className={joinClasses("absolute inset-0 rounded-b-2xl", palette.airGradientClass)}
           />
         </div>
         <div className="absolute inset-0 flex flex-col justify-end">
