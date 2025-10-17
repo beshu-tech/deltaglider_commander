@@ -99,7 +99,9 @@ export function useFileQueue({ bucket, prefix, onCompleted, onStatsUpdate }: Use
         }
         setQueue((prev) =>
           prev.map((item) =>
-            ids.has(item.id) ? { ...item, status: "error", error: message || "Upload failed" } : item,
+            ids.has(item.id)
+              ? { ...item, status: "error", error: message || "Upload failed" }
+              : item,
           ),
         );
         toast.push({ title, description: message, level: "error" });

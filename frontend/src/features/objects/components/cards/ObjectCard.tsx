@@ -13,7 +13,13 @@ interface ObjectCardProps {
   onRowClick: (item: ObjectItem) => void;
 }
 
-export function ObjectCard({ item, isSelected, isActive, onToggleSelect, onRowClick }: ObjectCardProps) {
+export function ObjectCard({
+  item,
+  isSelected,
+  isActive,
+  onToggleSelect,
+  onRowClick,
+}: ObjectCardProps) {
   const target: SelectionTarget = { type: "object", key: item.key };
   const name = item.key.includes("/") ? (item.key.split("/").pop() ?? item.key) : item.key;
   const storedSize = formatBytes(item.stored_bytes);

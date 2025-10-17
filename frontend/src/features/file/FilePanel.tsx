@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, Loader2, Trash2, X } from "lucide-react";
 import { useToast } from "../../app/toast";
 import { Button } from "../../lib/ui/Button";
+import { ConfirmModal } from "../../lib/ui/ConfirmModal";
 import { formatBytes } from "../../lib/utils/bytes";
 import { downloadObject } from "../../lib/utils/download";
 import { useDeleteObject } from "./useDeleteObject";
@@ -20,6 +21,8 @@ import {
   CustomMetadataSection,
   TagsSection,
 } from "./components/MetadataSections";
+import { useFilePanelNavigation } from "./hooks/useFilePanelNavigation";
+import { useNavigationContext } from "../objects/context/NavigationContext";
 
 interface FilePanelProps {
   bucket: string | null;
@@ -41,6 +44,7 @@ export function FilePanel({
   const deleteMutation = useDeleteObject(bucket);
   const [isCopyingLink, setIsCopyingLink] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { copiedField, manualCopyFallback, handleCopyWithFallback, clearFallback } =
     useCopyToClipboard();
@@ -49,6 +53,49 @@ export function FilePanel({
   const savings = useSavingsCalculation(metadata);
   const fileName = useMemo(() => extractFileName(objectKey), [objectKey]);
   const filePath = useMemo(() => extractFilePath(bucket, objectKey), [bucket, objectKey]);
+
+  // Navigation context for modal focus management
+  const { isContextActive, openFilePanel, closeFilePanel } = useNavigationContext();
+  const isPanelActive = isContextActive("file-panel");
+
+  // Notify context when panel opens
+  useEffect(() => {
+    if (objectKey && metadata) {
+      openFilePanel(objectKey);
+    }
+  }, [objectKey, metadata, openFilePanel]);
+
+  // Handle panel close with context update
+  const handleClose = useCallback(() => {
+    closeFilePanel();
+    onClose?.();
+  }, [closeFilePanel, onClose]);
+
+  // Keyboard navigation for FilePanel (disabled when dropdown is open)
+  const { focusedElement, panelRef } = useFilePanelNavigation({
+    enabled: isPanelActive && !isDropdownOpen,
+    onClose: handleClose,
+    onActivate: (element) => {
+      switch (element) {
+        case "close":
+          handleClose();
+          break;
+        case "download-dropdown":
+          setIsDropdownOpen((prev) => !prev);
+          break;
+        case "delete":
+          handleDeleteClick();
+          break;
+      }
+    },
+  });
+
+  // Auto-focus panel when it opens
+  useEffect(() => {
+    if (panelRef.current && metadata && isPanelActive) {
+      panelRef.current.focus();
+    }
+  }, [metadata, isPanelActive, panelRef]);
 
   useEffect(() => {
     if (query.error) {
@@ -123,16 +170,23 @@ export function FilePanel({
     setIsDropdownOpen(false);
   }, [handleDownload]);
 
-  const handleDelete = useCallback(() => {
+  const handleDeleteClick = useCallback(() => {
+    setShowDeleteConfirm(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
     if (!metadata) return;
-    const confirmed = window.confirm(`Delete ${metadata.key}? This cannot be undone.`);
-    if (!confirmed) return;
+    setShowDeleteConfirm(false);
     deleteMutation.mutate(metadata.key, {
       onSuccess: () => {
         onDeleted?.(metadata.key);
       },
     });
   }, [metadata, deleteMutation, onDeleted]);
+
+  const handleDeleteCancel = useCallback(() => {
+    setShowDeleteConfirm(false);
+  }, []);
 
   if (query.isLoading) {
     return (
@@ -167,10 +221,12 @@ export function FilePanel({
 
   const panel = (
     <aside
+      ref={panelRef}
       className={panelClasses}
       role={isOverlay ? "dialog" : undefined}
       aria-modal={isOverlay ? true : undefined}
       aria-label="File details"
+      tabIndex={-1}
     >
       {/* Fixed Header */}
       <div
@@ -193,7 +249,7 @@ export function FilePanel({
           variant="ghost"
           onClick={onClose}
           aria-label="Close panel"
-          className="h-8 w-8 flex-shrink-0 p-0 text-ui-text-muted hover:bg-ui-surface-active hover:text-ui-text dark:text-ui-text-subtle dark:hover:bg-ui-surface-active-dark dark:hover:text-ui-text-dark"
+          className="x-close-button h-8 w-8 flex-shrink-0 p-0 text-ui-text-muted hover:bg-ui-surface-active hover:text-ui-text dark:text-ui-text-subtle dark:hover:bg-ui-surface-active-dark dark:hover:text-ui-text-dark"
         >
           <X className="h-5 w-5" />
         </Button>
@@ -207,6 +263,7 @@ export function FilePanel({
           copiedField={copiedField}
           bucket={bucket}
           objectKey={metadata.key}
+          isFocused={focusedElement === "download-dropdown"}
           onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
           onDownload={handleDownloadClick}
           onCopyS3Uri={handleCopyS3Uri}
@@ -243,9 +300,13 @@ export function FilePanel({
       <div className={`border-t border-ui-border ${footerPadding} dark:border-ui-border-dark`}>
         <Button
           variant="ghost"
-          className="w-full justify-center gap-2 border border-ui-border text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-ui-border-dark dark:text-red-300 dark:hover:bg-red-900"
+          className={`w-full justify-center gap-2 border border-ui-border text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-ui-border-dark dark:text-red-300 dark:hover:bg-red-900 ${
+            focusedElement === "delete"
+              ? "ring-2 ring-primary-600 ring-offset-2 dark:ring-primary-500"
+              : ""
+          }`}
           disabled={deleteMutation.isPending}
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
         >
           {deleteMutation.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -255,6 +316,18 @@ export function FilePanel({
           Delete object
         </Button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title="Delete Object"
+        message={`Are you sure you want to delete "${fileName}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </aside>
   );
 

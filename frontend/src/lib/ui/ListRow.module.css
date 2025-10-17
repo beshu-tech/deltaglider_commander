@@ -1,0 +1,46 @@
+/**
+ * Reusable list row styles with proper CSS cascade
+ * Avoids !important by using correct specificity
+ */
+
+.listRow {
+  @apply cursor-pointer border-b border-ui-border-subtle transition-all duration-fast;
+  @apply dark:border-ui-border-subtle-dark;
+
+  /* Focus styles */
+  @apply focus-visible:outline-focus focus-visible:outline-offset-[-2px];
+  @apply focus-visible:outline-primary-600 focus-visible:ring-focus focus-visible:ring-primary-600/20;
+  @apply dark:focus-visible:outline-primary-500 dark:focus-visible:ring-primary-500/20;
+}
+
+/* Zebra striping for default state */
+.listRow:not(.selected):not(.focused) {
+  @apply odd:bg-black/5 dark:odd:bg-white/5;
+}
+
+/* Hover only applies to non-selected rows */
+.listRow:not(.selected):not(.focused):hover {
+  @apply bg-ui-surface-hover dark:bg-ui-surface-hover-dark;
+}
+
+/**
+ * Selected state uses semantic tokens
+ * Higher specificity than hover, no !important needed
+ */
+.listRow.selected,
+.listRow.focused {
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-text);
+}
+
+/* Override child text colors for selected rows */
+.listRow.selected *,
+.listRow.focused * {
+  color: inherit;
+}
+
+/* Bucket row variant */
+.listRow.bucket {
+  @apply border-b border-ui-border/70 last:border-0;
+  @apply dark:border-ui-border-dark/70;
+}

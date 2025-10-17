@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronRight, Loader2, RefreshCcw, Trash2 } from "lucide-react";
 import { Badge } from "../../lib/ui/Badge";
@@ -13,15 +13,20 @@ import { BucketSavingsButton } from "../savings/BucketSavingsButton";
 import { useDeleteBucket } from "./useBucketManagement";
 import { useBucketStats } from "./useBucketStats";
 import { useRefreshBucketStats } from "./useRefreshBucketStats";
+import { useBucketKeyboardNavigation } from "./hooks/useBucketKeyboardNavigation";
+import { getBucketRowClasses } from "./bucketRowStyles";
+import { getVisualSelectionKey } from "../objects/logic/navigationSelectionLogic";
 
 function BucketRow({
   bucket,
   deleteMutation,
   variant = "table",
+  isFocused = false,
 }: {
   bucket: Bucket;
   deleteMutation: ReturnType<typeof useDeleteBucket>;
   variant?: "table" | "card";
+  isFocused?: boolean;
 }) {
   const navigate = useNavigate();
   const statsQuery = useBucketStats(bucket, "sampled");
@@ -191,13 +196,17 @@ function BucketRow({
                 </span>
               ) : stats.stored_bytes !== stats.original_bytes ? (
                 <>
-                  <span className="font-medium tabular-nums">{formatBytesThin(stats.stored_bytes)}</span>
+                  <span className="font-medium tabular-nums">
+                    {formatBytesThin(stats.stored_bytes)}
+                  </span>
                   <span className="text-xs text-ui-text-subtle line-through">
                     {formatBytesThin(stats.original_bytes)}
                   </span>
                 </>
               ) : (
-                <span className="font-medium tabular-nums">{formatBytesThin(stats.original_bytes)}</span>
+                <span className="font-medium tabular-nums">
+                  {formatBytesThin(stats.original_bytes)}
+                </span>
               )}
             </div>
           </div>
@@ -251,7 +260,7 @@ function BucketRow({
 
   return (
     <TableRow
-      className="group odd:bg-black/5 dark:odd:bg-white/5 border-b border-ui-border/70 last:border-0 dark:border-ui-border-dark/70"
+      className={getBucketRowClasses({ isFocused })}
       role="button"
       tabIndex={0}
       onKeyDown={(event) => {
@@ -336,7 +345,12 @@ function BucketRow({
                 </>
               ) : hasSavings ? (
                 <>
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -348,7 +362,12 @@ function BucketRow({
                 </>
               ) : (
                 <>
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <circle cx="12" cy="12" r="6" strokeWidth={2} />
                     <path strokeWidth={2} strokeLinecap="round" d="M9 12h6" />
                   </svg>
@@ -397,6 +416,32 @@ export function BucketsPanel() {
   const { data, isLoading, isError, error } = useBuckets();
   const deleteMutation = useDeleteBucket();
   const refreshMutation = useRefreshBucketStats();
+  const navigate = useNavigate();
+
+  const handleBucketSelect = (bucket: Bucket) => {
+    navigate({
+      to: "/b/$bucket",
+      params: { bucket: bucket.name },
+      search: { ...DEFAULT_OBJECTS_SEARCH_STATE },
+    });
+  };
+
+  const { containerRef, focusedKey } = useBucketKeyboardNavigation({
+    buckets: data ?? [],
+    onBucketSelect: handleBucketSelect,
+    enabled: !isLoading && !isError && (data?.length ?? 0) > 0,
+  });
+
+  // Use unified selection logic - keyboard focus when active, no URL selection for buckets list
+  const visualSelectionKey = useMemo(
+    () =>
+      getVisualSelectionKey(
+        null, // No URL-based selection for buckets list
+        focusedKey,
+        true, // Always show keyboard focus when present
+      ),
+    [focusedKey],
+  );
 
   if (isLoading) {
     return (
@@ -417,7 +462,10 @@ export function BucketsPanel() {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-ui-border bg-surface-elevated shadow-elevation-md dark:border-ui-border-dark dark:bg-ui-surface-dark dark:shadow-elevation-md-dark">
+    <div
+      ref={containerRef}
+      className="overflow-hidden rounded-xl border border-ui-border bg-surface-elevated shadow-elevation-md dark:border-ui-border-dark dark:bg-ui-surface-dark dark:shadow-elevation-md-dark"
+    >
       <div className="bg-ui-bg-subtle dark:bg-ui-surface-dark/50 px-group py-3 border-b border-ui-border dark:border-ui-border-dark flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-title-sm text-ui-text dark:text-ui-text-dark">Storage Buckets</h2>
@@ -471,6 +519,7 @@ export function BucketsPanel() {
                 key={`${bucket.name}-table`}
                 bucket={bucket}
                 deleteMutation={deleteMutation}
+                isFocused={visualSelectionKey === bucket.name}
               />
             ))}
           </TableBody>

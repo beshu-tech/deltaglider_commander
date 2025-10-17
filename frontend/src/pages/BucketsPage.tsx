@@ -14,7 +14,7 @@ export function BucketsPage() {
             {/* Header Section */}
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
-                <div className="h-1 w-12 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 sm:w-16"></div>
+                <div className="h-1 w-12 rounded-full bg-ui-border-hover dark:bg-ui-border-hover-dark sm:w-16"></div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-muted-dark sm:text-sm">
                   Smart Object Storage Platform
                 </span>
@@ -28,7 +28,7 @@ export function BucketsPage() {
                   href="https://pypi.org/project/deltaglider/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-semibold text-primary-600 dark:text-primary-500 hover:underline"
+                  className="font-semibold text-ui-text dark:text-ui-text-dark underline decoration-ui-border-hover hover:decoration-ui-text transition-colors"
                 >
                   DeltaGlider
                 </a>
@@ -37,7 +37,7 @@ export function BucketsPage() {
                   href="https://github.com/jmacd/xdelta"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary-600 dark:text-primary-500 hover:underline font-medium"
+                  className="font-medium text-ui-text dark:text-ui-text-dark underline decoration-ui-border-hover hover:decoration-ui-text transition-colors"
                 >
                   xdelta3
                 </a>{" "}

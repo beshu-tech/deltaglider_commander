@@ -15,7 +15,7 @@ export function ManualCopyFallback({ value, label, onClose }: ManualCopyFallback
         </p>
         <button
           onClick={onClose}
-          className="text-ui-text-muted transition-colors hover:text-ui-text dark:text-ui-text-muted-dark dark:hover:text-ui-text-dark"
+          className="x-close-button text-ui-text-muted transition-colors hover:text-ui-text dark:text-ui-text-muted-dark dark:hover:text-ui-text-dark"
           aria-label="Close"
         >
           <X className="h-3 w-3" />

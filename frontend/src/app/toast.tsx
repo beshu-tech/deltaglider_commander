@@ -215,7 +215,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     remove(toast.id);
                   }
                 }}
-                className={`flex-shrink-0 rounded-md p-1.5 transition-colors duration-fast hover:bg-white/10 focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-white/70 ${styles.icon}`}
+                className={`x-close-button flex-shrink-0 rounded-md p-1.5 transition-colors duration-fast hover:bg-white/10 ${styles.icon}`}
                 aria-label={`Dismiss ${toast.level} notification: ${toast.title}`}
               >
                 <X className="h-4 w-4" />

@@ -63,7 +63,9 @@ export function UploadPage() {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
-            <p className="text-sm text-ui-text-muted dark:text-ui-text-subtle">Bucket · {bucket} · Upload</p>
+            <p className="text-sm text-ui-text-muted dark:text-ui-text-subtle">
+              Bucket · {bucket} · Upload
+            </p>
             <h1 className="text-2xl font-semibold text-ui-text dark:text-ui-text-dark">
               Upload to {bucket}
             </h1>

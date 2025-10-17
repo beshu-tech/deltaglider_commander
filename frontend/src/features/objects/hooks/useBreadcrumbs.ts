@@ -14,7 +14,12 @@ interface UseBreadcrumbsProps {
   onPrefixChange: (prefix: string | undefined) => void;
 }
 
-export function useBreadcrumbs({ bucket, prefix, selectedKey, onPrefixChange }: UseBreadcrumbsProps) {
+export function useBreadcrumbs({
+  bucket,
+  prefix,
+  selectedKey,
+  onPrefixChange,
+}: UseBreadcrumbsProps) {
   const navigate = useNavigate();
 
   const breadcrumbSegments = useMemo(() => {

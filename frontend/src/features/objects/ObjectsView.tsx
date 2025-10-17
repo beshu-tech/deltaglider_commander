@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useToast } from "../../app/toast";
 import { ObjectItem, ObjectSortKey, ObjectsSearchState } from "./types";
 import { ObjectsTable } from "./ObjectsTable";
@@ -39,6 +40,7 @@ export function ObjectsView({
 }: ObjectsViewProps) {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const updateSearchState = useCallback(
     (updates: Partial<ObjectsSearchState>) => {
@@ -156,6 +158,26 @@ export function ObjectsView({
     [updateSearchState],
   );
 
+  const handleNavigateUp = useCallback(() => {
+    // Navigate up one folder level
+    if (!search.prefix) return;
+
+    const normalized = search.prefix.endsWith("/") ? search.prefix.slice(0, -1) : search.prefix;
+    const segments = normalized.split("/").filter(Boolean);
+
+    if (segments.length === 0) {
+      updateSearchState({ prefix: "" });
+    } else {
+      segments.pop();
+      const parentPrefix = segments.length > 0 ? `${segments.join("/")}/` : "";
+      updateSearchState({ prefix: parentPrefix });
+    }
+  }, [search.prefix, updateSearchState]);
+
+  const handleNavigateToBuckets = useCallback(() => {
+    navigate({ to: "/buckets" });
+  }, [navigate]);
+
   const hasData = objects.length > 0 || prefixes.length > 0;
 
   // Show loading/error states, otherwise show the table
@@ -183,6 +205,7 @@ export function ObjectsView({
   } else {
     tableContent = (
       <ObjectsTable
+        bucket={bucket}
         objects={objects}
         directories={prefixes}
         currentPrefix={search.prefix}
@@ -197,6 +220,8 @@ export function ObjectsView({
         pageSelectedCount={pageSelectedCount}
         onRowClick={onRowClick}
         onEnterDirectory={handleDirectoryEnter}
+        onNavigateUp={handleNavigateUp}
+        onNavigateToBuckets={handleNavigateToBuckets}
         isFetching={cacheQuery.isFetching}
         isLoadingMetadata={cacheQuery.isLoadingFull}
         directoryFileCounts={directoryFileCounts}

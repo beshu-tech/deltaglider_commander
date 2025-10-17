@@ -6,8 +6,12 @@ import { TableHeader } from "./components/table/TableHeader";
 import { DirectoryRow } from "./components/table/DirectoryRow";
 import { ObjectRow } from "./components/table/ObjectRow";
 import { MobileView } from "./components/MobileView";
+import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
+import { useNavigationContext } from "./context/NavigationContext";
+import { getVisualSelectionKey } from "./logic/navigationSelectionLogic";
 
 interface ObjectsTableProps {
+  bucket: string;
   objects: ObjectItem[];
   directories: string[];
   currentPrefix: string;
@@ -22,12 +26,15 @@ interface ObjectsTableProps {
   pageSelectedCount: number;
   onRowClick: (item: ObjectItem) => void;
   onEnterDirectory: (prefix: string) => void;
+  onNavigateUp: () => void;
+  onNavigateToBuckets?: () => void;
   isFetching: boolean;
   isLoadingMetadata?: boolean;
   directoryFileCounts: Map<string, DirectoryCounts>;
 }
 
 export function ObjectsTable({
+  bucket,
   objects,
   directories,
   currentPrefix,
@@ -42,12 +49,38 @@ export function ObjectsTable({
   pageSelectedCount,
   onRowClick,
   onEnterDirectory,
+  onNavigateUp,
+  onNavigateToBuckets,
   isFetching,
   isLoadingMetadata = false,
   directoryFileCounts,
 }: ObjectsTableProps) {
   const allSelected = pageSelectableCount > 0 && pageSelectedCount === pageSelectableCount;
   const selectionDisabled = pageSelectableCount === 0;
+
+  // Only enable keyboard navigation when objects list context is active
+  const { isContextActive } = useNavigationContext();
+  const isListActive = isContextActive("objects");
+
+  const { containerRef, focusedKey, isKeyboardMode } = useKeyboardNavigation({
+    bucket,
+    directories,
+    objects,
+    currentPrefix,
+    onEnterDirectory,
+    onRowClick,
+    onNavigateUp,
+    onNavigateToBuckets,
+    enabled: isListActive,
+  });
+
+  // Determine which key should be visually selected (using pure logic)
+  // Priority: keyboard focus (when in keyboard mode) > URL selection
+  const visualSelectionKey = getVisualSelectionKey(
+    selectedKey ?? null,
+    focusedKey,
+    isKeyboardMode, // Use isKeyboardMode instead of isListActive
+  );
 
   const renderDirectoryRows = () =>
     directories.map((prefix) => {
@@ -58,6 +91,8 @@ export function ObjectsTable({
       const counts = directoryFileCounts.get(prefix);
       const target: SelectionTarget = { type: "prefix", key: prefix };
       const directorySelected = isSelected(target);
+      // Use unified visual selection logic (keyboard focus when active, URL otherwise)
+      const isHighlighted = visualSelectionKey === prefix;
 
       return (
         <DirectoryRow
@@ -66,6 +101,7 @@ export function ObjectsTable({
           label={label}
           counts={counts}
           isSelected={directorySelected}
+          isHighlighted={isHighlighted}
           onToggleSelect={onToggleSelect}
           onEnterDirectory={onEnterDirectory}
         />
@@ -76,7 +112,8 @@ export function ObjectsTable({
     objects.map((item) => {
       const target: SelectionTarget = { type: "object", key: item.key };
       const objectSelected = isSelected(target);
-      const isHighlighted = selectedKey === item.key;
+      // Use unified visual selection logic (keyboard focus when active, URL otherwise)
+      const isHighlighted = visualSelectionKey === item.key;
 
       return (
         <ObjectRow
@@ -110,8 +147,14 @@ export function ObjectsTable({
         isFetching={isFetching}
         isLoadingMetadata={isLoadingMetadata}
       />
-      <div className="relative hidden flex-1 overflow-auto md:block">
-        <Table className="min-w-full">
+      <div
+        ref={containerRef}
+        role="application"
+        aria-label="Objects table with keyboard navigation"
+        tabIndex={0}
+        className="relative hidden flex-1 overflow-auto md:block focus:outline-none"
+      >
+        <Table className="min-w-full" role="table">
           <TableHeader
             sort={sort}
             order={order}

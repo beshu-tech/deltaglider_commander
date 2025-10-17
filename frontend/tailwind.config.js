@@ -48,19 +48,19 @@ export default {
           900: "#003a5c",
         },
 
-        // Primary Action - Red gradient for primary buttons
+        // Primary Action - Burgundy/Rose gradient for primary buttons and accents
         primary: {
-          50: "#fef2f2",
-          100: "#fee2e2",
-          200: "#fecaca",
-          300: "#fca5a5",
-          400: "#f87171",
-          500: "#ef4444",
-          600: "#dc2626",
-          700: "#b91c1c",
-          800: "#991b1b",
-          900: "#7f1d1d",
-          950: "#450a0a",
+          50: "#fff1f2",
+          100: "#ffe4e6",
+          200: "#fecdd3",
+          300: "#fda4af",
+          400: "#fb7185",
+          500: "#f43f5e",
+          600: "#be123c",
+          700: "#9f1239",
+          800: "#881337",
+          900: "#4c0519",
+          950: "#3f0713",
         },
 
         // Semantic tones for light/dark mode consistency

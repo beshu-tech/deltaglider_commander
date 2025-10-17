@@ -22,7 +22,9 @@ export function SummaryCard({ summary }: { summary: StatsSummary | null }) {
             </svg>
           </div>
           <div>
-            <p className="font-medium text-ui-text dark:text-ui-text-dark">No storage data available</p>
+            <p className="font-medium text-ui-text dark:text-ui-text-dark">
+              No storage data available
+            </p>
             <p className="text-xs text-ui-text-muted dark:text-ui-text-subtle mt-1">
               Connect to your S3-compatible storage to view metrics
             </p>

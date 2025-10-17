@@ -19,15 +19,17 @@ export function ObjectSizeCell({
   // Show compressed size with strikethrough original when metadata is loaded
   if (!isLoadingMetadata && isCompressed && originalBytes !== effectiveSize) {
     return (
-      <span className="flex flex-col text-sm">
+      <div className="text-xs leading-tight whitespace-nowrap">
         <span className="font-medium text-ui-text dark:text-ui-text-dark">
           {formatBytes(effectiveSize)}
         </span>
-        <span className="text-xs text-ui-text-subtle line-through">{formatBytes(originalBytes)}</span>
-      </span>
+        <span className="ml-1 text-[10px] text-ui-text-subtle line-through opacity-60">
+          {formatBytes(originalBytes)}
+        </span>
+      </div>
     );
   }
 
   // Always show original_bytes (available immediately)
-  return <span className="font-medium">{formatBytes(originalBytes)}</span>;
+  return <div className="text-xs leading-tight font-medium">{formatBytes(originalBytes)}</div>;
 }

@@ -67,11 +67,11 @@ const sampleBuckets = [
 ];
 
 beforeEach(() => {
-  // Mock window.matchMedia
+  // Mock window.matchMedia - simulate desktop viewport (md breakpoint)
   Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: vi.fn().mockImplementation((query) => ({
-      matches: false,
+      matches: query === "(min-width: 768px)", // Match md breakpoint from LayoutContext
       media: query,
       onchange: null,
       addListener: vi.fn(),

@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastProvider } from "../../../app/toast";
 import { FilePanel } from "../FilePanel";
+import { NavigationContextProvider } from "../../objects/context/NavigationContext";
 import * as endpoints from "../../../lib/api/endpoints";
 import * as env from "../../../lib/config/env";
 
@@ -76,7 +77,9 @@ function renderPanel(overrides: Partial<React.ComponentProps<typeof FilePanel>> 
     props,
     ...render(
       <ToastProvider>
-        <FilePanel {...props} />
+        <NavigationContextProvider initialContext="file-panel">
+          <FilePanel {...props} />
+        </NavigationContextProvider>
       </ToastProvider>,
     ),
   };
@@ -90,7 +93,7 @@ describe("FilePanel", () => {
     expect(screen.getByText(/compressed/i)).toBeInTheDocument();
 
     // Click the dropdown button first
-    await user.click(screen.getByRole("button", { name: /download & share/i }));
+    await user.click(screen.getByRole("button", { name: /download and share options/i }));
 
     // Then click the download option in the dropdown
     await user.click(screen.getByText("Download object"));

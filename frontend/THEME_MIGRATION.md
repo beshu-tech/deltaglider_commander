@@ -20,32 +20,34 @@ All theme tokens are defined in [`tailwind.config.js`](./tailwind.config.js) und
 ### Color Palettes
 
 #### Brand Colors (`brand-*`)
+
 - **Purpose**: Primary interactive color (cyan-blue)
 - **Scale**: 50-900
 - **Usage**: Accents, links, focus states
 
 #### Primary Action Colors (`primary-*`)
+
 - **Purpose**: Primary buttons and CTAs (red)
 - **Scale**: 50-950
 - **Usage**: Main action buttons, important UI elements
 
 #### UI Semantic Tokens (`ui-*`)
 
-| Token | Light Mode | Dark Mode | Purpose |
-|-------|------------|-----------|---------|
-| `ui-bg` | `#F7F8FA` | `#1E1F22` | Main app background |
-| `ui-bg-subtle` | `#F1F3F5` | `#16171a` | Subtle background variation |
-| `ui-surface` | `#FFFFFF` | `#2B2D30` | Elevated cards/panels |
-| `ui-surface-hover` | `#f8fafc` | `#374151` | Hover state for surfaces |
-| `ui-surface-active` | `#f1f5f9` | `#1f2937` | Active/pressed state |
-| `ui-border` | `#e2e8f0` | `#334155` | Primary borders |
-| `ui-border-subtle` | `#f1f5f9` | `#1e293b` | Subtle borders |
-| `ui-border-hover` | `#cbd5e1` | `#475569` | Border hover state |
-| `ui-text` | `#0f172a` | `#f1f5f9` | Primary text |
-| `ui-text-muted` | `#64748b` | `#94a3b8` | Secondary text |
-| `ui-text-subtle` | `#94a3b8` | `#64748b` | Tertiary/subtle text |
-| `ui-icon` | `#64748b` | `#94a3b8` | Icon colors |
-| `ui-icon-subtle` | `#cbd5e1` | `#475569` | Subtle icon colors |
+| Token               | Light Mode | Dark Mode | Purpose                     |
+| ------------------- | ---------- | --------- | --------------------------- |
+| `ui-bg`             | `#F7F8FA`  | `#1E1F22` | Main app background         |
+| `ui-bg-subtle`      | `#F1F3F5`  | `#16171a` | Subtle background variation |
+| `ui-surface`        | `#FFFFFF`  | `#2B2D30` | Elevated cards/panels       |
+| `ui-surface-hover`  | `#f8fafc`  | `#374151` | Hover state for surfaces    |
+| `ui-surface-active` | `#f1f5f9`  | `#1f2937` | Active/pressed state        |
+| `ui-border`         | `#e2e8f0`  | `#334155` | Primary borders             |
+| `ui-border-subtle`  | `#f1f5f9`  | `#1e293b` | Subtle borders              |
+| `ui-border-hover`   | `#cbd5e1`  | `#475569` | Border hover state          |
+| `ui-text`           | `#0f172a`  | `#f1f5f9` | Primary text                |
+| `ui-text-muted`     | `#64748b`  | `#94a3b8` | Secondary text              |
+| `ui-text-subtle`    | `#94a3b8`  | `#64748b` | Tertiary/subtle text        |
+| `ui-icon`           | `#64748b`  | `#94a3b8` | Icon colors                 |
+| `ui-icon-subtle`    | `#cbd5e1`  | `#475569` | Subtle icon colors          |
 
 ---
 
@@ -54,6 +56,7 @@ All theme tokens are defined in [`tailwind.config.js`](./tailwind.config.js) und
 ### ✅ Completed Components
 
 #### UI Library Components
+
 - [x] `Button.tsx` - All variants use semantic tokens
 - [x] `Input.tsx` - Inputs and focus states
 - [x] `Select.tsx` - Dropdown selects
@@ -63,11 +66,13 @@ All theme tokens are defined in [`tailwind.config.js`](./tailwind.config.js) und
 - [x] `DropdownMenu.tsx` - Dropdown menus and items
 
 #### Layout Components
+
 - [x] `AppLayout.tsx` - Main app container
 - [x] `Header.tsx` - Top navigation header
 - [ ] `Sidebar.tsx` - **PARTIAL** - Complex dark theme specific design needs review
 
 #### Page Components
+
 - [x] `SettingsPage.tsx` - Settings page
 - [x] `BucketsPage.tsx` - Buckets overview page
 - [ ] `UploadPage.tsx` - **TODO**
@@ -75,6 +80,7 @@ All theme tokens are defined in [`tailwind.config.js`](./tailwind.config.js) und
 ### 🔄 In Progress Components
 
 #### Feature Components
+
 - [ ] `BucketsPanel.tsx` - Bucket list panel
 - [ ] `ObjectsView.tsx` - Objects view container
 - [ ] `ObjectsTable.tsx` - Objects data table
@@ -95,26 +101,27 @@ All theme tokens are defined in [`tailwind.config.js`](./tailwind.config.js) und
 
 ### Find & Replace Mappings
 
-| Old Pattern | New Pattern | Notes |
-|-------------|-------------|-------|
-| `bg-white` | `bg-ui-surface` | Main surface backgrounds |
-| `dark:bg-slate-900` | `dark:bg-ui-surface-dark` | Dark surface backgrounds |
-| `bg-slate-50` | `bg-ui-bg-subtle` | Subtle backgrounds |
-| `dark:bg-slate-950` | `dark:bg-ui-bg-subtle-dark` | Dark subtle backgrounds |
-| `text-slate-900` | `text-ui-text` | Primary text |
-| `dark:text-slate-100` | `dark:text-ui-text-dark` | Dark primary text |
-| `text-slate-500` | `text-ui-text-muted` | Muted/secondary text |
-| `dark:text-slate-400` | `dark:text-ui-text-muted-dark` | Dark muted text |
-| `border-slate-200` | `border-ui-border` | Primary borders |
-| `dark:border-slate-700` | `dark:border-ui-border-dark` | Dark borders |
-| `hover:bg-slate-100` | `hover:bg-ui-surface-hover` | Hover states |
-| `dark:hover:bg-slate-800` | `dark:hover:bg-ui-surface-hover-dark` | Dark hover states |
-| `from-red-900` | `from-primary-900` | Primary action gradient |
-| `to-red-900` | `to-primary-900` | Primary action gradient |
+| Old Pattern               | New Pattern                           | Notes                    |
+| ------------------------- | ------------------------------------- | ------------------------ |
+| `bg-white`                | `bg-ui-surface`                       | Main surface backgrounds |
+| `dark:bg-slate-900`       | `dark:bg-ui-surface-dark`             | Dark surface backgrounds |
+| `bg-slate-50`             | `bg-ui-bg-subtle`                     | Subtle backgrounds       |
+| `dark:bg-slate-950`       | `dark:bg-ui-bg-subtle-dark`           | Dark subtle backgrounds  |
+| `text-slate-900`          | `text-ui-text`                        | Primary text             |
+| `dark:text-slate-100`     | `dark:text-ui-text-dark`              | Dark primary text        |
+| `text-slate-500`          | `text-ui-text-muted`                  | Muted/secondary text     |
+| `dark:text-slate-400`     | `dark:text-ui-text-muted-dark`        | Dark muted text          |
+| `border-slate-200`        | `border-ui-border`                    | Primary borders          |
+| `dark:border-slate-700`   | `dark:border-ui-border-dark`          | Dark borders             |
+| `hover:bg-slate-100`      | `hover:bg-ui-surface-hover`           | Hover states             |
+| `dark:hover:bg-slate-800` | `dark:hover:bg-ui-surface-hover-dark` | Dark hover states        |
+| `from-red-900`            | `from-primary-900`                    | Primary action gradient  |
+| `to-red-900`              | `to-primary-900`                      | Primary action gradient  |
 
 ### Example Migration
 
 **Before:**
+
 ```tsx
 <div className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
   <p className="text-slate-500 dark:text-slate-400">Muted text</p>
@@ -122,6 +129,7 @@ All theme tokens are defined in [`tailwind.config.js`](./tailwind.config.js) und
 ```
 
 **After:**
+
 ```tsx
 <div className="bg-ui-surface border border-ui-border text-ui-text dark:bg-ui-surface-dark dark:border-ui-border-dark dark:text-ui-text-dark">
   <p className="text-ui-text-muted dark:text-ui-text-muted-dark">Muted text</p>
@@ -133,18 +141,21 @@ All theme tokens are defined in [`tailwind.config.js`](./tailwind.config.js) und
 ## Special Cases
 
 ### Sidebar.tsx
+
 - **Status**: Partially migrated
 - **Issue**: Heavy use of dark-mode-specific colors with opacity/alpha values
 - **Needs**: Design review for light mode support or remain dark-only
 - **Examples**: `bg-slate-800/30`, `border-slate-700/40`, `text-slate-400`
 
 ### StatsOverviewCards.tsx
+
 - **Status**: Not migrated
 - **Issue**: Custom color palettes for blue, purple, amber, emerald tones
 - **Contains**: Inline gradient definitions and rgba color values
 - **Needs**: Decide if custom palettes should be in tokens or remain inline
 
 ### Components with `red-900` Gradients
+
 - Should use `primary-*` tokens for consistency
 - Replace `red-900` → `primary-900`, `red-800` → `primary-800`, etc.
 
@@ -168,6 +179,7 @@ After migration, verify:
 ## Validation Commands
 
 ### Find Remaining Hardcoded Colors
+
 ```bash
 # Find files with hardcoded slate colors
 grep -r "slate-[0-9]" src --include="*.tsx" --include="*.ts" -l
@@ -177,11 +189,13 @@ grep -r "slate-[0-9]" src --include="*.tsx" --include="*.ts" | wc -l
 ```
 
 ### TypeScript Validation
+
 ```bash
 pnpm typecheck
 ```
 
 ### Build Validation
+
 ```bash
 pnpm build
 ```

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ObjectsView } from "../ObjectsView";
 import { ObjectsSearchState } from "../types";
 import { ToastProvider } from "../../../app/toast";
+import { NavigationContextProvider } from "../context/NavigationContext";
 
 const navigateMock = vi.fn();
 
@@ -99,7 +100,9 @@ function setup(overrides: Partial<React.ComponentProps<typeof ObjectsView>> = {}
     ...render(
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
-          <ObjectsView {...props} />
+          <NavigationContextProvider initialContext="objects">
+            <ObjectsView {...props} />
+          </NavigationContextProvider>
         </ToastProvider>
       </QueryClientProvider>,
     ),

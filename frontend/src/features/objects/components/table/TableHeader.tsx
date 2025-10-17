@@ -70,7 +70,12 @@ export function TableHeader({
           </SortButton>
         </th>
         <th className="group px-3 py-3 text-left text-label-sm uppercase tracking-wide text-ui-text-muted transition-colors duration-fast hover:bg-ui-surface-hover dark:hover:bg-ui-surface-hover-dark/50">
-          <SortButton column="modified" currentSort={sort} order={order} onSortChange={onSortChange}>
+          <SortButton
+            column="modified"
+            currentSort={sort}
+            order={order}
+            onSortChange={onSortChange}
+          >
             Modified
           </SortButton>
         </th>

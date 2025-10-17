@@ -2,12 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
-}
+@layer base {
+  :root {
+    color-scheme: light;
 
-:root.dark {
-  color-scheme: dark;
+    /* Semantic tokens for keyboard navigation selection states */
+    --color-selection-bg: theme("colors.primary.900 / 90%");
+    --color-selection-text: theme("colors.primary.50");
+    --color-selection-border: theme("colors.primary.700");
+  }
+
+  :root.dark {
+    color-scheme: dark;
+
+    /* Dark mode selection states */
+    --color-selection-bg: theme("colors.primary.950 / 95%");
+    --color-selection-text: theme("colors.primary.100");
+    --color-selection-border: theme("colors.primary.800");
+  }
 }
 
 html,
@@ -19,7 +31,6 @@ body,
 body {
   @apply antialiased;
 }
-
 
 @keyframes savings-wave {
   0% {
@@ -47,4 +58,37 @@ body {
   .animate-savings-wave {
     animation: none;
   }
+}
+
+/* X close button styling */
+.x-close-button {
+  /* Remove all outlines */
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+/* Override Button component focus styles */
+.x-close-button:focus,
+.x-close-button:focus-visible,
+.x-close-button:active,
+.x-close-button:focus-within {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Add subtle focus indicator */
+.x-close-button:focus-visible {
+  @apply ring-2 ring-primary-600/20 ring-offset-2 ring-offset-ui-surface;
+  @apply dark:ring-primary-500/20 dark:ring-offset-ui-surface-dark;
+}
+
+/* Ensure specificity for button elements */
+button.x-close-button,
+button.x-close-button:focus,
+button.x-close-button:focus-visible,
+button.x-close-button:active {
+  outline: none !important;
+  outline-color: transparent !important;
+  outline-width: 0 !important;
 }

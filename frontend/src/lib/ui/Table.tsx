@@ -28,7 +28,10 @@ export function TableHead({ className, ...rest }: HTMLAttributes<HTMLTableSectio
 export function TableBody({ className, ...rest }: HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <tbody
-      className={twMerge("divide-y divide-ui-border-subtle dark:divide-ui-border-subtle-dark", className)}
+      className={twMerge(
+        "divide-y divide-ui-border-subtle dark:divide-ui-border-subtle-dark",
+        className,
+      )}
       {...rest}
     />
   );
@@ -47,5 +50,5 @@ export function TableRow({ className, ...rest }: HTMLAttributes<HTMLTableRowElem
 }
 
 export function TableCell({ className, ...rest }: HTMLAttributes<HTMLTableCellElement>) {
-  return <td className={twMerge("px-3 py-4 text-body-sm", className)} {...rest} />;
+  return <td className={twMerge("px-3 py-3", className)} {...rest} />;
 }

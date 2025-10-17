@@ -64,7 +64,7 @@ function BucketFilter({ filter, onFilterChange }: BucketFilterProps) {
           value={filter}
           onChange={(event) => onFilterChange(event.target.value)}
           placeholder="Filter buckets..."
-          className="h-9 border-ui-border bg-ui-surface-active pl-9 text-ui-text placeholder:text-ui-text-muted transition-all focus:border-red-900/50 focus:ring-2 focus:ring-red-900/30 dark:border-ui-border-dark/50 dark:bg-ui-surface-active-dark/50 dark:text-ui-text-dark"
+          className="h-9 border-ui-border bg-ui-surface-active pl-9 text-ui-text placeholder:text-ui-text-muted transition-all focus:border-ui-border-hover focus:ring-2 focus:ring-ui-border-hover/30 dark:border-ui-border-dark/50 dark:bg-ui-surface-active-dark/50 dark:text-ui-text-dark dark:focus:border-ui-border-hover-dark dark:focus:ring-ui-border-hover-dark/30"
         />
       </div>
     </div>
@@ -94,13 +94,13 @@ function CreateBucketForm({
       className="space-y-3 rounded-lg border border-ui-border bg-ui-surface-active p-4 backdrop-blur-sm dark:border-ui-border-dark/50 dark:bg-ui-surface-active-dark/30"
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-red-300">
+        <span className="text-xs font-semibold uppercase tracking-wide text-ui-text dark:text-ui-text-dark">
           New bucket
         </span>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md p-1 text-ui-text-muted transition-colors hover:bg-ui-surface-hover hover:text-ui-text dark:text-ui-text-subtle dark:hover:bg-ui-surface-hover-dark/50 dark:hover:text-white"
+          className="x-close-button rounded-md p-1 text-ui-text-muted transition-colors hover:bg-ui-surface-hover hover:text-ui-text dark:text-ui-text-subtle dark:hover:bg-ui-surface-hover-dark/50 dark:hover:text-white"
           aria-label="Cancel bucket creation"
         >
           <X className="h-4 w-4" />
@@ -118,18 +118,20 @@ function CreateBucketForm({
           value={value}
           onChange={(event) => onValueChange(event.target.value)}
           placeholder="e.g. images-prod"
-          className="h-9 border-ui-border bg-ui-surface-hover text-ui-text placeholder:text-ui-text-muted transition-all focus:border-red-900/50 focus:ring-2 focus:ring-red-900/30 dark:border-ui-border-hover-dark/50 dark:bg-ui-surface-hover-dark/50 dark:text-white dark:placeholder:text-ui-text-subtle"
+          className="h-9 border-ui-border bg-ui-surface-hover text-ui-text placeholder:text-ui-text-muted transition-all focus:border-primary-900/50 focus:ring-2 focus:ring-primary-900/30 dark:border-ui-border-hover-dark/50 dark:bg-ui-surface-hover-dark/50 dark:text-white dark:placeholder:text-ui-text-subtle"
           disabled={isSubmitting}
           autoFocus
         />
         {validationError ? (
-          <p className="text-xs font-medium text-primary-600 dark:text-red-300">{validationError}</p>
+          <p className="text-xs font-medium text-primary-600 dark:text-primary-300">
+            {validationError}
+          </p>
         ) : null}
       </div>
       <div className="flex items-center gap-2">
         <Button
           type="submit"
-          className="h-9 flex-1 border-0 bg-gradient-to-r from-red-900/90 via-red-900 to-red-900/90 font-medium text-white shadow-lg transition-all duration-200 hover:from-red-800/80 hover:via-red-800 hover:to-red-800/80 hover:shadow-xl"
+          className="h-9 flex-1 border-0 bg-gradient-to-r from-primary-900/90 via-primary-900 to-primary-900/90 font-medium text-white shadow-lg transition-all duration-200 hover:from-primary-800/80 hover:via-primary-800 hover:to-primary-800/80 hover:shadow-xl"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -161,13 +163,7 @@ interface BucketListProps {
   activeBucket: string | null;
 }
 
-function BucketList({
-  buckets,
-  isLoading,
-  error,
-  filter,
-  activeBucket,
-}: BucketListProps) {
+function BucketList({ buckets, isLoading, error, filter, activeBucket }: BucketListProps) {
   const filteredBuckets = useMemo(() => {
     if (!buckets) {
       return [];
@@ -190,7 +186,7 @@ function BucketList({
 
   if (error) {
     return (
-      <div className="rounded-md bg-primary-50 px-3 py-2 text-xs text-primary-700 dark:bg-white/10 dark:text-red-200">
+      <div className="rounded-md bg-primary-50 px-3 py-2 text-xs text-primary-700 dark:bg-white/10 dark:text-primary-200">
         Could not load buckets: {String(error)}
       </div>
     );
@@ -208,13 +204,13 @@ function BucketList({
     <nav className="flex flex-col gap-1 text-sm">
       <Link
         to="/buckets"
-        className="mb-3 flex items-center gap-3 rounded-lg border border-ui-border bg-gradient-to-r from-ui-surface-active to-ui-surface-active px-3 py-3 text-ui-text transition-all duration-200 hover:from-ui-surface-hover hover:to-ui-surface-active hover:border-ui-border-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:border-ui-border-dark/50 dark:from-ui-surface-active-dark/50 dark:to-ui-surface-active-dark/30 dark:text-ui-text-dark dark:hover:from-ui-surface-active-dark/70 dark:hover:to-ui-surface-active-dark/50 dark:hover:border-ui-border-hover-dark/50"
+        className="mb-3 flex items-center gap-3 rounded-lg border border-ui-border bg-gradient-to-r from-ui-surface-active to-ui-surface-active px-3 py-3 text-ui-text transition-all duration-200 hover:from-ui-surface-hover hover:to-ui-surface-active hover:border-ui-border-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:border-ui-border-dark/50 dark:from-ui-surface-active-dark/50 dark:to-ui-surface-active-dark/30 dark:text-ui-text-dark dark:hover:from-ui-surface-active-dark/70 dark:hover:to-ui-surface-active-dark/50 dark:hover:border-ui-border-hover-dark/50"
         activeProps={{
           className:
-            "from-red-900/20 to-red-900/20 border-red-900/40 text-ui-text dark:text-white shadow-lg shadow-red-900/10",
+            "from-primary-100 to-primary-50 border-primary-600/30 text-primary-900 dark:from-primary-900/10 dark:to-primary-900/5 dark:border-primary-500/20 dark:text-primary-100 shadow-lg shadow-primary-600/10",
         }}
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-red-900/90 via-red-900 to-red-900/80 text-white shadow-lg shadow-red-900/20 ring-1 ring-red-900/40">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-900/90 via-primary-900 to-primary-900/80 text-white shadow-lg shadow-primary-900/20 ring-1 ring-primary-900/40">
           <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
@@ -226,7 +222,9 @@ function BucketList({
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-ui-text dark:text-ui-text-dark">Dashboard</span>
-          <span className="text-xs text-ui-text-muted dark:text-ui-text-muted-dark">All Buckets Overview</span>
+          <span className="text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
+            All Buckets Overview
+          </span>
         </div>
       </Link>
       <div className="mb-2 px-3">
@@ -240,9 +238,9 @@ function BucketList({
             to="/b/$bucket"
             params={{ bucket: bucket.name }}
             search={DEFAULT_OBJECTS_SEARCH_STATE}
-            className={`group flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 ${
+            className={`group flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 ${
               isActive
-                ? "border-red-900/30 bg-gradient-to-r from-red-900/20 to-red-900/20 text-ui-text shadow-sm dark:text-white"
+                ? "border-primary-600/20 bg-gradient-to-r from-primary-100 to-primary-50 text-primary-900 shadow-sm dark:border-primary-500/20 dark:from-primary-900/10 dark:to-primary-900/5 dark:text-primary-100"
                 : "border-transparent text-ui-text-muted hover:bg-ui-surface-hover hover:text-ui-text dark:text-ui-text-muted-dark dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
             }`}
             aria-current={isActive ? "page" : undefined}
@@ -274,7 +272,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
       {/* Typographic Logo Section */}
       <Link
         to="/buckets"
-        className="group relative -mx-6 block overflow-hidden bg-gradient-to-r from-red-900/90 via-red-900 to-red-900/90 px-6 py-7 transition-all duration-200 hover:from-red-800/80 hover:via-red-800 hover:to-red-800/80 focus-visible:outline-none"
+        className="group relative -mx-6 block overflow-hidden bg-gradient-to-r from-primary-900/90 via-primary-900 to-primary-900/90 px-6 py-7 transition-all duration-200 hover:from-primary-800/80 hover:via-primary-800 hover:to-primary-800/80 focus-visible:outline-none"
       >
         {/* Subtle shine effect on hover */}
         <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-[100%]"></div>
@@ -299,7 +297,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
       <div className="space-y-1 text-[13px] text-ui-text-muted dark:text-ui-text-dark">
         <Link
           to="/settings"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
         >
           <Settings className="h-4 w-4" />
           <span className="font-medium">Settings</span>
@@ -308,7 +306,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
           href="https://github.com/beshu-tech/deltaglider_commander/"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
         >
           <BookOpen className="h-4 w-4" />
           <span className="font-medium">Documentation</span>
@@ -317,7 +315,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
           href="https://github.com/beshu-tech/deltaglider_commander/issues"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
         >
           <LifeBuoy className="h-4 w-4" />
           <span className="font-medium">Support</span>
@@ -429,7 +427,7 @@ export function Sidebar() {
               <button
                 type="button"
                 onClick={closeSidebar}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-ui-text-muted transition hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:text-ui-text-subtle dark:hover:bg-ui-surface-active-dark/60 dark:hover:text-white"
+                className="x-close-button inline-flex h-8 w-8 items-center justify-center rounded-md text-ui-text-muted transition hover:bg-ui-surface-hover hover:text-ui-text dark:text-ui-text-subtle dark:hover:bg-ui-surface-active-dark/60 dark:hover:text-white"
               >
                 <span className="sr-only">Close sidebar</span>
                 <X className="h-4 w-4" />
@@ -455,7 +453,7 @@ export function Sidebar() {
             <button
               type="button"
               onClick={() => setBucketsExpanded(!bucketsExpanded)}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-ui-surface-hover focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-red-900 dark:hover:bg-ui-surface-active-dark/50"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-ui-surface-hover focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50"
             >
               {bucketsExpanded ? (
                 <ChevronDown className="h-4 w-4 text-ui-text-muted dark:text-ui-text-muted-dark" />
@@ -496,7 +494,11 @@ export function Sidebar() {
         </div>
         <SidebarFooter
           onSignOut={handleSignOut}
-          className={!isDesktop ? "mt-8 border-t border-ui-border pt-6 dark:border-ui-border-dark/40" : undefined}
+          className={
+            !isDesktop
+              ? "mt-8 border-t border-ui-border pt-6 dark:border-ui-border-dark/40"
+              : undefined
+          }
         />
       </aside>
     </>

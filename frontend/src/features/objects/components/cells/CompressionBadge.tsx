@@ -49,7 +49,8 @@ export function CompressionBadge({
 
   // Color coding based on compression percentage
   const getCompressionColor = (pct: number) => {
-    if (pct >= 70) return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+    if (pct >= 70)
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
     if (pct >= 40)
       return "bg-ui-surface-active text-ui-text-muted dark:bg-ui-surface-active-dark dark:text-ui-text-muted-dark";
     return "bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200";

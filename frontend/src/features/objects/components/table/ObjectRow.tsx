@@ -6,6 +6,7 @@ import { useCompressionStats } from "../../hooks/useCompressionStats";
 import { ObjectNameCell } from "../cells/ObjectNameCell";
 import { ObjectSizeCell } from "../cells/ObjectSizeCell";
 import { CompressionBadge } from "../cells/CompressionBadge";
+import { getTableRowClasses } from "./tableRowStyles";
 
 interface ObjectRowProps {
   item: ObjectItem;
@@ -28,15 +29,9 @@ export function ObjectRow({
   const name = item.key.split("/").pop() ?? item.key;
   const compressionStats = useCompressionStats(item);
 
-  const rowClasses = `cursor-pointer border-b border-ui-border-subtle transition-all duration-fast hover:bg-ui-surface-hover focus-visible:outline-focus focus-visible:outline-offset-[-2px] focus-visible:outline-primary-600 focus-visible:ring-focus focus-visible:ring-primary-600/20 dark:border-ui-border-subtle-dark dark:hover:bg-ui-surface-hover-dark dark:focus-visible:outline-primary-500 dark:focus-visible:ring-primary-500/20 ${
-    isHighlighted || isSelected
-      ? "bg-ui-surface-active dark:bg-ui-surface-active-dark"
-      : "odd:bg-black/5 dark:odd:bg-white/5"
-  }`;
-
   return (
     <tr
-      className={rowClasses}
+      className={getTableRowClasses({ isSelected, isHighlighted })}
       onClick={() => onRowClick(item)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -44,9 +39,10 @@ export function ObjectRow({
           onRowClick(item);
         }
       }}
-      tabIndex={0}
-      role="button"
-      aria-label={`View object ${name}`}
+      tabIndex={-1}
+      role="row"
+      aria-label={`Object: ${name}`}
+      aria-selected={isHighlighted}
     >
       <TableCell className="w-12">
         <input
@@ -73,7 +69,7 @@ export function ObjectRow({
           isLoadingMetadata={isLoadingMetadata}
         />
       </TableCell>
-      <TableCell>{formatDateTime(item.modified)}</TableCell>
+      <TableCell className="whitespace-nowrap">{formatDateTime(item.modified)}</TableCell>
       <TableCell>
         <CompressionBadge
           compressionStats={compressionStats}

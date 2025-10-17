@@ -15,15 +15,11 @@ export function ObjectInfoSection({ modified, acceptRanges }: ObjectInfoSectionP
       </h3>
       <dl className="space-y-2 text-xs">
         <div className="rounded bg-ui-bg-subtle p-2 dark:bg-ui-surface-active-dark">
-          <dt className="font-medium text-ui-text-muted dark:text-ui-text-subtle">
-            Last modified
-          </dt>
+          <dt className="font-medium text-ui-text-muted dark:text-ui-text-subtle">Last modified</dt>
           <dd className="mt-0.5 text-ui-text dark:text-ui-text-dark">{formatDateTime(modified)}</dd>
         </div>
         <div className="rounded bg-ui-bg-subtle p-2 dark:bg-ui-surface-active-dark">
-          <dt className="font-medium text-ui-text-muted dark:text-ui-text-subtle">
-            Accept-Ranges
-          </dt>
+          <dt className="font-medium text-ui-text-muted dark:text-ui-text-subtle">Accept-Ranges</dt>
           <dd className="mt-0.5 text-ui-text dark:text-ui-text-dark">
             {acceptRanges ? "Enabled" : "Disabled"}
           </dd>
