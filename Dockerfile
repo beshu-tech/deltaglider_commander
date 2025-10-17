@@ -32,19 +32,23 @@ FROM node:20-slim AS frontend-builder
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-WORKDIR /frontend
+WORKDIR /build
 
 # Copy frontend package files
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
+COPY frontend/package.json frontend/pnpm-lock.yaml ./frontend/
+
+# Copy vite config to ensure correct build output
+COPY frontend/vite.config.ts ./frontend/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN cd frontend && pnpm install --frozen-lockfile
 
-# Copy frontend source
-COPY frontend/ ./
+# Copy full project structure (needed for vite.config.ts outDir path)
+COPY src/ ./src/
+COPY frontend/ ./frontend/
 
-# Build frontend
-RUN pnpm build
+# Build frontend (outputs to /build/src/dgcommander/static per vite.config.ts)
+RUN cd frontend && pnpm build
 
 # Stage 2: Build Python backend
 FROM python:3.11-slim
@@ -61,8 +65,8 @@ WORKDIR /app
 COPY pyproject.toml README.md /app/
 COPY src /app/src
 
-# Copy built frontend from previous stage
-COPY --from=frontend-builder /frontend/dist /app/src/dgcommander/static
+# Copy built frontend from previous stage (vite outputs to /build/src/dgcommander/static)
+COPY --from=frontend-builder /build/src/dgcommander/static /app/src/dgcommander/static
 
 RUN pip install --upgrade pip \
     && pip install .[server]
