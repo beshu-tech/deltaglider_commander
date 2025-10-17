@@ -14,7 +14,7 @@ from .api.buckets import bp as buckets_bp
 from .api.downloads import bp as downloads_bp
 from .api.objects import bp as objects_bp
 from .api.uploads import bp as uploads_bp
-from .auth import SessionStore
+from .auth.filesystem_session_store import FileSystemSessionStore
 from .deps import (
     DGCommanderConfig,
     ServiceContainer,
@@ -106,10 +106,23 @@ def create_app(
     app.extensions["dgcommander"] = services
 
     # Initialize session store for client-side credentials
-    session_store = SessionStore(
-        max_size=cfg.session_max_size,
-        ttl_seconds=cfg.session_idle_ttl,
-    )
+    # Use filesystem-based store for multi-worker deployments, in-memory for tests
+    if cfg.test_mode:
+        # Test mode: use in-memory store (faster, simpler for tests with mock SDKs)
+        from .auth.session_store import SessionStore
+
+        session_store: SessionStore | FileSystemSessionStore = SessionStore(
+            max_size=cfg.session_max_size,
+            ttl_seconds=cfg.session_idle_ttl,
+        )
+    else:
+        # Production mode: use filesystem-based store for multi-worker support
+        session_dir = os.environ.get("DGCOMM_SESSION_DIR")
+        session_store = FileSystemSessionStore(
+            max_size=cfg.session_max_size,
+            ttl_seconds=cfg.session_idle_ttl,
+            session_dir=session_dir,
+        )
     app.extensions["session_store"] = session_store
 
     # Initialize purge scheduler for cleaning up temporary files

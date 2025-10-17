@@ -79,6 +79,7 @@ ENV DGCOMM_HMAC_SECRET=""
 # Application defaults
 ENV DGCOMM_LOG_LEVEL="INFO"
 ENV DGCOMM_CACHE_DIR="/tmp/dgcommander-cache"
+ENV DGCOMM_SESSION_DIR="/tmp/dgcommander-sessions"
 ENV DGCOMM_OBJECT_RATE_LIMIT="10"
 ENV DGCOMM_OBJECT_RATE_WINDOW="1.0"
 ENV DGCOMM_DOWNLOAD_TTL="300"
@@ -93,7 +94,9 @@ ENV DGCOMM_HOUSEKEEPING_S3_REGION=""
 ENV DGCOMM_HOUSEKEEPING_S3_SESSION_TOKEN=""
 ENV DGCOMM_HOUSEKEEPING_S3_ADDRESSING_STYLE="path"
 ENV DGCOMM_HOUSEKEEPING_S3_VERIFY_SSL="true"
+ENV DGCOMM_WORKER_COUNT="4"
+ENV DGCOMM_OBJECT_COUNT_LIMIT="15000"
 
-# Run with 4 worker processes
+# Run with the configured worker count
 # The filesystem-based purge scheduler lock ensures only one worker runs the scheduler
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "-w", "4", "dgcommander.app:create_app()"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "-w", "${DGCOMM_WORKER_COUNT}", "--limit-request-line", "${DGCOMM_OBJECT_COUNT_LIMIT}", "dgcommander.app:create_app()"]
