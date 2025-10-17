@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { StatsSummary } from "./useStats";
 import { formatBytesThin } from "../../lib/utils/bytes";
 
-type Tone = "blue" | "purple" | "amber" | "emerald";
+type Tone = "primary" | "secondary";
 
 interface StatCardConfig {
   id: string;
@@ -11,6 +11,8 @@ interface StatCardConfig {
   icon: ReactNode;
   value: ReactNode;
   description: ReactNode;
+  subMetric?: ReactNode;
+  sideMetric?: ReactNode;
 }
 
 interface StatCardProps extends StatCardConfig {
@@ -32,22 +34,22 @@ const tonePalette: Record<
     gloss: { light: string; dark: string };
   }
 > = {
-  blue: {
+  primary: {
     cardClass:
-      "border border-blue-500/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-blue-500/20 dark:bg-ui-bg-dark/72 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-blue-400 to-blue-500",
-    iconShadow: "0 14px 36px rgba(59, 130, 246, 0.28)",
+      "border border-primary-900/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-primary-900/20 dark:bg-ui-bg-dark/72 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+    iconClass: "bg-gradient-to-br from-purple-400 to-purple-500",
+    iconShadow: "0 14px 36px rgba(147, 51, 234, 0.28)",
     air: {
-      lightTop: "rgba(248, 251, 255, 0.48)",
-      lightBottom: "rgba(226, 232, 240, 0.28)",
-      darkTop: "rgba(11, 17, 32, 0.42)",
-      darkBottom: "rgba(23, 35, 63, 0.26)",
+      lightTop: "rgba(248, 241, 242, 0.48)",
+      lightBottom: "rgba(226, 210, 220, 0.28)",
+      darkTop: "rgba(76, 5, 25, 0.08)",
+      darkBottom: "rgba(63, 7, 19, 0.06)",
     },
     water: {
-      lightTop: "rgba(96, 165, 250, 0.48)",
-      lightBottom: "rgba(29, 78, 216, 0.32)",
-      darkTop: "rgba(37, 99, 235, 0.42)",
-      darkBottom: "rgba(15, 63, 150, 0.32)",
+      lightTop: "rgba(76, 5, 25, 0.18)",
+      lightBottom: "rgba(63, 7, 19, 0.12)",
+      darkTop: "rgba(76, 5, 25, 0.25)",
+      darkBottom: "rgba(63, 7, 19, 0.18)",
     },
     gloss: {
       light:
@@ -55,68 +57,22 @@ const tonePalette: Record<
       dark: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 55%, rgba(255,255,255,0) 100%)",
     },
   },
-  purple: {
+  secondary: {
     cardClass:
-      "border border-purple-500/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-purple-500/20 dark:bg-ui-bg-dark/78 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-purple-400 to-purple-500",
-    iconShadow: "0 14px 36px rgba(147, 51, 234, 0.28)",
-    air: {
-      lightTop: "rgba(250, 245, 255, 0.48)",
-      lightBottom: "rgba(233, 213, 255, 0.3)",
-      darkTop: "rgba(26, 16, 40, 0.42)",
-      darkBottom: "rgba(37, 17, 52, 0.26)",
-    },
-    water: {
-      lightTop: "rgba(192, 132, 252, 0.5)",
-      lightBottom: "rgba(124, 58, 237, 0.34)",
-      darkTop: "rgba(139, 92, 246, 0.44)",
-      darkBottom: "rgba(91, 33, 182, 0.32)",
-    },
-    gloss: {
-      light:
-        "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0) 100%)",
-      dark: "linear-gradient(180deg, rgba(255,255,255,0.21) 0%, rgba(255,255,255,0.08) 55%, rgba(255,255,255,0) 100%)",
-    },
-  },
-  amber: {
-    cardClass:
-      "border border-ui-border bg-ui-surface text-ui-text shadow-elevation-sm dark:border-ui-border-dark dark:bg-ui-surface-dark dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-primary-400 to-primary-500",
-    iconShadow: "0 14px 36px rgba(217, 119, 6, 0.26)",
-    air: {
-      lightTop: "rgba(255, 247, 237, 0.48)",
-      lightBottom: "rgba(253, 230, 138, 0.28)",
-      darkTop: "rgba(33, 19, 6, 0.4)",
-      darkBottom: "rgba(44, 26, 12, 0.26)",
-    },
-    water: {
-      lightTop: "rgba(251, 191, 36, 0.48)",
-      lightBottom: "rgba(217, 119, 6, 0.32)",
-      darkTop: "rgba(234, 138, 26, 0.44)",
-      darkBottom: "rgba(180, 83, 9, 0.32)",
-    },
-    gloss: {
-      light:
-        "linear-gradient(180deg, rgba(255,255,255,0.48) 0%, rgba(255,255,255,0.1) 55%, rgba(255,255,255,0) 100%)",
-      dark: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.07) 55%, rgba(255,255,255,0) 100%)",
-    },
-  },
-  emerald: {
-    cardClass:
-      "border border-emerald-500/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-emerald-500/20 dark:bg-ui-bg-dark/78 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+      "border border-primary-900/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-primary-900/20 dark:bg-ui-bg-dark/78 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
     iconClass: "bg-gradient-to-br from-emerald-400 to-emerald-500",
     iconShadow: "0 14px 36px rgba(16, 185, 129, 0.28)",
     air: {
-      lightTop: "rgba(240, 253, 244, 0.48)",
-      lightBottom: "rgba(187, 247, 208, 0.3)",
-      darkTop: "rgba(15, 31, 26, 0.42)",
-      darkBottom: "rgba(19, 41, 35, 0.26)",
+      lightTop: "rgba(248, 241, 242, 0.48)",
+      lightBottom: "rgba(226, 210, 220, 0.28)",
+      darkTop: "rgba(76, 5, 25, 0.08)",
+      darkBottom: "rgba(63, 7, 19, 0.06)",
     },
     water: {
-      lightTop: "rgba(52, 211, 153, 0.48)",
-      lightBottom: "rgba(4, 120, 87, 0.32)",
-      darkTop: "rgba(15, 157, 104, 0.44)",
-      darkBottom: "rgba(6, 95, 70, 0.32)",
+      lightTop: "rgba(76, 5, 25, 0.18)",
+      lightBottom: "rgba(63, 7, 19, 0.12)",
+      darkTop: "rgba(76, 5, 25, 0.25)",
+      darkBottom: "rgba(63, 7, 19, 0.18)",
     },
     gloss: {
       light:
@@ -234,6 +190,8 @@ function StatCard({
   icon,
   value,
   description,
+  subMetric,
+  sideMetric,
   fillProgress,
   assistiveText,
   isAnalyzing,
@@ -343,15 +301,25 @@ function StatCard({
           {icon}
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="text-left text-[1.45rem] font-semibold uppercase tracking-[0.18em] text-ui-text/90 drop-shadow-[0_1px_2px_rgba(255,255,255,0.35)] dark:text-ui-text-dark dark:drop-shadow-[0_1px_4px_rgba(8,15,35,0.45)]">
-            {label}
-          </span>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-left text-[1.45rem] font-semibold uppercase tracking-[0.18em] text-ui-text/90 drop-shadow-[0_1px_2px_rgba(255,255,255,0.35)] dark:text-ui-text-dark dark:drop-shadow-[0_1px_4px_rgba(8,15,35,0.45)]">
+              {label}
+            </span>
+            {sideMetric && (
+              <div className="flex flex-col items-end">{sideMetric}</div>
+            )}
+          </div>
           <div className="mt-3 text-left text-[2.2rem] font-semibold leading-tight tracking-tight text-ui-text tabular-nums drop-shadow-[0_4px_12px_rgba(15,23,42,0.22)] dark:text-white dark:drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] md:text-[2.5rem]">
             {value}
           </div>
-          <p className="mt-2 text-left text-base font-normal leading-snug text-ui-text-muted tabular-nums dark:text-ui-text-dark/90">
-            {description}
-          </p>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <p className="text-left text-base font-normal leading-snug text-ui-text-muted tabular-nums dark:text-ui-text-dark/90">
+              {description}
+            </p>
+            {subMetric && (
+              <div className="flex flex-col items-end text-right">{subMetric}</div>
+            )}
+          </div>
         </div>
       </div>
       <span className="sr-only" aria-live="polite">
@@ -379,13 +347,6 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
     : summary.pendingCount > 0
       ? `${summary.pendingCount} ${pluralize(summary.pendingCount, "bucket")} pending analysis.`
       : "No active buckets available for analysis yet.";
-
-  const bucketDescription =
-    summary.pendingCount > 0
-      ? `${summary.pendingCount} pending ${pluralize(summary.pendingCount, "bucket")}`
-      : summary.bucketCount === 0
-        ? "No buckets yet"
-        : "All buckets active";
 
   const animatedBucketCount = useAnimatedNumber(summary.bucketCount, {
     precision: 0,
@@ -433,40 +394,12 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
   });
 
   const ratioValue = hasRatio ? `${Math.max(animatedRatio, 0).toFixed(1)}:1` : "—";
-  const ratioDescription = hasRatio
-    ? "Compression ratio"
-    : hasActiveBuckets
-      ? "Waiting for compression data"
-      : "No compression data";
 
   const cards: StatCardConfig[] = [
     {
-      id: "buckets",
-      label: "Buckets",
-      tone: "blue",
-      icon: (
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-          />
-        </svg>
-      ),
-      value: animatedBucketCount.toLocaleString(),
-      description: bucketDescription,
-    },
-    {
       id: "objects",
       label: "Objects",
-      tone: "purple",
+      tone: "primary",
       icon: (
         <svg
           className="h-5 w-5"
@@ -485,34 +418,21 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
       ),
       value: animatedObjectCount.toLocaleString(),
       description: `${formatBytesThin(Math.max(0, Math.round(animatedStoredBytes)))} stored`,
-    },
-    {
-      id: "ratio",
-      label: "Ratio",
-      tone: "amber",
-      icon: (
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 8V4a2 2 0 012-2h8a2 2 0 012 2v4M4 8h16M4 8v8a2 2 0 002 2h12a2 2 0 002-2V8"
-          />
-        </svg>
+      subMetric: (
+        <>
+          <span className="text-sm font-semibold text-ui-text/80 dark:text-ui-text-dark/80">
+            {animatedBucketCount.toLocaleString()}
+          </span>
+          <span className="text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
+            {pluralize(summary.bucketCount, "bucket")}
+          </span>
+        </>
       ),
-      value: ratioValue,
-      description: ratioDescription,
     },
     {
-      id: "savings",
-      label: "Saved",
-      tone: "emerald",
+      id: "compression",
+      label: "Compression",
+      tone: "secondary",
       icon: (
         <svg
           className="h-5 w-5"
@@ -531,22 +451,32 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
       ),
       value: `${Math.max(animatedSavingsPct, 0).toFixed(1)}%`,
       description: `${formatBytesThin(Math.max(0, Math.round(savedBytes)))} saved`,
+      sideMetric: (
+        <>
+          <span className="text-xl font-bold text-ui-text/80 dark:text-ui-text-dark/80 tabular-nums">
+            {ratioValue}
+          </span>
+          <span className="text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
+            ratio
+          </span>
+        </>
+      ),
     },
   ];
 
   const cardFillTarget = clampProgress(Math.max(0, summary.savingsPct) / 100);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
       {cards.map((card) => (
         <StatCard
           key={card.id}
           {...card}
-          fillProgress={card.id === "savings" ? cardFillTarget : progress}
+          fillProgress={card.id === "compression" ? cardFillTarget : progress}
           assistiveText={assistiveText}
           isAnalyzing={hasAnalyzingBuckets}
-          isSavings={card.id === "savings"}
-          animateSavings={card.id === "savings" ? animateSavings : false}
+          isSavings={card.id === "compression"}
+          animateSavings={card.id === "compression" ? animateSavings : false}
         />
       ))}
     </div>

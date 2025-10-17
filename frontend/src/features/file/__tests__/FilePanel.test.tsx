@@ -108,15 +108,19 @@ describe("FilePanel", () => {
   it("confirms deletion and calls mutation", async () => {
     const mutateSpy = vi.fn();
     mockUseDeleteObject.mockReturnValue({ mutate: mutateSpy, isPending: false });
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const { user } = renderPanel();
 
+    // Click delete button to open modal
     await user.click(screen.getByRole("button", { name: /delete object/i }));
 
-    expect(confirmSpy).toHaveBeenCalled();
-    expect(mutateSpy).toHaveBeenCalledWith("folder/example.txt", expect.any(Object));
+    // Modal should be visible
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
 
-    confirmSpy.mockRestore();
+    // Click confirm button in modal
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+
+    expect(mutateSpy).toHaveBeenCalledWith("folder/example.txt", expect.any(Object));
   });
 
   // Skip due to timing flakiness with clipboard API mocking in test environment

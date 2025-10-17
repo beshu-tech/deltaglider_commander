@@ -79,8 +79,13 @@ export function getVisualSelectionKey(
     return keyboardFocusedKey;
   }
 
-  // Priority 2: Fall back to URL selection
-  return urlSelectedKey;
+  // Priority 2: URL selection
+  if (urlSelectedKey !== null) {
+    return urlSelectedKey;
+  }
+
+  // Priority 3: Fall back to keyboard focus even if not active
+  return keyboardFocusedKey;
 }
 
 /**
@@ -290,8 +295,8 @@ export function isEditable(element: HTMLElement): boolean {
     return true;
   }
 
-  // ContentEditable elements
-  if (element.isContentEditable) {
+  // ContentEditable elements (check both property and attribute for test compatibility)
+  if (element.isContentEditable || element.contentEditable === "true") {
     return true;
   }
 
