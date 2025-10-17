@@ -26,6 +26,18 @@ wheels = [
 ]
 
 [[package]]
+name = "apscheduler"
+version = "3.11.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tzlocal" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4e/00/6d6814ddc19be2df62c8c898c4df6b5b1914f3bd024b780028caa392d186/apscheduler-3.11.0.tar.gz", hash = "sha256:4c622d250b0955a65d5d0eb91c33e6d43fd879834bf541e0a18661ae60460133", size = 107347 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/ae/9a053dd9229c0fde6b1f1f33f609ccff1ee79ddda364c756a924c6d8563b/APScheduler-3.11.0-py3-none-any.whl", hash = "sha256:fc134ca32e50f5eadcc4938e3a4545ab19131435e851abb40b34d63d5141c6da", size = 64004 },
+]
+
+[[package]]
 name = "authlib"
 version = "1.6.5"
 source = { registry = "https://pypi.org/simple" }
@@ -458,24 +470,26 @@ wheels = [
 
 [[package]]
 name = "deltaglider"
-version = "5.1.1"
+version = "6.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
     { name = "click" },
     { name = "cryptography" },
     { name = "python-dateutil" },
+    { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/e2/77d8e550dacf4c08f000fb1c8a43191d2177b32000c029961f2241047c07/deltaglider-5.1.1.tar.gz", hash = "sha256:b826cae897656477e0cb98a8cc95dde74b9defdf63702b34c81d5282dd04d0b6", size = 463684 }
+sdist = { url = "https://files.pythonhosted.org/packages/49/71/71f0aa91486d9ae58ec4f8518695e813c826b78b1ba9ffd4627b92dd9b94/deltaglider-6.0.1.tar.gz", hash = "sha256:9a188c3bf1492cae9d1eb23d5b3bbeaaaa301c6880e97ebcebd57cfb80af107a", size = 498467 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/43/91c1af7b54047b76b2d4605067a3b83e8513d1bda4c6069cc3bfdddd2106/deltaglider-5.1.1-py3-none-any.whl", hash = "sha256:11d4a0d9892a86252b540b832c111c4acfc3b1da7ea0cb877307df0317df4481", size = 81938 },
+    { url = "https://files.pythonhosted.org/packages/20/10/91ebe41830c0f9b01bff231a54fa0b2113f1457c7128b71ece788a50743f/deltaglider-6.0.1-py3-none-any.whl", hash = "sha256:ab04bb072fea825e77f2ffd0f85f556729221f5699b2291f2c79b8ab30302c8d", size = 100935 },
 ]
 
 [[package]]
 name = "dgcommander"
-version = "1.0.5"
+version = "1.2.0"
 source = { editable = "." }
 dependencies = [
+    { name = "apscheduler" },
     { name = "cachetools" },
     { name = "deltaglider" },
     { name = "flask" },
@@ -497,6 +511,7 @@ dev = [
     { name = "pytest-flask" },
     { name = "ruff" },
     { name = "safety" },
+    { name = "types-cachetools" },
 ]
 server = [
     { name = "gunicorn" },
@@ -504,9 +519,10 @@ server = [
 
 [package.metadata]
 requires-dist = [
+    { name = "apscheduler", specifier = ">=3.10.0,<4" },
     { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.5" },
     { name = "cachetools", specifier = ">=5.3" },
-    { name = "deltaglider", specifier = "==5.1.1" },
+    { name = "deltaglider", specifier = "==6.0.1" },
     { name = "flask", specifier = ">=3.0,<4" },
     { name = "flask-cors", specifier = ">=4.0" },
     { name = "freezegun", marker = "extra == 'dev'", specifier = ">=1.5" },
@@ -521,6 +537,7 @@ requires-dist = [
     { name = "pytest-flask", marker = "extra == 'dev'", specifier = ">=1.3" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "safety", marker = "extra == 'dev'", specifier = ">=2.3.5" },
+    { name = "types-cachetools", marker = "extra == 'dev'", specifier = ">=6.2" },
     { name = "typing-extensions", specifier = ">=4.9" },
 ]
 provides-extras = ["dev", "server"]
@@ -1723,6 +1740,15 @@ wheels = [
 ]
 
 [[package]]
+name = "types-cachetools"
+version = "6.2.0.20250827"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/f2/e14f51330093fd640fd11663863dc7dd80e5894ef9d2eb39325cc61ba3cf/types_cachetools-6.2.0.20250827.tar.gz", hash = "sha256:f27febfd1b5e517e3cb1ca6daf38ad6ddb4eeb1e29bdbd81a082971ba30c0d8e", size = 9128 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/80/9c/be9d24c246ff825385b4a139409ae7e2d36ea2294f12681951a6b9f905f7/types_cachetools-6.2.0.20250827-py3-none-any.whl", hash = "sha256:96ae5abcb5ea1e1f1faf811a2ff8b2ce7e6d820fc42c4fcb4b332b2da485de16", size = 8940 },
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1741,6 +1767,27 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/55/e3/70399cb7dd41c10ac53367ae42139cf4b1ca5f36bb3dc6c9d33acdb43655/typing_inspection-0.4.2.tar.gz", hash = "sha256:ba561c48a67c5958007083d386c3295464928b01faa735ab8547c5692e87f464", size = 75949 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/dc/9b/47798a6c91d8bdb567fe2698fe81e0c6b7cb7ef4d13da4114b41d239f65d/typing_inspection-0.4.2-py3-none-any.whl", hash = "sha256:4ed1cacbdc298c220f1bd249ed5287caa16f34d44ef4e9c3d0cbad5b521545e7", size = 14611 },
+]
+
+[[package]]
+name = "tzdata"
+version = "2025.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/95/32/1a225d6164441be760d75c2c42e2780dc0873fe382da3e98a2e1e48361e5/tzdata-2025.2.tar.gz", hash = "sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9", size = 196380 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/23/c7abc0ca0a1526a0774eca151daeb8de62ec457e77262b66b359c3c7679e/tzdata-2025.2-py2.py3-none-any.whl", hash = "sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8", size = 347839 },
+]
+
+[[package]]
+name = "tzlocal"
+version = "5.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8b/2e/c14812d3d4d9cd1773c6be938f89e5735a1f11a9f184ac3639b93cef35d5/tzlocal-5.3.1.tar.gz", hash = "sha256:cceffc7edecefea1f595541dbd6e990cb1ea3d19bf01b2809f362a03dd7921fd", size = 30761 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c2/14/e2a54fabd4f08cd7af1c07030603c3356b74da07f7cc056e600436edfa17/tzlocal-5.3.1-py3-none-any.whl", hash = "sha256:eb1a66c3ef5847adf7a834f1be0800581b683b5608e74f86ecbcef8ab91bb85d", size = 18026 },
 ]
 
 [[package]]

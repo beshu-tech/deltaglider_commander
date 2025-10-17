@@ -61,6 +61,7 @@ class FileSystemSessionStore:
         # Use fcntl for Unix-like systems, fallback to simple file creation
         try:
             import fcntl
+
             lock_fd = os.open(str(self._lock_file), os.O_RDWR)
             fcntl.flock(lock_fd, fcntl.LOCK_EX)
             return lock_fd
@@ -73,6 +74,7 @@ class FileSystemSessionStore:
         if lock_fd is not None:
             try:
                 import fcntl
+
                 fcntl.flock(lock_fd, fcntl.LOCK_UN)
                 os.close(lock_fd)
             except ImportError:
@@ -150,7 +152,9 @@ class FileSystemSessionStore:
         self._delete_session_file(lru_session_id)
         return access_order
 
-    def _find_by_credentials_hash_unlocked(self, cred_hash: str, access_order: list[str]) -> tuple[str | None, list[str]]:
+    def _find_by_credentials_hash_unlocked(
+        self, cred_hash: str, access_order: list[str]
+    ) -> tuple[str | None, list[str]]:
         """
         Find existing valid session for given credentials (internal, no locking).
 
