@@ -5,7 +5,7 @@ import { formatBytesThin } from "../../lib/utils/bytes";
 // Water background opacity multiplier - adjust this value to control all water backgrounds
 // Range: 0.0 (transparent) to 1.0 (fully opaque)
 // Current: 0.50 = 50% opacity
-const WATER_OPACITY = 0.50;
+const WATER_OPACITY = 0.5;
 
 type Tone = "primary" | "secondary";
 
@@ -29,7 +29,7 @@ interface StatCardProps extends StatCardConfig {
 }
 
 // Coefficients for adjusting gradient opacity based on theme
-const LIGHT_MODE_COEFFICIENT = 0.60;
+const LIGHT_MODE_COEFFICIENT = 0.6;
 const DARK_MODE_COEFFICIENT = 0.45;
 
 // Helper function to create water gradient colors with adjustable opacity
@@ -225,7 +225,7 @@ function StatCard({
     fillProgress,
     animatedFill,
     effectiveProgress,
-    'effectiveProgress%': `${(effectiveProgress * 100).toFixed(1)}%`,
+    "effectiveProgress%": `${(effectiveProgress * 100).toFixed(1)}%`,
   });
 
   return (
@@ -323,9 +323,7 @@ function StatCard({
             <span className="text-left text-[1.45rem] font-semibold uppercase tracking-[0.18em] text-ui-text/90 drop-shadow-[0_1px_2px_rgba(255,255,255,0.35)] dark:text-ui-text-dark dark:drop-shadow-[0_1px_4px_rgba(8,15,35,0.45)]">
               {label}
             </span>
-            {sideMetric && (
-              <div className="flex flex-col items-end">{sideMetric}</div>
-            )}
+            {sideMetric && <div className="flex flex-col items-end">{sideMetric}</div>}
           </div>
           <div className="mt-3 text-left text-[2.2rem] font-semibold leading-tight tracking-tight text-ui-text tabular-nums drop-shadow-[0_4px_12px_rgba(15,23,42,0.22)] dark:text-white dark:drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] md:text-[2.5rem]">
             {value}
@@ -334,9 +332,7 @@ function StatCard({
             <p className="text-left text-base font-normal leading-snug text-ui-text-muted tabular-nums dark:text-ui-text-dark/90">
               {description}
             </p>
-            {subMetric && (
-              <div className="flex flex-col items-end text-right">{subMetric}</div>
-            )}
+            {subMetric && <div className="flex flex-col items-end text-right">{subMetric}</div>}
           </div>
         </div>
       </div>
@@ -366,7 +362,7 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
     maxDuration: 2200,
   });
 
-  console.log('[StatsOverviewCards] Raw values:', {
+  console.log("[StatsOverviewCards] Raw values:", {
     analysisCoverage: summary.analysisCoverage,
     animatedProgress,
     savingsPct: summary.savingsPct,
@@ -417,10 +413,10 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
       precision: 3,
       minDuration: 900,
       maxDuration: 2200,
-    }
+    },
   );
 
-  console.log('[StatsOverviewCards] Animated values:', {
+  console.log("[StatsOverviewCards] Animated values:", {
     animatedSavingsPct,
     animatedSavingsFillProgress,
     animatedObjectCount,
@@ -491,7 +487,7 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
     },
   ];
 
-  console.log('[StatsOverviewCards] fillProgress values:', {
+  console.log("[StatsOverviewCards] fillProgress values:", {
     compression: animatedSavingsFillProgress,
     objects: animatedProgress,
   });

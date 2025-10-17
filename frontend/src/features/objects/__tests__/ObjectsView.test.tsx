@@ -146,7 +146,9 @@ describe("ObjectsView", () => {
     // Wait for the debounce to complete (150ms + buffer)
     await waitFor(
       () => {
-        expect(onSearchChange).toHaveBeenCalledWith(expect.objectContaining({ search: "documents" }));
+        expect(onSearchChange).toHaveBeenCalledWith(
+          expect.objectContaining({ search: "documents" }),
+        );
       },
       { timeout: 500 },
     );
