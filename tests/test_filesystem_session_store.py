@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dgcommander.auth.filesystem_session_store import FileSystemSessionStore, SessionData
+from dgcommander.auth.filesystem_session_store import FileSystemSessionStore
 from dgcommander.sdk.adapters.memory import InMemoryDeltaGliderSDK
 
 
