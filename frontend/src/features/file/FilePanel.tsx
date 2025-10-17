@@ -151,6 +151,7 @@ export function FilePanel({
         });
       } finally {
         setIsCopyingLink(false);
+        setIsDropdownOpen(false);
       }
     },
     [bucket, metadata, handleCopyWithFallback, toast],
