@@ -10,6 +10,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from dgcommander.auth.credentials import create_sdk_from_credentials
 from dgcommander.sdk.protocol import DeltaGliderSDK
 
 
@@ -19,6 +20,15 @@ class SessionData:
 
     credentials: dict
     sdk_client: DeltaGliderSDK
+    last_accessed: float
+    created_at: float
+
+
+@dataclass
+class FileSessionData:
+    """Lightweight session data for filesystem storage (SDK client not stored)."""
+
+    credentials: dict
     last_accessed: float
     created_at: float
 
@@ -110,7 +120,7 @@ class FileSystemSessionStore:
         return (time.time() - session_data.last_accessed) > self._ttl
 
     def _load_session(self, session_id: str) -> SessionData | None:
-        """Load session data from filesystem."""
+        """Load session data from filesystem and reconstruct SDK client."""
         session_file = self._session_file(session_id)
 
         if not session_file.exists():
@@ -118,18 +128,36 @@ class FileSystemSessionStore:
 
         try:
             with open(session_file, "rb") as f:
-                return pickle.load(f)  # noqa: S301 - Loading trusted session data from our own files
+                file_data: FileSessionData = pickle.load(f)  # noqa: S301 - Loading trusted session data from our own files
+
+            # Reconstruct SDK client from credentials
+            sdk_client = create_sdk_from_credentials(file_data.credentials)
+
+            # Return full SessionData with SDK client
+            return SessionData(
+                credentials=file_data.credentials,
+                sdk_client=sdk_client,
+                last_accessed=file_data.last_accessed,
+                created_at=file_data.created_at,
+            )
         except Exception:
             # Corrupted file, remove it
             session_file.unlink(missing_ok=True)
             return None
 
     def _save_session(self, session_id: str, session_data: SessionData) -> None:
-        """Save session data to filesystem."""
+        """Save session data to filesystem (without SDK client)."""
         session_file = self._session_file(session_id)
 
+        # Create lightweight file data without SDK client (which can't be pickled)
+        file_data = FileSessionData(
+            credentials=session_data.credentials,
+            last_accessed=session_data.last_accessed,
+            created_at=session_data.created_at,
+        )
+
         with open(session_file, "wb") as f:
-            pickle.dump(session_data, f)
+            pickle.dump(file_data, f)
 
     def _delete_session_file(self, session_id: str) -> None:
         """Delete session file from filesystem."""
