@@ -5,6 +5,7 @@ from __future__ import annotations
 import fcntl
 import logging
 import os
+import tempfile
 from pathlib import Path
 from typing import IO
 
@@ -30,7 +31,9 @@ class PurgeScheduler:
         self._scheduler: BackgroundScheduler | None = None
         self._job: Job | None = None
         self._lock_file: IO | None = None
-        self._lock_path = Path(os.environ.get("DGCOMM_CACHE_DIR", "/tmp/dgcommander-cache")) / "purge_scheduler.lock"
+        # Use tempfile.gettempdir() instead of hardcoded /tmp for security
+        default_cache_dir = Path(tempfile.gettempdir()) / "dgcommander-cache"
+        self._lock_path = Path(os.environ.get("DGCOMM_CACHE_DIR", str(default_cache_dir))) / "purge_scheduler.lock"
 
     def start(self) -> bool:
         """Start the scheduler. Returns True if started, False if already running."""
