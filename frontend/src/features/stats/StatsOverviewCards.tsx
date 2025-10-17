@@ -2,11 +2,6 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { StatsSummary } from "./useStats";
 import { formatBytesThin } from "../../lib/utils/bytes";
 
-// Water background opacity multiplier - adjust this value to control all water backgrounds
-// Range: 0.0 (transparent) to 1.0 (fully opaque)
-// Current: 0.50 = 50% opacity
-const WATER_OPACITY = 0.5;
-
 type Tone = "primary" | "secondary";
 
 interface StatCardConfig {
@@ -28,68 +23,37 @@ interface StatCardProps extends StatCardConfig {
   animateSavings?: boolean;
 }
 
-// Coefficients for adjusting gradient opacity based on theme
-const LIGHT_MODE_COEFFICIENT = 0.6;
-const DARK_MODE_COEFFICIENT = 0.45;
-
-// Helper function to create water gradient colors with adjustable opacity
-function createWaterGradient(baseOpacity: number) {
-  return {
-    // Light mode: Full opacity with warmer tones
-    lightTop: `rgba(76, 5, 25, ${baseOpacity * LIGHT_MODE_COEFFICIENT})`,
-    lightBottom: `rgba(63, 7, 19, ${baseOpacity * LIGHT_MODE_COEFFICIENT})`,
-    // Dark mode: Reduced opacity with cooler tones for better visibility
-    darkTop: `rgba(90, 15, 40, ${baseOpacity * DARK_MODE_COEFFICIENT})`,
-    darkBottom: `rgba(75, 12, 30, ${baseOpacity * DARK_MODE_COEFFICIENT})`,
-  };
-}
+// Water fill opacity is controlled via CSS opacity on the gradient elements
+// We'll use Tailwind's opacity modifiers for this
 
 const tonePalette: Record<
   Tone,
   {
     cardClass: string;
     iconClass: string;
-    iconShadow: string;
-    air: { lightTop: string; lightBottom: string; darkTop: string; darkBottom: string };
-    water: { lightTop: string; lightBottom: string; darkTop: string; darkBottom: string };
-    gloss: { light: string; dark: string };
+    iconShadowClass: string;
+    airGradientClass: string;
+    waterGradientClass: string;
+    glossGradientClass: string;
   }
 > = {
   primary: {
     cardClass:
       "border border-primary-900/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-primary-900/20 dark:bg-ui-bg-dark/72 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-purple-400 to-purple-500",
-    iconShadow: "0 14px 36px rgba(147, 51, 234, 0.28)",
-    air: {
-      lightTop: "rgba(248, 241, 242, 0.48)",
-      lightBottom: "rgba(226, 210, 220, 0.28)",
-      darkTop: "rgba(76, 5, 25, 0.08)",
-      darkBottom: "rgba(63, 7, 19, 0.06)",
-    },
-    water: createWaterGradient(WATER_OPACITY),
-    gloss: {
-      light:
-        "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0) 100%)",
-      dark: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 55%, rgba(255,255,255,0) 100%)",
-    },
+    iconClass: "bg-gradient-to-br from-purple-400 to-purple-500 shadow-icon-purple",
+    iconShadowClass: "shadow-icon-purple",
+    airGradientClass: "bg-air-light dark:bg-air-dark",
+    waterGradientClass: "bg-water-light dark:bg-water-dark",
+    glossGradientClass: "bg-gloss-primary-light dark:bg-gloss-primary-dark",
   },
   secondary: {
     cardClass:
       "border border-primary-900/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-primary-900/20 dark:bg-ui-bg-dark/78 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-emerald-400 to-emerald-500",
-    iconShadow: "0 14px 36px rgba(16, 185, 129, 0.28)",
-    air: {
-      lightTop: "rgba(248, 241, 242, 0.48)",
-      lightBottom: "rgba(226, 210, 220, 0.28)",
-      darkTop: "rgba(76, 5, 25, 0.08)",
-      darkBottom: "rgba(63, 7, 19, 0.06)",
-    },
-    water: createWaterGradient(WATER_OPACITY),
-    gloss: {
-      light:
-        "linear-gradient(180deg, rgba(255,255,255,0.48) 0%, rgba(255,255,255,0.1) 55%, rgba(255,255,255,0) 100%)",
-      dark: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.07) 55%, rgba(255,255,255,0) 100%)",
-    },
+    iconClass: "bg-gradient-to-br from-emerald-400 to-emerald-500 shadow-icon-emerald",
+    iconShadowClass: "shadow-icon-emerald",
+    airGradientClass: "bg-air-light dark:bg-air-dark",
+    waterGradientClass: "bg-water-light dark:bg-water-dark",
+    glossGradientClass: "bg-gloss-secondary-light dark:bg-gloss-secondary-dark",
   },
 };
 
@@ -238,16 +202,10 @@ function StatCard({
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 opacity-95 transition-opacity duration-500">
           <div
-            className="absolute inset-0 rounded-b-2xl dark:hidden"
-            style={{
-              backgroundImage: `linear-gradient(180deg, ${palette.air.lightTop} 0%, ${palette.air.lightBottom} 100%)`,
-            }}
-          />
-          <div
-            className="absolute inset-0 hidden rounded-b-2xl dark:block"
-            style={{
-              backgroundImage: `linear-gradient(180deg, ${palette.air.darkTop} 0%, ${palette.air.darkBottom} 100%)`,
-            }}
+            className={joinClasses(
+              "absolute inset-0 rounded-b-2xl",
+              palette.airGradientClass
+            )}
           />
         </div>
         <div className="absolute inset-0 flex flex-col justify-end">
@@ -258,46 +216,24 @@ function StatCard({
             <div className="absolute inset-0 overflow-hidden rounded-b-2xl">
               <div
                 className={joinClasses(
-                  "absolute inset-0 rounded-b-2xl dark:hidden",
+                  "absolute inset-0 rounded-b-2xl",
+                  palette.waterGradientClass,
                   savingsActive ? "animate-savings-wave" : "",
                 )}
-                style={{
-                  backgroundImage: `linear-gradient(180deg, ${palette.water.lightTop} 0%, ${palette.water.lightBottom} 100%)`,
-                }}
               />
               <div
                 className={joinClasses(
-                  "absolute inset-0 hidden rounded-b-2xl dark:block",
-                  savingsActive ? "animate-savings-wave" : "",
+                  "absolute inset-x-0 top-0 h-8 transition-opacity duration-500",
+                  palette.glossGradientClass,
+                  effectiveProgress > 0 ? "opacity-80 dark:opacity-70" : "opacity-0",
                 )}
-                style={{
-                  backgroundImage: `linear-gradient(180deg, ${palette.water.darkTop} 0%, ${palette.water.darkBottom} 100%)`,
-                }}
-              />
-              <div
-                className={joinClasses(
-                  "absolute inset-x-0 top-0 h-8 opacity-0 transition-opacity duration-500 dark:hidden",
-                  effectiveProgress > 0 ? "opacity-80" : "opacity-0",
-                )}
-                style={{ backgroundImage: palette.gloss.light }}
-              />
-              <div
-                className={joinClasses(
-                  "absolute inset-x-0 top-0 hidden h-8 opacity-0 transition-opacity duration-500 dark:block",
-                  effectiveProgress > 0 ? "opacity-70" : "opacity-0",
-                )}
-                style={{ backgroundImage: palette.gloss.dark }}
               />
             </div>
             <div
               className={joinClasses(
-                "absolute inset-x-0 -top-[1px] h-[2px] opacity-0 transition-opacity duration-500",
+                "absolute inset-x-0 -top-[1px] h-[2px] bg-water-line transition-opacity duration-500",
                 effectiveProgress > 0 ? "opacity-90" : "opacity-0",
               )}
-              style={{
-                background:
-                  "linear-gradient(90deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.75) 100%)",
-              }}
             />
           </div>
         </div>
@@ -306,11 +242,10 @@ function StatCard({
       <div className="relative z-10 flex items-start gap-4">
         <div
           className={joinClasses(
-            "flex h-12 w-12 items-center justify-center rounded-xl text-white transition-transform duration-700 ease-out motion-reduce:transition-none",
+            "flex h-12 w-12 items-center justify-center rounded-xl text-white transition-all duration-700 ease-out motion-reduce:transition-none",
             palette.iconClass,
           )}
           style={{
-            boxShadow: palette.iconShadow,
             transform: `translateY(${effectiveProgress * -2}px)`,
             opacity: 0.9 + effectiveProgress * 0.1,
           }}
@@ -320,12 +255,12 @@ function StatCard({
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-left text-[1.45rem] font-semibold uppercase tracking-[0.18em] text-ui-text/90 drop-shadow-[0_1px_2px_rgba(255,255,255,0.35)] dark:text-ui-text-dark dark:drop-shadow-[0_1px_4px_rgba(8,15,35,0.45)]">
+            <span className="text-left text-[1.45rem] font-semibold uppercase tracking-[0.18em] text-ui-text/90 drop-shadow-text-light dark:text-ui-text-dark dark:drop-shadow-text-dark">
               {label}
             </span>
             {sideMetric && <div className="flex flex-col items-end">{sideMetric}</div>}
           </div>
-          <div className="mt-3 text-left text-[2.2rem] font-semibold leading-tight tracking-tight text-ui-text tabular-nums drop-shadow-[0_4px_12px_rgba(15,23,42,0.22)] dark:text-white dark:drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] md:text-[2.5rem]">
+          <div className="mt-3 text-left text-[2.2rem] font-semibold leading-tight tracking-tight text-ui-text tabular-nums drop-shadow-value-light dark:text-white dark:drop-shadow-value-dark md:text-[2.5rem]">
             {value}
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">

@@ -140,6 +140,18 @@ export default {
         "elevation-sm-dark": "0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.03)",
         "elevation-md-dark": "0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)",
         "elevation-lg-dark": "0 4px 16px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07)",
+
+        // Icon shadows for stat cards
+        "icon-purple": "0 14px 36px rgba(147, 51, 234, 0.28)", // purple-500
+        "icon-emerald": "0 14px 36px rgba(16, 185, 129, 0.28)", // emerald-500
+      },
+
+      // Drop shadows for text elements
+      dropShadow: {
+        "text-light": "0 1px 2px rgba(255, 255, 255, 0.35)",
+        "text-dark": "0 1px 4px rgba(8, 15, 35, 0.45)",
+        "value-light": "0 4px 12px rgba(15, 23, 42, 0.22)",
+        "value-dark": "0 4px 12px rgba(0, 0, 0, 0.4)",
       },
 
       // Motion System - Subtle transitions (100-150ms)
@@ -172,6 +184,26 @@ export default {
           "Segoe UI",
           "sans-serif",
         ],
+      },
+
+      // Custom gradient backgrounds for stat cards
+      backgroundImage: {
+        // Water gradients (using primary colors)
+        "water-light": "linear-gradient(180deg, rgb(76 5 25 / 0.3) 0%, rgb(63 7 19 / 0.3) 100%)", // primary-900/950 at 50% opacity
+        "water-dark": "linear-gradient(180deg, rgb(136 19 55 / 0.225) 0%, rgb(76 5 25 / 0.225) 100%)", // primary-800/900 at 45% opacity
+        
+        // Air gradients (subtle primary tones)
+        "air-light": "linear-gradient(180deg, rgb(255 241 242 / 0.48) 0%, rgb(255 228 230 / 0.28) 100%)", // primary-50/100
+        "air-dark": "linear-gradient(180deg, rgb(76 5 25 / 0.08) 0%, rgb(63 7 19 / 0.06) 100%)", // primary-900/950
+        
+        // Gloss effects
+        "gloss-primary-light": "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0) 100%)",
+        "gloss-primary-dark": "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 55%, rgba(255,255,255,0) 100%)",
+        "gloss-secondary-light": "linear-gradient(180deg, rgba(255,255,255,0.48) 0%, rgba(255,255,255,0.1) 55%, rgba(255,255,255,0) 100%)",
+        "gloss-secondary-dark": "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.07) 55%, rgba(255,255,255,0) 100%)",
+        
+        // Water line highlight
+        "water-line": "linear-gradient(90deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.75) 100%)",
       },
     },
   },
