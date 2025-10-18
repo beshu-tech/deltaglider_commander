@@ -244,7 +244,7 @@ export function ObjectsToolbar({
           <button
             type="button"
             onClick={handleSearchExpand}
-            className="flex h-9 w-9 shrink-0 items-center justify-center pl-0.5 text-ui-text-subtle transition hover:text-ui-text focus-visible:outline-none focus-visible:text-ui-text dark:text-ui-text-muted-dark dark:hover:text-ui-text-dark dark:focus-visible:text-ui-text-dark"
+            className="flex h-9 w-9 shrink-0 items-center justify-center pl-1 text-ui-text-subtle transition hover:text-ui-text focus-visible:outline-none focus-visible:text-ui-text dark:text-ui-text-muted-dark dark:hover:text-ui-text-dark dark:focus-visible:text-ui-text-dark"
             aria-label={isSearchExpanded ? "Search icon" : "Open search"}
             disabled={isSearchExpanded}
           >
