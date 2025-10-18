@@ -194,15 +194,26 @@ def create_app(
     def log_request():
         from flask import request as flask_request
 
+        def sanitize_header(value: str | None, max_length: int = 80) -> str:
+            """Sanitize and truncate header values for safe logging."""
+            if not value:
+                return ""
+            # Remove newlines and control characters for security
+            sanitized = "".join(c if c.isprintable() and c not in "\r\n" else " " for c in str(value))
+            # Truncate if too long
+            if len(sanitized) > max_length:
+                return sanitized[:max_length] + "..."
+            return sanitized
+
         # Log all requests with method, path, and selected headers
         headers_to_log = {
-            "Content-Type": flask_request.headers.get("Content-Type"),
-            "Content-Length": flask_request.headers.get("Content-Length"),
-            "User-Agent": flask_request.headers.get("User-Agent"),
-            "Origin": flask_request.headers.get("Origin"),
+            "Content-Type": sanitize_header(flask_request.headers.get("Content-Type"), 40),
+            "Content-Length": sanitize_header(flask_request.headers.get("Content-Length"), 20),
+            "User-Agent": sanitize_header(flask_request.headers.get("User-Agent"), 80),
+            "Origin": sanitize_header(flask_request.headers.get("Origin"), 80),
         }
-        # Filter out None values
-        headers_str = ", ".join(f"{k}: {v}" for k, v in headers_to_log.items() if v is not None)
+        # Filter out empty values
+        headers_str = ", ".join(f"{k}: {v}" for k, v in headers_to_log.items() if v)
 
         app.logger.info(
             f"{flask_request.method} {flask_request.path} | Headers: {{{headers_str}}}"
