@@ -23,8 +23,8 @@ interface StatCardProps extends StatCardConfig {
   animateSavings?: boolean;
 }
 
-// Water fill opacity is controlled via CSS opacity on the gradient elements
-// We'll use Tailwind's opacity modifiers for this
+// 2025 Flat Design: Using flat Tailwind colors with semantic opacity modifiers
+// Only gloss gradient kept for subtle liquid surface effect
 
 const tonePalette: Record<
   Tone,
@@ -32,28 +32,31 @@ const tonePalette: Record<
     cardClass: string;
     iconClass: string;
     iconShadowClass: string;
-    airGradientClass: string;
-    waterGradientClass: string;
+    airFillClass: string;
+    waterFillClass: string;
     glossGradientClass: string;
+    waterLineClass: string;
   }
 > = {
   primary: {
     cardClass:
-      "border border-primary-900/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-primary-900/20 dark:bg-ui-bg-dark/72 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+      "border border-slate-200 bg-white/card-bg text-ui-text shadow-elevation-sm dark:border-slate-700 dark:bg-slate-900/card-bg-dark dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
     iconClass: "bg-gradient-to-br from-purple-400 to-purple-500 shadow-icon-purple",
     iconShadowClass: "shadow-icon-purple",
-    airGradientClass: "bg-air-light dark:bg-air-dark",
-    waterGradientClass: "bg-water-light dark:bg-water-dark",
+    airFillClass: "bg-primary-50/35 dark:bg-slate-950/30",
+    waterFillClass: "bg-blue-700/30 dark:bg-blue-700/22",
     glossGradientClass: "bg-gloss-primary-light dark:bg-gloss-primary-dark",
+    waterLineClass: "bg-white/waterline dark:bg-blue-400/waterline-dark",
   },
   secondary: {
     cardClass:
-      "border border-primary-900/15 bg-white/60 text-ui-text shadow-elevation-sm dark:border-primary-900/20 dark:bg-ui-bg-dark/78 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+      "border border-slate-200 bg-white/card-bg text-ui-text shadow-elevation-sm dark:border-slate-700 dark:bg-slate-900/card-bg-dark dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
     iconClass: "bg-gradient-to-br from-emerald-400 to-emerald-500 shadow-icon-emerald",
     iconShadowClass: "shadow-icon-emerald",
-    airGradientClass: "bg-air-light dark:bg-air-dark",
-    waterGradientClass: "bg-water-light dark:bg-water-dark",
+    airFillClass: "bg-emerald-50/35 dark:bg-slate-950/30",
+    waterFillClass: "bg-teal-700/30 dark:bg-teal-700/22",
     glossGradientClass: "bg-gloss-secondary-light dark:bg-gloss-secondary-dark",
+    waterLineClass: "bg-white/waterline dark:bg-teal-400/waterline-dark",
   },
 };
 
@@ -201,9 +204,7 @@ function StatCard({
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 opacity-95 transition-opacity duration-500">
-          <div
-            className={joinClasses("absolute inset-0 rounded-b-2xl", palette.airGradientClass)}
-          />
+          <div className={joinClasses("absolute inset-0 rounded-b-2xl", palette.airFillClass)} />
         </div>
         <div className="absolute inset-0 flex flex-col justify-end">
           <div
@@ -214,7 +215,7 @@ function StatCard({
               <div
                 className={joinClasses(
                   "absolute inset-0 rounded-b-2xl",
-                  palette.waterGradientClass,
+                  palette.waterFillClass,
                   savingsActive ? "animate-savings-wave" : "",
                 )}
               />
@@ -222,14 +223,15 @@ function StatCard({
                 className={joinClasses(
                   "absolute inset-x-0 top-0 h-8 transition-opacity duration-500",
                   palette.glossGradientClass,
-                  effectiveProgress > 0 ? "opacity-80 dark:opacity-70" : "opacity-0",
+                  effectiveProgress > 0 ? "opacity-gloss dark:opacity-gloss-dark" : "opacity-0",
                 )}
               />
             </div>
             <div
               className={joinClasses(
-                "absolute inset-x-0 -top-[1px] h-[2px] bg-water-line transition-opacity duration-500",
-                effectiveProgress > 0 ? "opacity-90" : "opacity-0",
+                "absolute inset-x-0 -top-[1px] h-[2px] transition-opacity duration-500",
+                palette.waterLineClass,
+                effectiveProgress > 0 ? "opacity-100" : "opacity-0",
               )}
             />
           </div>

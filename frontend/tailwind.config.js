@@ -186,31 +186,33 @@ export default {
         ],
       },
 
+      // Semantic opacity values for stat cards (2025 flat design)
+      opacity: {
+        // Gloss highlights on water surface
+        gloss: "0.4",
+        "gloss-dark": "0.3",
+
+        // Water line shimmer effect
+        waterline: "0.6",
+        "waterline-dark": "0.4",
+
+        // Card background translucency
+        "card-bg": "0.6",
+        "card-bg-dark": "0.5",
+      },
+
       // Custom gradient backgrounds for stat cards
+      // 2025 Flat Design: Water/air fills use flat Tailwind colors, only gloss kept for subtle liquid effect
       backgroundImage: {
-        // Water gradients (using primary colors)
-        "water-light": "linear-gradient(180deg, rgb(76 5 25 / 0.3) 0%, rgb(63 7 19 / 0.3) 100%)", // primary-900/950 at 50% opacity
-        "water-dark":
-          "linear-gradient(180deg, rgb(136 19 55 / 0.225) 0%, rgb(76 5 25 / 0.225) 100%)", // primary-800/900 at 45% opacity
-
-        // Air gradients (subtle primary tones)
-        "air-light":
-          "linear-gradient(180deg, rgb(255 241 242 / 0.48) 0%, rgb(255 228 230 / 0.28) 100%)", // primary-50/100
-        "air-dark": "linear-gradient(180deg, rgb(76 5 25 / 0.08) 0%, rgb(63 7 19 / 0.06) 100%)", // primary-900/950
-
-        // Gloss effects
+        // Gloss effects - subtle surface highlight for liquid effect (functional, not decorative)
         "gloss-primary-light":
-          "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0) 100%)",
+          "linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.2) 100%)",
         "gloss-primary-dark":
-          "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 55%, rgba(255,255,255,0) 100%)",
+          "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.05) 100%)",
         "gloss-secondary-light":
-          "linear-gradient(180deg, rgba(255,255,255,0.48) 0%, rgba(255,255,255,0.1) 55%, rgba(255,255,255,0) 100%)",
+          "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.18) 100%)",
         "gloss-secondary-dark":
-          "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.07) 55%, rgba(255,255,255,0) 100%)",
-
-        // Water line highlight
-        "water-line":
-          "linear-gradient(90deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.75) 100%)",
+          "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.06) 100%)",
       },
     },
   },
