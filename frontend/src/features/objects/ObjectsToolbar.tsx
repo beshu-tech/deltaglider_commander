@@ -238,7 +238,7 @@ export function ObjectsToolbar({
         <form
           onSubmit={handleSubmit}
           className={`flex h-9 items-center gap-2 rounded-md border border-ui-border bg-surface-elevated transition-all duration-300 ease-out dark:border-ui-border-dark dark:bg-ui-surface-active-dark ${
-            isSearchExpanded ? "w-full px-3 sm:w-64" : "w-9 justify-center px-0"
+            isSearchExpanded ? "w-full pr-3 sm:w-64" : "w-9 justify-center px-0"
           }`}
         >
           <button
