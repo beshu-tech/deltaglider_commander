@@ -358,7 +358,7 @@ class CatalogService:
             if error_code == "AccessDenied":
                 raise APIError(
                     code="s3_access_denied",
-                    message="AWS denied permission to upload objects. Please verify your S3 access policy.",
+                    message="Access denied. Please verify your S3 credentials and bucket permissions.",
                     http_status=403,
                 ) from exc
             details = {"reason": _summarize_exception(exc)}
@@ -366,6 +366,14 @@ class CatalogService:
                 details["aws_code"] = error_code
             raise SDKError("Unable to upload object", details=details) from exc
         except Exception as exc:
+            # Check if the error message contains AccessDenied (from DeltaGlider SDK wrapper)
+            exc_str = str(exc).lower()
+            if "accessdenied" in exc_str or "access denied" in exc_str:
+                raise APIError(
+                    code="s3_access_denied",
+                    message="Access denied. Please verify your S3 credentials and bucket permissions.",
+                    http_status=403,
+                ) from exc
             details = {"reason": _summarize_exception(exc)}
             raise SDKError("Unable to upload object", details=details) from exc
 

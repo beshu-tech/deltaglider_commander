@@ -44,13 +44,25 @@ class NotFoundError(APIError):
 
 
 class SDKError(APIError):
-    """Raised when the underlying DeltaGlider SDK fails."""
+    """Raised when the underlying DeltaGlider SDK fails.
 
-    def __init__(self, message: str = "Storage backend error", *, details: dict[str, Any] | None = None) -> None:
+    Default to 503 (Service Unavailable) for S3/storage backend failures.
+    Use custom http_status for specific error conditions (e.g., 403 for permissions).
+
+    Note: 502 Bad Gateway is reserved for proxy/gateway failures, not application errors.
+    """
+
+    def __init__(
+        self,
+        message: str = "Storage backend error",
+        *,
+        details: dict[str, Any] | None = None,
+        http_status: int = 503,
+    ) -> None:
         super().__init__(
             code="sdk_error",
             message=message,
-            http_status=502,
+            http_status=http_status,
             details=details,
         )
 
