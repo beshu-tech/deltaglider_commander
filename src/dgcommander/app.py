@@ -194,6 +194,19 @@ def create_app(
     def log_request():
         from flask import request as flask_request
 
+        # Sensitive headers that should never be logged
+        SENSITIVE_HEADERS = {
+            "authorization",
+            "cookie",
+            "set-cookie",
+            "x-api-key",
+            "x-auth-token",
+            "x-session-token",
+            "proxy-authorization",
+            "www-authenticate",
+            "x-csrf-token",
+        }
+
         def sanitize_header(value: str | None, max_length: int = 80) -> str:
             """Sanitize and truncate header values for safe logging."""
             if not value:
@@ -205,6 +218,13 @@ def create_app(
                 return sanitized[:max_length] + "..."
             return sanitized
 
+        def is_sensitive_header(header_name: str) -> bool:
+            """Check if header contains sensitive data that should not be logged."""
+            normalized = header_name.lower()
+            return normalized in SENSITIVE_HEADERS or any(
+                sensitive in normalized for sensitive in ["password", "secret", "token", "key", "credential"]
+            )
+
         # Log all requests with method, path, and selected headers
         headers_to_log = {
             "Content-Type": sanitize_header(flask_request.headers.get("Content-Type"), 40),
@@ -212,6 +232,13 @@ def create_app(
             "User-Agent": sanitize_header(flask_request.headers.get("User-Agent"), 80),
             "Origin": sanitize_header(flask_request.headers.get("Origin"), 80),
         }
+
+        # Add non-sensitive custom headers for debugging (if any)
+        for header_name in flask_request.headers.keys():
+            if header_name.startswith("X-") and not is_sensitive_header(header_name):
+                if header_name not in ["X-Api-Key", "X-Auth-Token", "X-Session-Token", "X-CSRF-Token"]:
+                    headers_to_log[header_name] = sanitize_header(flask_request.headers.get(header_name), 40)
+
         # Filter out empty values
         headers_str = ", ".join(f"{k}: {v}" for k, v in headers_to_log.items() if v)
 
