@@ -49,7 +49,7 @@ def test_list_buckets_handles_sdk_errors(app, client, monkeypatch):
     monkeypatch.setattr(container.catalog.sdk, "list_buckets", broken_list_buckets)
 
     response = client.get("/api/buckets/")
-    assert response.status_code == 502
+    assert response.status_code == 503  # Service Unavailable (S3/storage backend failure)
     payload = response.get_json()
     assert payload == {
         "error": {
