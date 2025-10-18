@@ -23,7 +23,7 @@ export function ObjectSizeCell({
         <span className="font-medium text-ui-text dark:text-ui-text-dark">
           {formatBytes(effectiveSize)}
         </span>
-        <span className="ml-1 text-[10px] text-ui-text-subtle line-through opacity-60">
+        <span className="ml-1 text-[10px] text-ui-text-subtle line-through opacity-75 dark:opacity-70">
           {formatBytes(originalBytes)}
         </span>
       </div>

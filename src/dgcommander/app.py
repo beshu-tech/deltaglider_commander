@@ -189,6 +189,34 @@ def create_app(
         g.config = cfg
         g.session_store = app.extensions["session_store"]
 
+    # HTTP request logging middleware
+    @app.before_request
+    def log_request():
+        from flask import request as flask_request
+
+        # Log all requests with method, path, and selected headers
+        headers_to_log = {
+            "Content-Type": flask_request.headers.get("Content-Type"),
+            "Content-Length": flask_request.headers.get("Content-Length"),
+            "User-Agent": flask_request.headers.get("User-Agent"),
+            "Origin": flask_request.headers.get("Origin"),
+        }
+        # Filter out None values
+        headers_str = ", ".join(f"{k}: {v}" for k, v in headers_to_log.items() if v is not None)
+
+        app.logger.info(
+            f"{flask_request.method} {flask_request.path} | Headers: {{{headers_str}}}"
+        )
+
+    @app.after_request
+    def log_response(response):
+        from flask import request as flask_request
+
+        app.logger.info(
+            f"{flask_request.method} {flask_request.path} → {response.status_code}"
+        )
+        return response
+
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(buckets_bp)
     app.register_blueprint(objects_bp)
