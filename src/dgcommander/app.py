@@ -154,18 +154,34 @@ def create_app(
     register_error_handlers(app)
 
     # CORS configuration
-    # Note: supports_credentials requires specific origins, not "*"
-    cors_origins = os.environ.get(
-        "CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:3000"
-    ).split(",")
+    # In development mode (FLASK_DEBUG=1 or test_mode), allow any localhost/127.0.0.1 origin
+    # In production, use specific origins from CORS_ORIGINS env var
+    is_dev_mode = app.debug or cfg.test_mode
 
-    CORS(
-        app,
-        resources={r"/*": {"origins": cors_origins}},
-        allow_headers=["Content-Type", "Authorization"],
-        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        supports_credentials=True,  # Enable credentials for session cookies
-    )
+    if is_dev_mode:
+        # Development: Allow any localhost/127.0.0.1 origin with any port
+        # Regex pattern matches: http://localhost:*, http://127.0.0.1:*, https://localhost:*, https://127.0.0.1:*
+        CORS(
+            app,
+            resources={r"/*": {"origins": r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"}},
+            allow_headers=["Content-Type", "Authorization"],
+            methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            supports_credentials=True,  # Enable credentials for session cookies
+        )
+        app.logger.info("CORS: Development mode - allowing all localhost/127.0.0.1 origins")
+    else:
+        # Production: Specific origins with credentials support
+        cors_origins = os.environ.get(
+            "CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:3000"
+        ).split(",")
+        CORS(
+            app,
+            resources={r"/*": {"origins": cors_origins}},
+            allow_headers=["Content-Type", "Authorization"],
+            methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            supports_credentials=True,  # Enable credentials for session cookies
+        )
+        app.logger.info(f"CORS: Production mode - allowing origins: {cors_origins}")
 
     # Before request hook to inject config and session store into g
     @app.before_request
