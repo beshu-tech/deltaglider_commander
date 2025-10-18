@@ -242,17 +242,13 @@ def create_app(
         # Filter out empty values
         headers_str = ", ".join(f"{k}: {v}" for k, v in headers_to_log.items() if v)
 
-        app.logger.info(
-            f"{flask_request.method} {flask_request.path} | Headers: {{{headers_str}}}"
-        )
+        app.logger.info(f"{flask_request.method} {flask_request.path} | Headers: {{{headers_str}}}")
 
     @app.after_request
     def log_response(response):
         from flask import request as flask_request
 
-        app.logger.info(
-            f"{flask_request.method} {flask_request.path} → {response.status_code}"
-        )
+        app.logger.info(f"{flask_request.method} {flask_request.path} → {response.status_code}")
         return response
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
