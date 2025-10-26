@@ -1,4 +1,4 @@
-import { Moon, Sun, Menu, X, Keyboard } from "lucide-react";
+import { Moon, Sun, Menu, X, Keyboard, Settings } from "lucide-react";
 import { useMatch, useNavigate } from "@tanstack/react-router";
 import { Button } from "../../lib/ui/Button";
 import { Badge } from "../../lib/ui/Badge";
@@ -45,6 +45,7 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
           <ConnectionSummaryPill
             status={status}
             connectionEndpoint={connection?.endpoint ?? null}
+            connectionRegion={connection?.region ?? null}
             accessKeyId={connection?.accessKeyId ?? null}
             message={message}
             updatedAt={updatedAt}
@@ -78,6 +79,7 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
 interface ConnectionSummaryPillProps {
   status: ConnectionStatus;
   connectionEndpoint: string | null;
+  connectionRegion: string | null;
   accessKeyId: string | null;
   message?: string;
   updatedAt: number;
@@ -110,24 +112,27 @@ const STATUS_STYLES: Record<ConnectionStatus, { dot: string; text: string; accen
 function ConnectionSummaryPill({
   status,
   connectionEndpoint,
+  connectionRegion,
   accessKeyId,
   message,
   updatedAt,
   onManage,
 }: ConnectionSummaryPillProps) {
   const styles = STATUS_STYLES[status];
-  const endpointLabel = connectionEndpoint?.trim() || "No endpoint configured";
+  const endpointLabel = connectionEndpoint?.trim() || "AWS S3 (default)";
+  const regionLabel = connectionRegion?.trim() || "us-east-1";
   const accessKeyLabel = maskAccessKey(accessKeyId);
-  const updatedRelative = formatUpdatedRelative(updatedAt);
   const showMessage = !!message && status !== "connected";
+
+  // Format: "$key @ $server ($region)"
+  const summaryText = `${accessKeyLabel} @ ${endpointLabel} (${regionLabel})`;
+
   const titleParts = [
     `Status: ${statusLabel(status)}`,
-    `Endpoint: ${endpointLabel}`,
-    `Access key: ${accessKeyLabel}`,
-    `Updated: ${updatedRelative}`,
+    summaryText,
   ];
   if (showMessage) {
-    titleParts.splice(3, 0, `Message: ${message}`);
+    titleParts.push(`Message: ${message}`);
   }
   const title = titleParts.join("\n");
 
@@ -136,7 +141,7 @@ function ConnectionSummaryPill({
       type="button"
       onClick={onManage}
       title={title}
-      className="group hidden max-w-full items-center gap-2 rounded-full border border-ui-border bg-ui-surface px-3 py-1.5 text-left text-sm text-ui-text shadow-sm transition hover:border-ui-border-hover hover:bg-ui-surface-hover focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-primary-600 dark:border-ui-border-dark dark:bg-ui-surface-dark dark:text-ui-text-dark dark:hover:border-ui-border-hover-dark dark:hover:bg-ui-surface-hover-dark md:flex"
+      className="group hidden max-w-full items-center gap-2 rounded-md border border-ui-border bg-ui-surface px-3 py-1.5 text-left text-sm text-ui-text shadow-sm transition hover:border-ui-border-hover hover:bg-ui-surface-hover focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-primary-600 dark:border-ui-border-dark dark:bg-ui-surface-dark dark:text-ui-text-dark dark:hover:border-ui-border-hover-dark dark:hover:bg-ui-surface-hover-dark md:flex"
     >
       <span
         className={`mr-2 h-2.5 w-2.5 flex-shrink-0 rounded-full ${styles.dot}`}
@@ -152,6 +157,9 @@ function ConnectionSummaryPill({
       <span className="max-w-[200px] truncate text-xs font-medium text-ui-text dark:text-ui-text-dark sm:max-w-[260px]">
         {endpointLabel}
       </span>
+      <span className="hidden md:inline text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
+        • {regionLabel}
+      </span>
       <span className="hidden lg:inline text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
         • Key:{" "}
         <code className="rounded bg-ui-surface-hover px-1 py-0.5 font-mono text-[11px] dark:bg-ui-surface-hover-dark">
@@ -161,12 +169,7 @@ function ConnectionSummaryPill({
       {showMessage ? (
         <span className={`hidden xl:inline text-xs ${styles.accent}`}>• {message}</span>
       ) : null}
-      <span className="hidden md:inline text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
-        • {updatedRelative}
-      </span>
-      <span className="ml-2 text-xs font-semibold text-primary-600 transition group-hover:text-primary-500 dark:text-primary-400 dark:group-hover:text-primary-300">
-        Manage
-      </span>
+      <Settings className="ml-2 h-4 w-4 text-primary-600 transition group-hover:text-primary-500 dark:text-primary-400 dark:group-hover:text-primary-300" />
     </button>
   );
 }
@@ -193,28 +196,4 @@ function maskAccessKey(accessKeyId: string | null) {
     return accessKeyId;
   }
   return `${accessKeyId.slice(0, 4)}····${accessKeyId.slice(-4)}`;
-}
-
-function formatUpdatedRelative(updatedAt: number) {
-  const delta = Math.max(0, Date.now() - updatedAt);
-  const MINUTE = 60_000;
-  const HOUR = 60 * MINUTE;
-  const DAY = 24 * HOUR;
-
-  if (delta < 30_000) {
-    return "Updated just now";
-  }
-  if (delta < 90_000) {
-    return "Updated 1 minute ago";
-  }
-  if (delta < HOUR) {
-    const minutes = Math.round(delta / MINUTE);
-    return `Updated ${minutes} minutes ago`;
-  }
-  if (delta < DAY) {
-    const hours = Math.round(delta / HOUR);
-    return `Updated ${hours} hour${hours === 1 ? "" : "s"} ago`;
-  }
-  const days = Math.round(delta / DAY);
-  return `Updated ${days} day${days === 1 ? "" : "s"} ago`;
 }

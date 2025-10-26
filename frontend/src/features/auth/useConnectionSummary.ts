@@ -14,6 +14,7 @@ export type ConnectionStatus = "connected" | "checking" | "error" | "disconnecte
 export interface ConnectionDetails {
   accessKeyId: string;
   endpoint: string;
+  region: string;
 }
 
 export interface ConnectionSummaryOptions {
@@ -37,6 +38,7 @@ function readConnectionDetails(): ConnectionDetails | null {
   return {
     accessKeyId: credentials.accessKeyId,
     endpoint: credentials.endpoint,
+    region: credentials.region,
   };
 }
 
