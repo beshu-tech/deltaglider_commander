@@ -10,7 +10,7 @@
 #   make run          Run development servers
 #   make clean        Clean build artifacts
 
-.PHONY: help install test lint format ci run clean backend-test frontend-test build-static types docker
+.PHONY: help install test lint format ci run clean backend-test frontend-test build-static docker typecheck security pre-commit dev-setup benchmark
 
 # Default target
 help:
@@ -84,11 +84,6 @@ typecheck:
 	mypy src/dgcommander --ignore-missing-imports
 	@echo "📝 Type checking frontend..."
 	cd frontend && pnpm typecheck
-
-# Generate TypeScript types from Pydantic
-types:
-	@echo "🔄 Generating TypeScript types..."
-	python scripts/generate_types.py
 
 # Run full CI suite locally
 ci:

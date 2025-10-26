@@ -1,5 +1,6 @@
 export const qk = {
   buckets: ["buckets"] as const,
+  sessionStatus: ["session-status"] as const,
   objects: (
     bucket: string,
     prefix: string,

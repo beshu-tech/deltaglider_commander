@@ -13,6 +13,7 @@ from botocore.exceptions import (
 )
 
 from dgcommander.services.deltaglider import S3DeltaGliderSDK, S3Settings
+from dgcommander.util.s3_context import extract_s3_context_from_credentials, format_s3_context_string
 
 
 class InvalidCredentialsError(Exception):
@@ -119,13 +120,18 @@ def validate_credentials(credentials: dict, *, logger: logging.Logger | None = N
     if logger is not None:
         log_credential_preview(credentials, logger=logger)
 
+    s3_context = extract_s3_context_from_credentials(credentials)
+    context_str = format_s3_context_string(s3_context)
+
     try:
         sdk = create_sdk_from_credentials(credentials)
         sdk.list_buckets()
     except (EndpointConnectionError, ConnectTimeoutError, ReadTimeoutError) as exc:
         if logger is not None:
             logger.error("S3 endpoint connection error: %s", exc, exc_info=True)
-        raise S3ConnectionError("Unable to reach S3 endpoint. Check network connectivity or endpoint URL.") from exc
+        raise S3ConnectionError(
+            f"Unable to reach S3 endpoint{context_str}. Check network connectivity or endpoint URL."
+        ) from exc
     except ClientError as exc:
         error = exc.response.get("Error", {})
         error_code = error.get("Code", "")
@@ -136,9 +142,11 @@ def validate_credentials(credentials: dict, *, logger: logging.Logger | None = N
             logger.error("Full error response: %s", exc.response)
 
         if error_code in {"InvalidAccessKeyId", "SignatureDoesNotMatch", "AuthorizationHeaderMalformed"}:
-            raise InvalidCredentialsError("Invalid AWS credentials") from exc
+            raise InvalidCredentialsError(f"Invalid AWS credentials{context_str}") from exc
         if error_code == "AccessDenied":
-            raise S3AccessDeniedError("Valid credentials but insufficient S3 permissions") from exc
+            raise S3AccessDeniedError(
+                f"Valid credentials but insufficient S3 permissions{context_str}"
+            ) from exc
         raise
 
 

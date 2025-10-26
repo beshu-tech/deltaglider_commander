@@ -35,11 +35,12 @@ class RateLimitExceeded(APIError):
 
 
 class NotFoundError(APIError):
-    def __init__(self, resource: str, code: str) -> None:
+    def __init__(self, resource: str, code: str, details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code=code,
             message=f"{resource} not found",
             http_status=404,
+            details=details,
         )
 
 

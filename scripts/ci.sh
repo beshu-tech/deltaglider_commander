@@ -177,16 +177,6 @@ run_integration_tests() {
     docker compose down
 }
 
-# Generate TypeScript types
-generate_types() {
-    print_status "Generating TypeScript types from Pydantic models..."
-
-    if python scripts/generate_types.py; then
-        print_status "✅ TypeScript types generated"
-    else
-        print_warning "⚠️ Failed to generate TypeScript types"
-    fi
-}
 
 # Main execution
 main() {
@@ -202,18 +192,14 @@ main() {
         integration)
             run_integration_tests
             ;;
-        types)
-            generate_types
-            ;;
         all)
             run_backend_checks
             run_frontend_checks
-            generate_types
             run_integration_tests
             ;;
         *)
             print_error "Invalid component: $COMPONENT"
-            echo "Usage: $0 [backend|frontend|integration|types|all]"
+            echo "Usage: $0 [backend|frontend|integration|all]"
             exit 1
             ;;
     esac

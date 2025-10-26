@@ -1,0 +1,37 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReadOnlyForSpecificAccessKey",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::p1339373:user/HI3AJPWFFN4PJG48G5OF"
+      },
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::ror-builds-xdelta",
+        "arn:aws:s3:::ror-builds-xdelta/*"
+      ]
+    },
+    {
+      "Sid": "AllowReadWriteForRORRW",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::p1339373:user/MD61KMA143ET3MPVQ5HR"
+      },
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::ror-builds-xdelta",
+        "arn:aws:s3:::ror-builds-xdelta/*"
+      ]
+    }
+  ]
+}

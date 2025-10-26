@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useMatch, useNavigate } from "@tanstack/react-router";
 import {
   Archive,
@@ -16,6 +16,7 @@ import {
 import { DEFAULT_OBJECTS_SEARCH_STATE } from "../../features/objects/types";
 import { useBuckets } from "../../features/buckets/useBuckets";
 import { useCreateBucket } from "../../features/buckets/useBucketManagement";
+import { getErrorMessage } from "../../lib/api/client";
 import { Badge } from "../../lib/ui/Badge";
 import { Button } from "../../lib/ui/Button";
 import { Input } from "../../lib/ui/Input";
@@ -187,7 +188,7 @@ function BucketList({ buckets, isLoading, error, filter, activeBucket }: BucketL
   if (error) {
     return (
       <div className="rounded-md bg-primary-50 px-3 py-2 text-xs text-primary-700 dark:bg-white/10 dark:text-primary-200">
-        Could not load buckets: {String(error)}
+        Could not load buckets: {getErrorMessage(error)}
       </div>
     );
   }

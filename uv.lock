@@ -470,7 +470,7 @@ wheels = [
 
 [[package]]
 name = "deltaglider"
-version = "6.0.1"
+version = "6.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -479,9 +479,9 @@ dependencies = [
     { name = "python-dateutil" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/49/71/71f0aa91486d9ae58ec4f8518695e813c826b78b1ba9ffd4627b92dd9b94/deltaglider-6.0.1.tar.gz", hash = "sha256:9a188c3bf1492cae9d1eb23d5b3bbeaaaa301c6880e97ebcebd57cfb80af107a", size = 498467 }
+sdist = { url = "https://files.pythonhosted.org/packages/63/43/cb0084ca96fd6761d092c7dd5581748a91fb66f608ff674c2a49565b714e/deltaglider-6.0.2.tar.gz", hash = "sha256:b86f9c14ee787a704627cb4a78ceed73ed0c600899702bca72f8c39bf2057978", size = 502035 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/10/91ebe41830c0f9b01bff231a54fa0b2113f1457c7128b71ece788a50743f/deltaglider-6.0.1-py3-none-any.whl", hash = "sha256:ab04bb072fea825e77f2ffd0f85f556729221f5699b2291f2c79b8ab30302c8d", size = 100935 },
+    { url = "https://files.pythonhosted.org/packages/e7/6d/2844182c6de4e90609b54ba2e7475cb32fbb261e3fbd5883fcece75c1fa3/deltaglider-6.0.2-py3-none-any.whl", hash = "sha256:89e9b6c7295fc95efa08f5a7d95fe86cfde09af27eeede3e378a3ccf82149e85", size = 104356 },
 ]
 
 [[package]]
@@ -522,7 +522,7 @@ requires-dist = [
     { name = "apscheduler", specifier = ">=3.10.0,<4" },
     { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.5" },
     { name = "cachetools", specifier = ">=5.3" },
-    { name = "deltaglider", specifier = "==6.0.1" },
+    { name = "deltaglider", specifier = "==6.0.2" },
     { name = "flask", specifier = ">=3.0,<4" },
     { name = "flask-cors", specifier = ">=4.0" },
     { name = "freezegun", marker = "extra == 'dev'", specifier = ">=1.5" },

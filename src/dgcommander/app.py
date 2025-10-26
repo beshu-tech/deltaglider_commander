@@ -242,13 +242,21 @@ def create_app(
         # Filter out empty values
         headers_str = ", ".join(f"{k}: {v}" for k, v in headers_to_log.items() if v)
 
-        app.logger.info(f"{flask_request.method} {flask_request.path} | Headers: {{{headers_str}}}")
+        # Log bucket API requests at debug level to reduce noise
+        if flask_request.path.startswith("/api/buckets/"):
+            app.logger.debug(f"{flask_request.method} {flask_request.path} | Headers: {{{headers_str}}}")
+        else:
+            app.logger.info(f"{flask_request.method} {flask_request.path} | Headers: {{{headers_str}}}")
 
     @app.after_request
     def log_response(response):
         from flask import request as flask_request
 
-        app.logger.info(f"{flask_request.method} {flask_request.path} → {response.status_code}")
+        # Log bucket API responses at debug level to reduce noise
+        if flask_request.path.startswith("/api/buckets/"):
+            app.logger.debug(f"{flask_request.method} {flask_request.path} → {response.status_code}")
+        else:
+            app.logger.info(f"{flask_request.method} {flask_request.path} → {response.status_code}")
         return response
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")

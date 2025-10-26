@@ -11,6 +11,7 @@ from botocore.exceptions import ClientError
 
 from ..util.errors import APIError, NotFoundError, SDKError
 from ..util.paging import decode_cursor, encode_cursor
+from ..util.s3_context import extract_s3_context_from_sdk, format_s3_context
 from ..util.types import BucketStats, ObjectItem, ObjectList, ObjectSortOrder
 from .deltaglider import (
     BucketSnapshot,
@@ -94,6 +95,15 @@ class CatalogService:
             except Exception:  # pragma: no cover - defensive
                 logger.debug("Failed to clear stats cache", exc_info=True)
 
+    def _get_s3_error_context(self) -> dict:
+        """Extract S3 context for error reporting.
+
+        Returns:
+            Dictionary with s3_endpoint, s3_access_key, and s3_region fields.
+        """
+        s3_context = extract_s3_context_from_sdk(self.sdk)
+        return format_s3_context(s3_context)
+
     def invalidate_bucket_stats(self, bucket: str) -> None:
         """Expose cache invalidation for other components."""
         self._invalidate_bucket_stats_cache(bucket)
@@ -147,14 +157,23 @@ class CatalogService:
             error_code = exc.response.get("Error", {}).get("Code", "")
             if error_code in {"NoSuchBucket", "NotFound"}:
                 return False
-            raise
+            # For other S3 errors, include context
+            details = {
+                "reason": _summarize_exception(exc),
+                "aws_error_code": error_code,
+                **self._get_s3_error_context(),
+            }
+            raise SDKError("Unable to check bucket existence", details=details) from exc
         except KeyError:
             # In-memory SDK - KeyError means bucket doesn't exist
             return False
         except Exception as exc:
             if isinstance(exc, APIError):
                 raise
-            details = {"reason": _summarize_exception(exc)}
+            details = {
+                "reason": _summarize_exception(exc),
+                **self._get_s3_error_context(),
+            }
             raise SDKError("Unable to check bucket existence", details=details) from exc
 
     def create_bucket(self, name: str) -> None:
@@ -162,12 +181,24 @@ class CatalogService:
             self.sdk.create_bucket(name)
         except ClientError as exc:
             error_code = exc.response.get("Error", {}).get("Code", "")
+            context_details = self._get_s3_error_context()
+
             if error_code == "BucketAlreadyExists":
-                raise APIError(code="bucket_exists", message="Bucket already exists", http_status=409) from exc
+                raise APIError(
+                    code="bucket_exists",
+                    message="Bucket already exists",
+                    http_status=409,
+                    details=context_details,
+                ) from exc
             elif error_code == "BucketAlreadyOwnedByYou":
                 # Bucket exists but is owned by the user, treat as success
                 return
-            raise APIError(code="bucket_create_failed", message="Unable to create bucket", http_status=500) from exc
+            raise APIError(
+                code="bucket_create_failed",
+                message="Unable to create bucket",
+                http_status=500,
+                details={**context_details, "aws_error_code": error_code},
+            ) from exc
         except ValueError as exc:
             # InMemoryDeltaGliderSDK raises ValueError for existing bucket
             if "already exists" in str(exc).lower():
@@ -187,11 +218,23 @@ class CatalogService:
                 self.list_cache.invalidate_bucket(name)
         except ClientError as exc:
             error_code = exc.response.get("Error", {}).get("Code", "")
+            context_details = self._get_s3_error_context()
+
             if error_code in {"NoSuchBucket", "NotFound"}:
-                raise NotFoundError("bucket", "bucket_not_found") from exc
+                raise NotFoundError("bucket", "bucket_not_found", details=context_details) from exc
             elif error_code == "BucketNotEmpty":
-                raise APIError(code="bucket_not_empty", message="Bucket is not empty", http_status=409) from exc
-            raise APIError(code="bucket_delete_failed", message="Unable to delete bucket", http_status=500) from exc
+                raise APIError(
+                    code="bucket_not_empty",
+                    message="Bucket is not empty",
+                    http_status=409,
+                    details=context_details,
+                ) from exc
+            raise APIError(
+                code="bucket_delete_failed",
+                message="Unable to delete bucket",
+                http_status=500,
+                details={**context_details, "aws_error_code": error_code},
+            ) from exc
         except KeyError:
             # InMemoryDeltaGliderSDK raises KeyError for non-existent bucket
             raise NotFoundError("bucket", "bucket_not_found")
@@ -302,9 +345,16 @@ class CatalogService:
             self._invalidate_bucket_stats_cache(bucket)
         except ClientError as exc:
             error_code = exc.response.get("Error", {}).get("Code", "")
+            context_details = self._get_s3_error_context()
+
             if error_code in {"NoSuchKey", "NotFound"}:
-                raise NotFoundError("object", "object_not_found") from exc
-            raise APIError(code="delete_failed", message="Unable to delete object", http_status=500) from exc
+                raise NotFoundError("object", "object_not_found", details=context_details) from exc
+            raise APIError(
+                code="delete_failed",
+                message="Unable to delete object",
+                http_status=500,
+                details={**context_details, "aws_error_code": error_code},
+            ) from exc
         except Exception as exc:
             logger.error(f"Exception deleting {bucket}/{key}: {type(exc).__name__}: {exc}", exc_info=True)
             details = {"reason": f"{type(exc).__name__}: {_summarize_exception(exc)}"}
@@ -355,26 +405,32 @@ class CatalogService:
         except ClientError as exc:
             error = exc.response.get("Error", {}) if hasattr(exc, "response") else {}
             error_code = str(error.get("Code", "") or "")
+            context_details = self._get_s3_error_context()
+
             if error_code == "AccessDenied":
                 raise APIError(
                     code="s3_access_denied",
                     message="Access denied. Please verify your S3 credentials and bucket permissions.",
                     http_status=403,
+                    details=context_details,
                 ) from exc
-            details = {"reason": _summarize_exception(exc)}
+            details = {"reason": _summarize_exception(exc), **context_details}
             if error_code:
-                details["aws_code"] = error_code
+                details["aws_error_code"] = error_code
             raise SDKError("Unable to upload object", details=details) from exc
         except Exception as exc:
             # Check if the error message contains AccessDenied (from DeltaGlider SDK wrapper)
+            context_details = self._get_s3_error_context()
+
             exc_str = str(exc).lower()
             if "accessdenied" in exc_str or "access denied" in exc_str:
                 raise APIError(
                     code="s3_access_denied",
                     message="Access denied. Please verify your S3 credentials and bucket permissions.",
                     http_status=403,
+                    details=context_details,
                 ) from exc
-            details = {"reason": _summarize_exception(exc)}
+            details = {"reason": _summarize_exception(exc), **context_details}
             raise SDKError("Unable to upload object", details=details) from exc
 
         if relative_path:

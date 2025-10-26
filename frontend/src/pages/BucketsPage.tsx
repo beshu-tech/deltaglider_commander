@@ -16,7 +16,7 @@ export function BucketsPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="h-1 w-12 rounded-full bg-ui-border-hover dark:bg-ui-border-hover-dark sm:w-16"></div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-muted-dark sm:text-sm">
-                  Smart Object Storage Platform
+                  Differential Object Storage Platform
                 </span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-ui-text dark:text-ui-text-dark sm:text-4xl">

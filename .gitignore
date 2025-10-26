@@ -18,3 +18,7 @@ src/dgcommander/static/*
 
 # Local deltaglider checkout
 external/deltaglider/
+
+# Root-level test scripts and configs (use scripts/dev/ instead)
+/*.sh
+/bucket-policy*.json

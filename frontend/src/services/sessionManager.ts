@@ -16,9 +16,21 @@ export interface SessionStatusResponse {
 }
 
 /**
+ * Backend API credential format (snake_case)
+ */
+interface TransformedCredentials {
+  access_key_id: string;
+  secret_access_key: string;
+  region: string;
+  endpoint: string;
+  addressing_style?: string;
+  verify?: boolean;
+}
+
+/**
  * Transform camelCase credentials to snake_case for backend API
  */
-function transformCredentials(creds: AWSCredentials) {
+function transformCredentials(creds: AWSCredentials): TransformedCredentials {
   return {
     access_key_id: creds.accessKeyId,
     secret_access_key: creds.secretAccessKey,

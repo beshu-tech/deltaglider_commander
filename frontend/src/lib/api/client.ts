@@ -25,13 +25,45 @@ export class ApiError extends Error {
  * For ApiError, prefers details.reason over the generic message.
  */
 export function getErrorMessage(error: unknown): string {
+  if (error == null) {
+    return "Unknown error";
+  }
+
   if (error instanceof ApiError && error.details && typeof error.details === "object") {
     const details = error.details as Record<string, unknown>;
     if (details.reason && typeof details.reason === "string") {
       return details.reason;
     }
   }
-  return String(error);
+
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  if (error instanceof TypeError) {
+    const normalized = error.message.toLowerCase();
+    if (normalized.includes("failed to fetch") || normalized.includes("networkerror")) {
+      return "Unable to reach the API. Check your network connection and custom endpoint settings.";
+    }
+    if (normalized.includes("load failed")) {
+      return "Unable to load data from the API. Please retry.";
+    }
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
 }
 
 async function parseError(response: Response): Promise<ApiErrorPayload> {

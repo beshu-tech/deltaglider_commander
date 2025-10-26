@@ -6,6 +6,7 @@ import { Bucket } from "./types";
 
 interface UseBucketsOptions {
   enabled?: boolean;
+  refetchInterval?: number | false;
 }
 
 export function useBuckets(options?: UseBucketsOptions) {
@@ -13,7 +14,10 @@ export function useBuckets(options?: UseBucketsOptions) {
     queryKey: qk.buckets,
     queryFn: fetchBuckets,
     staleTime: 30_000,
-    refetchInterval: getPollMs(),
+    refetchInterval:
+      options && "refetchInterval" in options && options.refetchInterval !== undefined
+        ? options.refetchInterval
+        : getPollMs(),
     enabled: options?.enabled ?? true,
   });
 }
