@@ -144,9 +144,7 @@ def validate_credentials(credentials: dict, *, logger: logging.Logger | None = N
         if error_code in {"InvalidAccessKeyId", "SignatureDoesNotMatch", "AuthorizationHeaderMalformed"}:
             raise InvalidCredentialsError(f"Invalid AWS credentials{context_str}") from exc
         if error_code == "AccessDenied":
-            raise S3AccessDeniedError(
-                f"Valid credentials but insufficient S3 permissions{context_str}"
-            ) from exc
+            raise S3AccessDeniedError(f"Valid credentials but insufficient S3 permissions{context_str}") from exc
         raise
 
 

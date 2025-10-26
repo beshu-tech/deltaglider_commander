@@ -119,13 +119,7 @@ export function useConnectionSummary(options?: ConnectionSummaryOptions) {
   }, [issueIsError, connection, queryClient]);
 
   const sessionIssue = useMemo(
-    () =>
-      resolveSessionIssue(
-        isSessionLoading,
-        isSessionError,
-        sessionStatus?.valid,
-        sessionError,
-      ),
+    () => resolveSessionIssue(isSessionLoading, isSessionError, sessionStatus?.valid, sessionError),
     [isSessionLoading, isSessionError, sessionStatus?.valid, sessionError],
   );
 

@@ -24,7 +24,7 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
     refetchInterval: false,
   });
 
-  const { connection, status, message, updatedAt } = useConnectionSummary({
+  const { connection, status, message } = useConnectionSummary({
     issue: bucketsError ? { isError: bucketsError, error: bucketsErrorDetails } : undefined,
   });
 
@@ -48,7 +48,6 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
             connectionRegion={connection?.region ?? null}
             accessKeyId={connection?.accessKeyId ?? null}
             message={message}
-            updatedAt={updatedAt}
             onManage={() => navigate({ to: "/settings" })}
           />
         ) : null}
@@ -82,7 +81,6 @@ interface ConnectionSummaryPillProps {
   connectionRegion: string | null;
   accessKeyId: string | null;
   message?: string;
-  updatedAt: number;
   onManage: () => void;
 }
 
@@ -115,7 +113,6 @@ function ConnectionSummaryPill({
   connectionRegion,
   accessKeyId,
   message,
-  updatedAt,
   onManage,
 }: ConnectionSummaryPillProps) {
   const styles = STATUS_STYLES[status];
@@ -127,10 +124,7 @@ function ConnectionSummaryPill({
   // Format: "$key @ $server ($region)"
   const summaryText = `${accessKeyLabel} @ ${endpointLabel} (${regionLabel})`;
 
-  const titleParts = [
-    `Status: ${statusLabel(status)}`,
-    summaryText,
-  ];
+  const titleParts = [`Status: ${statusLabel(status)}`, summaryText];
   if (showMessage) {
     titleParts.push(`Message: ${message}`);
   }
@@ -153,7 +147,9 @@ function ConnectionSummaryPill({
       <Badge className={`border-0 px-2 py-0.5 text-[10px] font-semibold uppercase ${styles.text}`}>
         {statusLabel(status)}
       </Badge>
-      <span className="hidden sm:inline text-xs text-ui-text-muted dark:text-ui-text-muted-dark">•</span>
+      <span className="hidden sm:inline text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
+        •
+      </span>
       <span className="max-w-[200px] truncate text-xs font-medium text-ui-text dark:text-ui-text-dark sm:max-w-[260px]">
         {endpointLabel}
       </span>

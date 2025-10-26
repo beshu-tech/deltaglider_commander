@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from unittest.mock import Mock, patch
+
 import pytest
 from botocore.exceptions import ClientError
-from unittest.mock import Mock, patch
 
 from dgcommander.auth.credentials import (
     InvalidCredentialsError,
@@ -156,8 +157,9 @@ def test_s3_context_in_delete_object_error():
 
 def test_s3_context_in_upload_access_denied():
     """Test that upload errors include S3 context."""
-    from dgcommander.sdk.adapters.s3 import S3DeltaGliderSDK, S3Settings
     from io import BytesIO
+
+    from dgcommander.sdk.adapters.s3 import S3DeltaGliderSDK, S3Settings
 
     settings = S3Settings(
         endpoint_url="https://s3.eu-central-1.amazonaws.com",
@@ -193,8 +195,9 @@ def test_s3_context_in_upload_access_denied():
 
 def test_s3_context_in_upload_generic_access_denied():
     """Test that generic AccessDenied errors include S3 context."""
-    from dgcommander.sdk.adapters.s3 import S3DeltaGliderSDK, S3Settings
     from io import BytesIO
+
+    from dgcommander.sdk.adapters.s3 import S3DeltaGliderSDK, S3Settings
 
     settings = S3Settings(
         endpoint_url="https://hetzner.s3.eu-central-1.amazonaws.com",
