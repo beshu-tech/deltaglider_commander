@@ -4,7 +4,8 @@
  */
 
 import type { NavigateOptions } from "@tanstack/react-router";
-import { serializeObjectsSearch, type ObjectsSearchState } from "../../features/objects/search";
+import { serializeObjectsSearch } from "../../features/objects/search";
+import type { ObjectsSearchState } from "../../features/objects/types";
 
 /**
  * Navigation parameters for bucket routes
