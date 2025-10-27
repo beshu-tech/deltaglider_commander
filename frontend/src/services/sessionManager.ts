@@ -3,7 +3,7 @@
  */
 
 import { api, ApiError } from "../lib/api/client";
-import { AWSCredentials, CredentialStorage } from "./credentialStorage";
+import { AWSCredentials, CredentialManager } from "./credentials";
 
 export interface SessionError {
   code: string;
@@ -54,7 +54,7 @@ export const SessionManager = {
       });
 
       // Store credentials for auto-renewal
-      CredentialStorage.save(credentials);
+      CredentialManager.save(credentials);
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) {
         const details = error.details as { message?: string } | undefined;
@@ -68,7 +68,7 @@ export const SessionManager = {
    * Refresh session using stored credentials
    */
   async refreshSession(): Promise<void> {
-    const credentials = CredentialStorage.load();
+    const credentials = CredentialManager.load();
 
     if (!credentials) {
       throw new Error("No stored credentials for refresh");
@@ -92,7 +92,7 @@ export const SessionManager = {
       });
     } finally {
       // Always clear credentials even if request fails
-      CredentialStorage.clear();
+      CredentialManager.clear();
     }
   },
 

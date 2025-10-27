@@ -11,6 +11,7 @@ import { BucketsPage } from "../pages/BucketsPage";
 import { ObjectDetailsPage } from "../pages/ObjectDetailsPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { UploadPage } from "../pages/UploadPage";
+import { EnvironmentsPage } from "../pages/EnvironmentsPage";
 import { normalizeObjectsSearch } from "../features/objects/search";
 
 export interface RouterContext {
@@ -64,12 +65,19 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 });
 
+const environmentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/environments",
+  component: EnvironmentsPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   bucketsRoute,
   bucketObjectsRoute.addChildren([objectDetailsRoute]),
   uploadRoute,
   settingsRoute,
+  environmentsRoute,
 ]);
 
 export const router = createRouter({

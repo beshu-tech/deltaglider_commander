@@ -8,6 +8,7 @@ from ..auth.middleware import require_session_or_env
 from ..util.errors import APIError, NotFoundError
 from ..util.json import json_response
 from . import get_container
+from .dependencies import get_catalog, get_sdk
 
 bp = Blueprint("buckets", __name__, url_prefix="/api/buckets")
 
@@ -15,13 +16,7 @@ bp = Blueprint("buckets", __name__, url_prefix="/api/buckets")
 @bp.get("/")
 @require_session_or_env
 def list_buckets():
-    from flask import g
-
-    from ..services.catalog import CatalogService
-
-    # Use session SDK with catalog service
-    sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk)
+    catalog = get_catalog()
     container = get_container()
     jobs = getattr(container, "jobs", None)
 
@@ -49,14 +44,7 @@ def list_buckets():
 @bp.post("/")
 @require_session_or_env
 def create_bucket():
-    from flask import g
-
-    from ..services.catalog import CatalogService
-
-    # Use session SDK
-    sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk)
-
+    catalog = get_catalog()
     data = request.get_json(silent=True) or {}
     name = data.get("name")
     if not isinstance(name, str) or not name.strip():
@@ -71,18 +59,12 @@ def create_bucket():
 def compute_savings(bucket: str):
     import logging
 
-    from flask import g
-
-    from ..services.catalog import CatalogService
-
     logger = logging.getLogger(__name__)
     logger.info(f"[COMPUTE-SAVINGS] Endpoint called for bucket: {bucket}")
 
-    # Always use session SDK - no fallback to container
-    sdk = g.sdk_client
+    sdk = get_sdk()
+    catalog_service = get_catalog()
     logger.info(f"[COMPUTE-SAVINGS] SDK type: {type(sdk).__name__}")
-
-    catalog_service = CatalogService(sdk=sdk)
 
     if not sdk.bucket_exists(bucket):
         logger.error(f"[COMPUTE-SAVINGS] Bucket not found: {bucket}")
@@ -104,10 +86,7 @@ def compute_savings(bucket: str):
 @bp.post("/cache/refresh")
 @require_session_or_env
 def refresh_bucket_cache():
-    from flask import g
-
     from ..contracts.buckets import BucketStats as BucketStatsContract
-    from ..services.catalog import CatalogService
     from ..services.deltaglider import StatsMode
 
     payload = request.get_json(silent=True) or {}
@@ -117,7 +96,7 @@ def refresh_bucket_cache():
     except ValueError as exc:
         raise APIError(code="invalid_stats_mode", message="Unsupported stats mode", http_status=400) from exc
 
-    catalog = CatalogService(sdk=g.sdk_client)
+    catalog = get_catalog()
     stats_list = catalog.refresh_all_bucket_stats(mode=mode)
     buckets = [
         BucketStatsContract(
@@ -141,10 +120,7 @@ def refresh_bucket_cache():
 @bp.get("/<bucket>/stats")
 @require_session_or_env
 def bucket_stats(bucket: str):
-    from flask import g
-
     from ..contracts.buckets import BucketStats as BucketStatsContract
-    from ..services.catalog import CatalogService
     from ..services.deltaglider import StatsMode
 
     mode_param = (request.args.get("mode") or "sampled").lower()
@@ -153,7 +129,7 @@ def bucket_stats(bucket: str):
     except ValueError as exc:
         raise APIError(code="invalid_stats_mode", message="Unsupported stats mode", http_status=400) from exc
 
-    catalog = CatalogService(sdk=g.sdk_client)
+    catalog = get_catalog()
     stats = catalog.get_bucket_stats(bucket, mode=mode)
 
     contract = BucketStatsContract(
@@ -174,13 +150,6 @@ def bucket_stats(bucket: str):
 @bp.delete("/<bucket>")
 @require_session_or_env
 def delete_bucket(bucket: str):
-    from flask import g
-
-    from ..services.catalog import CatalogService
-
-    # Use session SDK
-    sdk = g.sdk_client
-    catalog = CatalogService(sdk=sdk)
-
+    catalog = get_catalog()
     catalog.delete_bucket(bucket)
     return json_response({"status": "deleted", "bucket": bucket})

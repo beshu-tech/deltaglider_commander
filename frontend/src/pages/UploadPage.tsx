@@ -7,6 +7,7 @@ import { UploadManager } from "../features/upload/UploadManager";
 import { normalizeObjectsSearch, serializeObjectsSearch } from "../features/objects/search";
 import { removeFromLocalStorage } from "../lib/cache/localStorage";
 import { qk } from "../lib/api/queryKeys";
+import { useBucketPaths } from "../features/upload/hooks/useBucketPaths";
 
 export function UploadPage() {
   const navigate = useNavigate();
@@ -15,6 +16,9 @@ export function UploadPage() {
   const rawSearch = useSearch({ from: "/b/$bucket/upload" }) as Record<string, unknown> | undefined;
 
   const currentSearch = useMemo(() => normalizeObjectsSearch(rawSearch), [rawSearch]);
+
+  // Fetch existing bucket paths for autocomplete
+  const existingPaths = useBucketPaths(bucket);
 
   const handleBack = useCallback(() => {
     navigate({
@@ -84,6 +88,7 @@ export function UploadPage() {
           bucket={bucket}
           prefix={currentSearch.prefix}
           onCompleted={handleCompleted}
+          existingPaths={existingPaths}
         />
       </div>
     </div>

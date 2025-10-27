@@ -188,13 +188,6 @@ function StatCard({
   const effectiveProgress = baseProgress > 0 ? baseProgress : isAnalyzing ? 0.12 : 0;
   const savingsActive = isSavings && animateSavings;
 
-  console.log(`[StatCard ${label}]`, {
-    fillProgress,
-    animatedFill,
-    effectiveProgress,
-    "effectiveProgress%": `${(effectiveProgress * 100).toFixed(1)}%`,
-  });
-
   return (
     <article
       className={joinClasses(

@@ -1,5 +1,6 @@
 import { ApiError } from "./client";
 import { apiWithAuth } from "./authInterceptor";
+import { encodeS3Key, encodeBucketName } from "../utils/encoding";
 import {
   Bucket,
   bucketStatsResponseSchema,
@@ -47,7 +48,7 @@ export async function fetchBucketStats(
     query.set("mode", mode);
   }
   const data = await apiWithAuth<unknown>(
-    `/api/buckets/${encodeURIComponent(bucket)}/stats?${query.toString()}`,
+    `/api/buckets/${encodeBucketName(bucket)}/stats?${query.toString()}`,
   );
   const parsed = bucketStatsResponseSchema.parse(data);
   return parsed.bucket;
@@ -70,14 +71,13 @@ export async function createBucket(name: string): Promise<void> {
 }
 
 export async function deleteBucket(name: string): Promise<void> {
-  await apiWithAuth(`/api/buckets/${encodeURIComponent(name)}`, {
+  await apiWithAuth(`/api/buckets/${encodeBucketName(name)}`, {
     method: "DELETE",
   });
 }
 
 export async function deleteObject(bucket: string, key: string): Promise<void> {
-  const encodedKey = key.split("/").map(encodeURIComponent).join("/");
-  await apiWithAuth(`/api/objects/${encodeURIComponent(bucket)}/${encodedKey}`, {
+  await apiWithAuth(`/api/objects/${encodeBucketName(bucket)}/${encodeS3Key(key)}`, {
     method: "DELETE",
   });
 }
@@ -174,15 +174,14 @@ export async function fetchObjects(params: ObjectsParams): Promise<ObjectList> {
 }
 
 export async function fetchObjectMetadata(bucket: string, key: string): Promise<FileMetadata> {
-  const encodedKey = key.split("/").map(encodeURIComponent).join("/");
   const data = await apiWithAuth<unknown>(
-    `/api/objects/${encodeURIComponent(bucket)}/${encodedKey}/metadata`,
+    `/api/objects/${encodeBucketName(bucket)}/${encodeS3Key(key)}/metadata`,
   );
   return fileMetadataSchema.parse(data);
 }
 
 export async function triggerSavings(bucket: string): Promise<void> {
-  await apiWithAuth(`/api/buckets/${encodeURIComponent(bucket)}/compute-savings`, {
+  await apiWithAuth(`/api/buckets/${encodeBucketName(bucket)}/compute-savings`, {
     method: "POST",
     body: JSON.stringify({}),
   });

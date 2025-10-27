@@ -48,14 +48,14 @@ export default {
           900: "#003a5c",
         },
 
-        // Primary Action - Burgundy/Rose gradient for primary buttons and accents
+        // Primary Action - Burgundy/Maroon for primary buttons and accents
         primary: {
-          50: "#fff1f2",
-          100: "#ffe4e6",
-          200: "#fecdd3",
-          300: "#fda4af",
-          400: "#fb7185",
-          500: "#f43f5e",
+          50: "#fef2f3",
+          100: "#fde6e8",
+          200: "#fad0d5",
+          300: "#f4a9b2",
+          400: "#ec7a8a",
+          500: "#df4f64",
           600: "#be123c",
           700: "#9f1239",
           800: "#881337",

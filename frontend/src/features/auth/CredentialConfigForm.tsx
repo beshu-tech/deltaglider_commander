@@ -2,16 +2,17 @@
  * AWS Credential configuration form
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { AWSCredentials, CredentialStorage } from "../../services/credentialStorage";
 import { SessionManager } from "../../services/sessionManager";
 
 export interface CredentialConfigFormProps {
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
-export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
+export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFormProps) {
   const [formData, setFormData] = useState<AWSCredentials>(() => {
     // Load saved credentials on mount
     const saved = CredentialStorage.load();
@@ -25,14 +26,10 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
     );
   });
 
+  const [profileName, setProfileName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-
-  // Save to localStorage on every change
-  useEffect(() => {
-    CredentialStorage.save(formData);
-  }, [formData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +37,12 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
     setIsSubmitting(true);
 
     try {
+      // First validate credentials by creating session
       await SessionManager.createSession(formData);
+
+      // Only save profile after successful session creation
+      CredentialStorage.save(formData, profileName || undefined);
+
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create session");
@@ -57,9 +59,29 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto w-full max-w-md space-y-4 rounded-xl bg-white/70 p-4 shadow-sm dark:bg-ui-surface-dark/60 sm:p-6"
+      className="mx-auto w-full max-w-2xl space-y-4 rounded-lg border-2 border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
       autoComplete="on"
     >
+      <div>
+        <label htmlFor="profileName" className="block text-sm font-medium mb-1">
+          Profile Name
+          <span className="ml-1 text-xs text-ui-text-muted dark:text-ui-text-subtle">
+            (optional)
+          </span>
+        </label>
+        <input
+          id="profileName"
+          type="text"
+          value={profileName}
+          onChange={(e) => setProfileName(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md dark:bg-ui-surface-active-dark dark:border-ui-border-dark"
+          placeholder="My S3 Profile"
+        />
+        <p className="mt-1 text-xs text-ui-text-muted dark:text-ui-text-subtle">
+          Give this profile a memorable name to easily switch between multiple S3 accounts
+        </p>
+      </div>
+
       <div>
         <label htmlFor="accessKeyId" className="block text-sm font-medium mb-1">
           AWS Access Key ID
@@ -156,13 +178,24 @@ export function CredentialConfigForm({ onSuccess }: CredentialConfigFormProps) {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed dark:bg-blue-700 dark:hover:bg-blue-600"
-      >
-        {isSubmitting ? "Connecting..." : "Connect to S3"}
-      </button>
+      <div className="flex gap-3">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            Cancel
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors dark:bg-primary-700 dark:hover:bg-primary-600"
+        >
+          {isSubmitting ? "Connecting..." : "Connect to object storage service"}
+        </button>
+      </div>
     </form>
   );
 }

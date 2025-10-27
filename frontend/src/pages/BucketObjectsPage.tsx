@@ -2,12 +2,18 @@ import { useMemo, useState, useEffect } from "react";
 import { useMatch, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { ObjectsView } from "../features/objects/ObjectsView";
 import { ObjectsSearchState } from "../features/objects/types";
-import { normalizeObjectsSearch, serializeObjectsSearch } from "../features/objects/search";
+import { normalizeObjectsSearch } from "../features/objects/search";
 import { FilePanel } from "../features/file/FilePanel";
 import { useLayoutContext } from "../app/layout/LayoutContext";
 import { NavigationContextProvider } from "../features/objects/context/NavigationContext";
 import { setLastVisitedKey } from "../features/objects/logic/navigationSelectionLogic";
 import { useObjects } from "../features/objects/useObjects";
+import {
+  createBucketNavigation,
+  createObjectNavigation,
+  createUploadNavigation,
+  updateBucketSearch,
+} from "../lib/routing/navigation";
 
 interface BucketObjectsContentProps {
   selectedKey: string | null;
@@ -37,57 +43,38 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
     // Only replace history for pagination, sort, filter changes - not directory navigation
     const isDirectoryChange = next.prefix !== currentSearch.prefix;
 
-    navigate({
-      to: "/b/$bucket",
-      params: { bucket },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      search: serializeObjectsSearch(next) as any,
-      replace: !isDirectoryChange, // Push new entry for directory navigation
-    });
+    navigate(
+      createBucketNavigation(
+        { bucket, search: next },
+        { replace: !isDirectoryChange }, // Push new entry for directory navigation
+      ),
+    );
   };
 
   const handleNextPage = () => {
-    navigate({
-      to: "/b/$bucket",
-      params: { bucket },
-      search: serializeObjectsSearch({
-        ...currentSearch,
-        pageIndex: currentSearch.pageIndex + 1,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      }) as any,
-      replace: true,
-    });
+    navigate(
+      updateBucketSearch(
+        { bucket, search: currentSearch },
+        { pageIndex: currentSearch.pageIndex + 1 },
+      ),
+    );
   };
 
   const handlePreviousPage = () => {
-    navigate({
-      to: "/b/$bucket",
-      params: { bucket },
-      search: serializeObjectsSearch({
-        ...currentSearch,
-        pageIndex: Math.max(0, currentSearch.pageIndex - 1),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      }) as any,
-      replace: true,
-    });
+    navigate(
+      updateBucketSearch(
+        { bucket, search: currentSearch },
+        { pageIndex: Math.max(0, currentSearch.pageIndex - 1) },
+      ),
+    );
   };
 
   const handleRowClick = (itemKey: string) => {
-    navigate({
-      to: "/b/$bucket/o/$objectKey+",
-      params: { bucket, "objectKey+": itemKey },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      search: serializeObjectsSearch(currentSearch) as any,
-    });
+    navigate(createObjectNavigation({ bucket, objectKey: itemKey, search: currentSearch }));
   };
 
   const handleCloseDetails = () => {
-    navigate({
-      to: "/b/$bucket",
-      params: { bucket },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      search: serializeObjectsSearch(currentSearch) as any,
-    });
+    navigate(createBucketNavigation({ bucket, search: currentSearch }));
   };
 
   const handleObjectDeleted = (deletedKey: string) => {
@@ -118,24 +105,14 @@ function BucketObjectsContent({ selectedKey }: BucketObjectsContentProps) {
 
     // Navigate to nearest neighbor or close panel if none exist
     if (nearestKey) {
-      navigate({
-        to: "/b/$bucket/o/$objectKey+",
-        params: { bucket, "objectKey+": nearestKey },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        search: serializeObjectsSearch(currentSearch) as any,
-      });
+      navigate(createObjectNavigation({ bucket, objectKey: nearestKey, search: currentSearch }));
     } else {
       handleCloseDetails();
     }
   };
 
   const handleUploadNavigate = () => {
-    navigate({
-      to: "/b/$bucket/upload",
-      params: { bucket },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      search: serializeObjectsSearch(currentSearch) as any,
-    });
+    navigate(createUploadNavigation({ bucket, search: currentSearch }));
   };
 
   const showDetails = Boolean(effectiveSelectedKey);

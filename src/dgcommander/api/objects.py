@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, g, request
+from flask import Blueprint, request
 
 from ..auth.middleware import require_session_or_env
 from ..common.decorators import api_endpoint, with_timing
@@ -14,9 +14,9 @@ from ..contracts.objects import (
     ObjectListResponse,
     ObjectSortOrder,
 )
-from ..services.catalog import CatalogService
 from ..util.errors import APIError, NotFoundError
 from ..util.json import json_response
+from .dependencies import get_catalog, get_credentials
 from .uploads import _enforce_rate_limit
 
 bp = Blueprint("objects", __name__, url_prefix="/api/objects")
@@ -28,17 +28,7 @@ bp = Blueprint("objects", __name__, url_prefix="/api/objects")
 @with_timing("list_objects")
 def list_objects(query: ObjectListRequest):
     """List objects with automatic validation and serialization."""
-    # Use session SDK
-    sdk = g.sdk_client
-
-    # Get shared cache from app extensions (for session-isolated caching)
-    from flask import current_app
-
-    services = current_app.extensions.get("dgcommander")
-    shared_cache = services.catalog.list_cache if services else None
-
-    # Create catalog service with session SDK and shared cache
-    catalog = CatalogService(sdk=sdk, list_cache=shared_cache)
+    catalog = get_catalog()
 
     # Convert ObjectSortOrder from contracts to util.types
     from ..util.types import ObjectSortOrder as UtilObjectSortOrder
@@ -63,7 +53,7 @@ def list_objects(query: ObjectListRequest):
     # This allows cache sharing across sessions/browsers with same credentials
     from ..services.list_cache import make_credentials_cache_key
 
-    credentials = getattr(g, "credentials", None)
+    credentials = get_credentials()
     credentials_key = make_credentials_cache_key(credentials)
 
     try:
@@ -102,15 +92,7 @@ def list_objects(query: ObjectListRequest):
 @bp.get("/<bucket>/<path:key>/metadata")
 @require_session_or_env
 def object_metadata(bucket: str, key: str):
-    sdk = g.sdk_client
-
-    # Get shared cache from app extensions
-    from flask import current_app
-
-    services = current_app.extensions.get("dgcommander")
-    shared_cache = services.catalog.list_cache if services else None
-
-    catalog = CatalogService(sdk=sdk, list_cache=shared_cache)
+    catalog = get_catalog()
     try:
         metadata = catalog.get_metadata(bucket, key)
     except KeyError as exc:
@@ -122,15 +104,7 @@ def object_metadata(bucket: str, key: str):
 @require_session_or_env
 def delete_object(bucket: str, key: str):
     _enforce_rate_limit(request)
-    sdk = g.sdk_client
-
-    # Get shared cache from app extensions (for cache invalidation)
-    from flask import current_app
-
-    services = current_app.extensions.get("dgcommander")
-    shared_cache = services.catalog.list_cache if services else None
-
-    catalog = CatalogService(sdk=sdk, list_cache=shared_cache)
+    catalog = get_catalog()
     try:
         catalog.delete_object(bucket, key)
     except NotFoundError:
@@ -149,15 +123,7 @@ def delete_object(bucket: str, key: str):
 def bulk_delete_objects(data: BulkDeleteRequest):
     """Delete multiple objects in bulk."""
     _enforce_rate_limit(request)
-    sdk = g.sdk_client
-
-    # Get shared cache from app extensions (for cache invalidation)
-    from flask import current_app
-
-    services = current_app.extensions.get("dgcommander")
-    shared_cache = services.catalog.list_cache if services else None
-
-    catalog = CatalogService(sdk=sdk, list_cache=shared_cache)
+    catalog = get_catalog()
 
     # Check if bucket exists efficiently
     if not catalog.bucket_exists(data.bucket):

@@ -22,29 +22,7 @@ import { Button } from "../../lib/ui/Button";
 import { Input } from "../../lib/ui/Input";
 import { SessionManager } from "../../services/sessionManager";
 import { useLayoutContext } from "./LayoutContext";
-
-function SidebarHeader({ onCreateClick }: { onCreateClick: () => void }) {
-  return (
-    <div className="rounded-xl border border-ui-border bg-ui-surface-active px-4 py-3 shadow-inner backdrop-blur-sm dark:border-ui-border-dark/40 dark:bg-ui-surface-active-dark/30">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-col">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-ui-text-muted dark:text-ui-text-muted-dark">
-            Storage
-          </span>
-          <span className="text-sm font-semibold text-ui-text dark:text-ui-text-dark">Buckets</span>
-        </div>
-        <Button
-          type="button"
-          onClick={onCreateClick}
-          className="h-9 gap-2 px-3 text-xs font-semibold"
-          aria-label="Create bucket"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
+import { ProfileDropdown } from "./ProfileDropdown";
 
 interface BucketFilterProps {
   filter: string;
@@ -92,7 +70,7 @@ function CreateBucketForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-3 rounded-lg border border-ui-border bg-ui-surface-active p-4 backdrop-blur-sm dark:border-ui-border-dark/50 dark:bg-ui-surface-active-dark/30"
+      className="space-y-4 rounded-lg border border-ui-border bg-ui-surface-active p-4 backdrop-blur-sm dark:border-ui-border-dark/50 dark:bg-ui-surface-active-dark/30"
     >
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-ui-text dark:text-ui-text-dark">
@@ -107,7 +85,7 @@ function CreateBucketForm({
           <X className="h-4 w-4" />
         </button>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <label
           htmlFor="sidebar-bucket-name"
           className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-muted-dark"
@@ -162,9 +140,17 @@ interface BucketListProps {
   error: unknown;
   filter: string;
   activeBucket: string | null;
+  onCreateClick: () => void;
 }
 
-function BucketList({ buckets, isLoading, error, filter, activeBucket }: BucketListProps) {
+function BucketList({
+  buckets,
+  isLoading,
+  error,
+  filter,
+  activeBucket,
+  onCreateClick,
+}: BucketListProps) {
   const filteredBuckets = useMemo(() => {
     if (!buckets) {
       return [];
@@ -201,18 +187,27 @@ function BucketList({ buckets, isLoading, error, filter, activeBucket }: BucketL
     );
   }
 
+  const isDashboardActive = activeBucket === null;
+
   return (
-    <nav className="flex flex-col gap-1 text-sm">
+    <nav className="flex flex-col gap-1.5 text-sm">
+      {/* Dashboard - Special First Item */}
       <Link
         to="/buckets"
-        className="mb-3 flex items-center gap-3 rounded-lg border border-ui-border bg-gradient-to-r from-ui-surface-active to-ui-surface-active px-3 py-3 text-ui-text transition-all duration-200 hover:from-ui-surface-hover hover:to-ui-surface-active hover:border-ui-border-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:border-ui-border-dark/50 dark:from-ui-surface-active-dark/50 dark:to-ui-surface-active-dark/30 dark:text-ui-text-dark dark:hover:from-ui-surface-active-dark/70 dark:hover:to-ui-surface-active-dark/50 dark:hover:border-ui-border-hover-dark/50"
-        activeProps={{
-          className:
-            "from-primary-100 to-primary-50 border-primary-600/30 text-primary-900 dark:from-primary-900/10 dark:to-primary-900/5 dark:border-primary-500/20 dark:text-primary-100 shadow-lg shadow-primary-600/10",
-        }}
+        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 ${
+          isDashboardActive
+            ? "bg-gradient-to-r from-primary-100 to-primary-50 text-primary-900 shadow-sm dark:from-primary-900/10 dark:to-primary-900/5 dark:text-primary-100"
+            : "text-ui-text-muted hover:bg-ui-surface-hover hover:text-ui-text dark:text-ui-text-muted-dark dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
+        }`}
+        aria-current={isDashboardActive ? "page" : undefined}
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-900/90 via-primary-900 to-primary-900/80 text-white shadow-lg shadow-primary-900/20 ring-1 ring-primary-900/40">
-          <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <span className="flex min-w-0 items-center gap-3">
+          <svg
+            className="h-4 w-4 flex-shrink-0 text-primary-700 dark:text-primary-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -220,42 +215,49 @@ function BucketList({ buckets, isLoading, error, filter, activeBucket }: BucketL
               d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
             />
           </svg>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-ui-text dark:text-ui-text-dark">Dashboard</span>
-          <span className="text-xs text-ui-text-muted dark:text-ui-text-muted-dark">
-            All Buckets Overview
-          </span>
-        </div>
+          <span className="truncate font-medium">Dashboard</span>
+        </span>
       </Link>
-      <div className="mb-2 px-3">
-        <div className="h-px bg-gradient-to-r from-transparent via-ui-border to-transparent dark:via-ui-border-dark dark:to-transparent"></div>
-      </div>
+
+      {/* Regular Buckets */}
       {filteredBuckets.map((bucket) => {
         const isActive = activeBucket === bucket.name;
         return (
-          <Link
-            key={bucket.name}
-            to="/b/$bucket"
-            params={{ bucket: bucket.name }}
-            search={DEFAULT_OBJECTS_SEARCH_STATE}
-            className={`group flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 ${
-              isActive
-                ? "border-primary-600/20 bg-gradient-to-r from-primary-100 to-primary-50 text-primary-900 shadow-sm dark:border-primary-500/20 dark:from-primary-900/10 dark:to-primary-900/5 dark:text-primary-100"
-                : "border-transparent text-ui-text-muted hover:bg-ui-surface-hover hover:text-ui-text dark:text-ui-text-muted-dark dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
-            }`}
-            aria-current={isActive ? "page" : undefined}
-          >
-            <span className="flex min-w-0 items-center gap-3">
-              <Archive className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate font-medium">{bucket.name}</span>
-            </span>
-            {bucket.pending ? (
-              <Badge className="border-ui-border bg-ui-surface-active text-[10px] font-medium uppercase text-ui-text-muted dark:border-ui-border-dark dark:bg-ui-surface-active-dark dark:text-ui-text-muted-dark">
-                Pending
-              </Badge>
-            ) : null}
-          </Link>
+          <div key={bucket.name} className="group/bucket relative">
+            <Link
+              to="/b/$bucket"
+              params={{ bucket: bucket.name }}
+              search={DEFAULT_OBJECTS_SEARCH_STATE}
+              className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 ${
+                isActive
+                  ? "border-primary-600/20 bg-gradient-to-r from-primary-100 to-primary-50 text-primary-900 shadow-sm dark:border-primary-500/20 dark:from-primary-900/10 dark:to-primary-900/5 dark:text-primary-100"
+                  : "border-transparent text-ui-text-muted hover:bg-ui-surface-hover hover:text-ui-text dark:text-ui-text-muted-dark dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
+              }`}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <Archive className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate font-medium">{bucket.name}</span>
+              </span>
+              {bucket.pending ? (
+                <Badge className="border-ui-border bg-ui-surface-active text-[10px] font-medium uppercase text-ui-text-muted dark:border-ui-border-dark dark:bg-ui-surface-active-dark dark:text-ui-text-muted-dark">
+                  Pending
+                </Badge>
+              ) : null}
+            </Link>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onCreateClick();
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover/bucket:opacity-100 rounded-md p-1.5 bg-primary-900/90 text-white hover:bg-primary-800 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900"
+              aria-label="Create new bucket"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
         );
       })}
     </nav>
@@ -419,9 +421,9 @@ export function Sidebar() {
     <>
       {overlay}
       <aside className={sidebarClasses} aria-hidden={!isDesktop && !sidebarOpen}>
-        <div className="space-y-3 overflow-y-auto">
+        <div className="space-y-5 overflow-y-auto">
           {!isDesktop ? (
-            <div className="-mx-6 mb-4 flex items-center justify-between px-6">
+            <div className="-mx-6 mb-6 flex items-center justify-between px-6">
               <span className="text-sm font-semibold uppercase tracking-wide text-ui-text-muted dark:text-ui-text-muted-dark">
                 Navigation
               </span>
@@ -436,7 +438,30 @@ export function Sidebar() {
             </div>
           ) : null}
 
-          <SidebarHeader onCreateClick={openCreateForm} />
+          {/* Environments Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-2">
+              <svg
+                className="h-3 w-3 text-ui-text-muted dark:text-ui-text-muted-dark"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
+                />
+              </svg>
+              <span className="text-label-sm uppercase tracking-wide text-ui-text-muted dark:text-ui-text-muted-dark">
+                Your Environments
+              </span>
+              <div className="h-px flex-1 bg-gradient-to-r from-ui-border to-transparent dark:from-ui-border-dark dark:to-transparent"></div>
+            </div>
+            <ProfileDropdown />
+          </div>
+
           {showCreateForm && (
             <CreateBucketForm
               value={bucketName}
@@ -450,7 +475,8 @@ export function Sidebar() {
               onCancel={handleCancelCreate}
             />
           )}
-          <div className="space-y-item">
+
+          <div className="space-y-2">
             <button
               type="button"
               onClick={() => setBucketsExpanded(!bucketsExpanded)}
@@ -480,14 +506,17 @@ export function Sidebar() {
               <div className="h-px flex-1 bg-gradient-to-r from-ui-border to-transparent dark:from-ui-border-dark dark:to-transparent"></div>
             </button>
             {bucketsExpanded && (
-              <div className="space-y-3 pt-2">
-                <BucketFilter filter={filter} onFilterChange={setFilter} />
+              <div className="space-y-2 pt-2.5 pl-3">
+                {buckets && buckets.length >= 5 && (
+                  <BucketFilter filter={filter} onFilterChange={setFilter} />
+                )}
                 <BucketList
                   buckets={buckets}
                   isLoading={isLoading}
                   error={isError ? error : null}
                   filter={filter}
                   activeBucket={activeBucket}
+                  onCreateClick={openCreateForm}
                 />
               </div>
             )}

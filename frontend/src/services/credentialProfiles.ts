@@ -4,9 +4,8 @@
  */
 
 // Re-export everything from the new unified module
-export type { AWSCredentials, CredentialProfile } from "./credentials";
+export type { CredentialProfile, AWSCredentials } from "./credentials";
 export {
-  CredentialManager as CredentialStorage,
-  AWS_CREDENTIALS_STORAGE_KEY,
-  AWS_CREDENTIALS_CHANGED_EVENT,
+  CredentialManager as CredentialProfiles,
+  CREDENTIAL_EVENTS as PROFILES_EVENTS,
 } from "./credentials";

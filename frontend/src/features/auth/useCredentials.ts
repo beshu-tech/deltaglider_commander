@@ -3,15 +3,17 @@
  */
 
 import { useState, useEffect } from "react";
-import { CredentialStorage } from "../../services/credentialStorage";
+import { CredentialManager, AWS_CREDENTIALS_STORAGE_KEY } from "../../services/credentials";
 
 export function useCredentials() {
-  const [hasCredentials, setHasCredentials] = useState<boolean>(() => CredentialStorage.exists());
+  const [hasCredentials, setHasCredentials] = useState<boolean>(() =>
+    CredentialManager.hasCredentials(),
+  );
 
   // Listen for storage events from other tabs
   useEffect(() => {
     function handleStorageChange(event: StorageEvent) {
-      if (event.key === "aws_credentials") {
+      if (event.key === AWS_CREDENTIALS_STORAGE_KEY) {
         setHasCredentials(event.newValue !== null);
       }
     }
@@ -22,7 +24,7 @@ export function useCredentials() {
 
   const markCredentialsSet = () => setHasCredentials(true);
   const clearCredentials = () => {
-    CredentialStorage.clear();
+    CredentialManager.clear();
     setHasCredentials(false);
   };
 

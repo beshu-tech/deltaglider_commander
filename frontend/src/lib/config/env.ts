@@ -7,10 +7,15 @@ const envSchema = z.object({
     .union([z.literal("true"), z.literal("false"), z.boolean()])
     .optional()
     .default("false"),
+  VITE_FEATURE_CONNECTION_CHIP: z
+    .union([z.literal("true"), z.literal("false"), z.boolean()])
+    .optional()
+    .default("false"),
 });
 
 type Env = z.infer<typeof envSchema> & {
   VITE_ENABLE_UPLOADS: boolean;
+  VITE_FEATURE_CONNECTION_CHIP: boolean;
 };
 
 let cachedEnv: Env | null = null;
@@ -24,6 +29,9 @@ export function getEnv(): Env {
     ...parsed,
     VITE_ENABLE_UPLOADS:
       parsed.VITE_ENABLE_UPLOADS === true || parsed.VITE_ENABLE_UPLOADS === "true",
+    VITE_FEATURE_CONNECTION_CHIP:
+      parsed.VITE_FEATURE_CONNECTION_CHIP === true ||
+      parsed.VITE_FEATURE_CONNECTION_CHIP === "true",
   };
   return cachedEnv;
 }

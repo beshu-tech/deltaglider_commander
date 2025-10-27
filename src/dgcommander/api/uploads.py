@@ -6,14 +6,14 @@ import logging
 from collections.abc import Iterable
 from typing import BinaryIO, cast
 
-from flask import Blueprint, Request, g, request
+from flask import Blueprint, Request, request
 from werkzeug.datastructures import FileStorage
 
 from ..auth.middleware import require_session_or_env
-from ..services.catalog import CatalogService
 from ..util.errors import APIError, NotFoundError
 from ..util.json import json_response
 from . import get_container
+from .dependencies import get_catalog
 
 logger = logging.getLogger(__name__)
 bp = Blueprint("uploads", __name__, url_prefix="/api/upload")
@@ -69,9 +69,7 @@ def upload_objects():
         logger.info("Upload request started")
         _enforce_rate_limit(request)
 
-        # Use session SDK
-        sdk = g.sdk_client
-        catalog = CatalogService(sdk=sdk)
+        catalog = get_catalog()
 
         bucket = request.form.get("bucket", "").strip()
         if not bucket:
