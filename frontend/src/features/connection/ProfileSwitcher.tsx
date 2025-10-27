@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { Check, Plus, Trash2, Edit2 } from "lucide-react";
+import { Plus, Trash2, Edit2, Database } from "lucide-react";
 import { useCredentialProfiles } from "../auth/useCredentialProfiles";
 import type { CredentialProfile } from "../../services/credentialProfiles";
 
@@ -143,40 +143,26 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
                 }
               `}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-sm font-medium truncate ${
-                        isActive
-                          ? "text-primary-700 dark:text-primary-300"
-                          : "text-ui-text dark:text-ui-text-dark"
-                      }`}
-                    >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {/* Status indicator icon */}
+                  <Database
+                    className={`h-4 w-4 flex-shrink-0 ${
+                      isActive
+                        ? "text-green-500 dark:text-green-400"
+                        : "text-gray-400 dark:text-gray-600"
+                    }`}
+                  />
+
+                  {/* Profile info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-ui-text dark:text-ui-text-dark truncate">
                       {profile.name}
-                    </span>
-                    {isActive && (
-                      <Check className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0" />
-                    )}
-                  </div>
-
-                  <div className="mt-1 space-y-0.5">
-                    <p className="text-xs text-ui-text-muted dark:text-ui-text-subtle truncate">
-                      {profile.credentials.accessKeyId}
-                    </p>
-                    <p className="text-xs text-ui-text-muted dark:text-ui-text-subtle truncate">
-                      {profile.credentials.endpoint}
-                    </p>
-                    <p className="text-xs text-ui-text-muted dark:text-ui-text-subtle">
+                    </div>
+                    <div className="text-xs text-ui-text-muted dark:text-ui-text-subtle">
                       {profile.credentials.region}
-                    </p>
+                    </div>
                   </div>
-
-                  {profile.lastUsedAt && (
-                    <p className="mt-1 text-xs text-ui-text-muted dark:text-ui-text-subtle">
-                      Last used {new Date(profile.lastUsedAt).toLocaleDateString()}
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-1 flex-shrink-0">
