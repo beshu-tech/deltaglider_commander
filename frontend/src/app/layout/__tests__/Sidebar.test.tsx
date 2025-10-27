@@ -64,6 +64,30 @@ const sampleBuckets = [
     savings_pct: 20,
     pending: true,
   },
+  {
+    name: "gamma",
+    object_count: 15,
+    original_bytes: 150,
+    stored_bytes: 120,
+    savings_pct: 20,
+    pending: false,
+  },
+  {
+    name: "delta",
+    object_count: 8,
+    original_bytes: 80,
+    stored_bytes: 64,
+    savings_pct: 20,
+    pending: false,
+  },
+  {
+    name: "epsilon",
+    object_count: 12,
+    original_bytes: 120,
+    stored_bytes: 96,
+    savings_pct: 20,
+    pending: false,
+  },
 ];
 
 beforeEach(() => {
@@ -128,7 +152,9 @@ describe("Sidebar", () => {
     );
 
     // Click the create bucket button (using aria-label since it's icon-only now)
-    await user.click(screen.getByRole("button", { name: /create bucket/i }));
+    // There are multiple "Create new bucket" buttons (one per bucket), so get all and click the first
+    const createButtons = screen.getAllByRole("button", { name: /create new bucket/i });
+    await user.click(createButtons[0]);
 
     const nameInput = screen.getByPlaceholderText("e.g. images-prod");
     await user.type(nameInput, " new-bucket ");
