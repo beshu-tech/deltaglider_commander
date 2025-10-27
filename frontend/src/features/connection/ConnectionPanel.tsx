@@ -80,7 +80,7 @@ export function ConnectionPanel() {
                   status.state === "warn" &&
                     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300",
                   status.state === "error" &&
-                    "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300",
+                    "bg-primary-100 text-primary-800 dark:bg-primary-900/20 dark:text-primary-300",
                   status.state === "offline" &&
                     "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300",
                   status.state === "reconnecting" &&
@@ -111,9 +111,11 @@ export function ConnectionPanel() {
 
         {/* Error message */}
         {status.errorMessage && (
-          <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-md mt-3">
-            <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-            <span className="text-sm text-red-900 dark:text-red-100">{status.errorMessage}</span>
+          <div className="flex items-start gap-2 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-md mt-3">
+            <AlertTriangle className="w-4 h-4 text-primary-600 dark:text-primary-400 mt-0.5 flex-shrink-0" />
+            <span className="text-sm text-primary-900 dark:text-primary-100">
+              {status.errorMessage}
+            </span>
           </div>
         )}
 
@@ -222,7 +224,7 @@ export function ConnectionPanel() {
                   className={twMerge(
                     "text-xs px-2 py-0.5 rounded-full",
                     item.event === "error" &&
-                      "bg-red-100 dark:bg-red-900/20 text-red-900 dark:text-red-100",
+                      "bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100",
                     item.event === "connected" &&
                       "bg-green-100 dark:bg-green-900/20 text-green-900 dark:text-green-100",
                     item.event === "disconnected" &&

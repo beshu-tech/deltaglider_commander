@@ -300,7 +300,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
       <div className="space-y-1 text-[13px] text-ui-text-muted dark:text-ui-text-dark">
         <Link
           to="/settings"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
+          className="flex items-center gap-3 rounded-lg py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
         >
           <Settings className="h-4 w-4" />
           <span className="font-medium">Settings</span>
@@ -309,7 +309,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
           href="https://github.com/beshu-tech/deltaglider_commander/"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
+          className="flex items-center gap-3 rounded-lg py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
         >
           <BookOpen className="h-4 w-4" />
           <span className="font-medium">Documentation</span>
@@ -318,7 +318,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
           href="https://github.com/beshu-tech/deltaglider_commander/issues"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
+          className="flex items-center gap-3 rounded-lg py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
         >
           <LifeBuoy className="h-4 w-4" />
           <span className="font-medium">Support</span>
@@ -326,7 +326,7 @@ function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
         <button
           type="button"
           onClick={onSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
+          className="flex w-full items-center gap-3 rounded-lg py-2 text-left transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"
         >
           <LogOut className="h-4 w-4" />
           <span className="font-medium">Sign Out</span>
@@ -402,7 +402,7 @@ export function Sidebar() {
   const sidebarClasses = [
     "flex h-full w-72 min-w-[18rem] flex-col justify-between bg-ui-surface text-ui-text border-ui-border dark:bg-neutral-dark dark:text-ui-text-dark dark:border-ui-border-dark/30 transition-transform duration-200 ease-in-out",
     isDesktop
-      ? "relative z-0 border-r px-6 py-section"
+      ? "relative z-0 border-r px-6 py-8"
       : "fixed inset-y-0 left-0 z-50 border-r px-6 py-8 shadow-2xl",
     !isDesktop && !sidebarOpen ? "-translate-x-full pointer-events-none" : "translate-x-0",
   ].join(" ");
@@ -440,7 +440,7 @@ export function Sidebar() {
 
           {/* Environments Section */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2 px-2">
+            <div className="flex items-center gap-2">
               <svg
                 className="h-3 w-3 text-ui-text-muted dark:text-ui-text-muted-dark"
                 fill="none"
@@ -454,7 +454,7 @@ export function Sidebar() {
                   d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
                 />
               </svg>
-              <span className="text-label-sm uppercase tracking-wide text-ui-text-muted dark:text-ui-text-muted-dark">
+              <span className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-muted-dark">
                 Your Environments
               </span>
               <div className="h-px flex-1 bg-gradient-to-r from-ui-border to-transparent dark:from-ui-border-dark dark:to-transparent"></div>
@@ -480,7 +480,7 @@ export function Sidebar() {
             <button
               type="button"
               onClick={() => setBucketsExpanded(!bucketsExpanded)}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-ui-surface-hover focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50"
+              className="flex w-full items-center gap-2 rounded-md py-1 transition-colors hover:bg-ui-surface-hover focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50"
             >
               {bucketsExpanded ? (
                 <ChevronDown className="h-4 w-4 text-ui-text-muted dark:text-ui-text-muted-dark" />
@@ -500,7 +500,7 @@ export function Sidebar() {
                   d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
                 />
               </svg>
-              <span className="text-label-sm uppercase tracking-wide text-ui-text-muted dark:text-ui-text-muted-dark">
+              <span className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-muted-dark">
                 Your Buckets {buckets && buckets.length > 0 ? `(${buckets.length})` : ""}
               </span>
               <div className="h-px flex-1 bg-gradient-to-r from-ui-border to-transparent dark:from-ui-border-dark dark:to-transparent"></div>

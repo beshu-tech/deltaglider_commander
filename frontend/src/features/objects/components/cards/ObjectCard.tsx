@@ -67,7 +67,7 @@ export function ObjectCard({
                 className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium ${
                   compression.variant === "savings"
                     ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
-                    : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200"
+                    : "bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-200"
                 }`}
               >
                 {compression.variant === "savings" ? "Saved" : "Growth"}{" "}
@@ -80,7 +80,7 @@ export function ObjectCard({
               </span>
             ) : null}
             {compression.variant === "growth" ? (
-              <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-300">
+              <span className="inline-flex items-center gap-1 text-primary-600 dark:text-primary-300">
                 <AlertTriangle className="h-3 w-3" />
                 Larger delta
               </span>

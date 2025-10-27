@@ -40,9 +40,10 @@ const stateConfig: Record<
   error: {
     icon: AlertTriangle,
     label: "Error",
-    iconClass: "text-red-600 dark:text-red-400",
-    bgClass: "bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30",
-    textClass: "text-red-900 dark:text-red-100",
+    iconClass: "text-primary-600 dark:text-primary-400",
+    bgClass:
+      "bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30",
+    textClass: "text-primary-900 dark:text-primary-100",
   },
   offline: {
     icon: WifiOff,

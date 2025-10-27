@@ -179,7 +179,7 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
                   {isDeleting ? (
                     <button
                       onClick={(e) => handleDelete(e, profile.id)}
-                      className="px-2 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-300 dark:bg-red-900/40 dark:hover:bg-red-900/60 rounded transition-colors animate-pulse"
+                      className="px-2 py-1.5 text-xs font-medium text-primary-700 bg-primary-100 hover:bg-primary-200 dark:text-primary-300 dark:bg-primary-900/40 dark:hover:bg-primary-900/60 rounded transition-colors animate-pulse"
                       title="Click to confirm deletion"
                     >
                       Delete?
@@ -187,7 +187,7 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
                   ) : (
                     <button
                       onClick={(e) => handleDelete(e, profile.id)}
-                      className="p-1.5 text-ui-text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                      className="p-1.5 text-ui-text-muted hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
                       title="Delete profile"
                       aria-label={`Delete ${profile.name}`}
                     >

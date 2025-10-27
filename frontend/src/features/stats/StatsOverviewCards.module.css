@@ -1,0 +1,88 @@
+/**
+ * StatsOverviewCards - Isolated visual effects
+ *
+ * These styles are specific to the stats overview cards' unique visual design
+ * (water fill animation, gloss surface effects, special shadows).
+ * They are isolated from the global theme as they serve a special-purpose
+ * visual effect rather than being part of the general design system.
+ */
+
+/* ============================================
+   GLOSS SURFACE EFFECTS (Liquid appearance)
+   ============================================ */
+
+.glossPrimary {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+}
+
+:global(.dark) .glossPrimary {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+}
+
+.glossSecondary {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.18) 100%
+  );
+}
+
+:global(.dark) .glossSecondary {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+}
+
+/* ============================================
+   ICON SHADOWS (Stat card icons)
+   ============================================ */
+
+.iconPurple {
+  box-shadow: 0 14px 36px rgba(147, 51, 234, 0.28);
+}
+
+.iconEmerald {
+  box-shadow: 0 14px 36px rgba(16, 185, 129, 0.28);
+}
+
+/* ============================================
+   TEXT/VALUE DROP SHADOWS
+   ============================================ */
+
+.textShadow {
+  filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.35));
+}
+
+:global(.dark) .textShadow {
+  filter: drop-shadow(0 1px 4px rgba(8, 15, 35, 0.45));
+}
+
+.valueShadow {
+  filter: drop-shadow(0 4px 12px rgba(15, 23, 42, 0.22));
+}
+
+:global(.dark) .valueShadow {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+}
+
+/* ============================================
+   OPACITY VALUES (Used in stat cards)
+   ============================================ */
+
+.opacityGloss {
+  opacity: 0.65;
+}
+
+:global(.dark) .opacityGloss {
+  opacity: 0.45;
+}

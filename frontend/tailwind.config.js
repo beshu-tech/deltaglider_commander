@@ -4,50 +4,8 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
-      // Typography Scale - Professional design system
-      fontSize: {
-        // Titles: 20-24px, weight 600-700
-        title: ["1.5rem", { lineHeight: "1.3", fontWeight: "700", letterSpacing: "-0.01em" }], // 24px
-        "title-sm": ["1.25rem", { lineHeight: "1.4", fontWeight: "600", letterSpacing: "-0.01em" }], // 20px
-
-        // Section headers: 16-18px, weight 500
-        section: ["1.125rem", { lineHeight: "1.5", fontWeight: "500" }], // 18px
-        "section-sm": ["1rem", { lineHeight: "1.5", fontWeight: "500" }], // 16px
-
-        // Body: 14-15px, weight 400, line-height 1.5-1.6
-        body: ["0.9375rem", { lineHeight: "1.6", fontWeight: "400" }], // 15px
-        "body-sm": ["0.875rem", { lineHeight: "1.6", fontWeight: "400" }], // 14px
-
-        // Labels: 12-13px, weight 500
-        label: ["0.8125rem", { lineHeight: "1.5", fontWeight: "500" }], // 13px
-        "label-sm": ["0.75rem", { lineHeight: "1.4", fontWeight: "500" }], // 12px
-      },
-
-      // Semantic Spacing Scale - 8-16-32 rule
-      spacing: {
-        section: "2rem", // 32px - Between major sections
-        block: "1.5rem", // 24px - Between content blocks
-        group: "1rem", // 16px - Between related elements
-        item: "0.75rem", // 12px - Between list items
-        inline: "0.5rem", // 8px - Inline spacing
-      },
-
       // 5 Functional Color Tones - 2025 Modern Aesthetic (Light + Dark Mode)
       colors: {
-        // Brand/Accent - Primary interactive color (cyan-blue)
-        brand: {
-          50: "#f2fbff",
-          100: "#e6f5ff",
-          200: "#bfebff",
-          300: "#80d9ff",
-          400: "#33c2ff",
-          500: "#00a7f0",
-          600: "#0085c7",
-          700: "#0069a1",
-          800: "#005584",
-          900: "#003a5c",
-        },
-
         // Primary Action - Burgundy/Maroon for primary buttons and accents
         primary: {
           50: "#fef2f3",
@@ -118,13 +76,6 @@ export default {
           "icon-subtle-dark": "#475569", // Dark mode (slate-600)
         },
 
-        // Legacy surface colors for backward compatibility
-        surface: {
-          base: "#F7F8FA",
-          elevated: "#FFFFFF",
-          subtle: "#F1F3F5",
-        },
-
         // Neutral dark background for sidebar
         "neutral-dark": "#1E1F22",
       },
@@ -140,18 +91,6 @@ export default {
         "elevation-sm-dark": "0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.03)",
         "elevation-md-dark": "0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)",
         "elevation-lg-dark": "0 4px 16px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07)",
-
-        // Icon shadows for stat cards
-        "icon-purple": "0 14px 36px rgba(147, 51, 234, 0.28)", // purple-500
-        "icon-emerald": "0 14px 36px rgba(16, 185, 129, 0.28)", // emerald-500
-      },
-
-      // Drop shadows for text elements
-      dropShadow: {
-        "text-light": "0 1px 2px rgba(255, 255, 255, 0.35)",
-        "text-dark": "0 1px 4px rgba(8, 15, 35, 0.45)",
-        "value-light": "0 4px 12px rgba(15, 23, 42, 0.22)",
-        "value-dark": "0 4px 12px rgba(0, 0, 0, 0.4)",
       },
 
       // Motion System - Subtle transitions (100-150ms)
@@ -184,35 +123,6 @@ export default {
           "Segoe UI",
           "sans-serif",
         ],
-      },
-
-      // Semantic opacity values for stat cards (2025 flat design)
-      opacity: {
-        // Gloss highlights on water surface
-        gloss: "0.4",
-        "gloss-dark": "0.3",
-
-        // Water line shimmer effect
-        waterline: "0.6",
-        "waterline-dark": "0.4",
-
-        // Card background translucency
-        "card-bg": "0.6",
-        "card-bg-dark": "0.5",
-      },
-
-      // Custom gradient backgrounds for stat cards
-      // 2025 Flat Design: Water/air fills use flat Tailwind colors, only gloss kept for subtle liquid effect
-      backgroundImage: {
-        // Gloss effects - subtle surface highlight for liquid effect (functional, not decorative)
-        "gloss-primary-light":
-          "linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.2) 100%)",
-        "gloss-primary-dark":
-          "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.05) 100%)",
-        "gloss-secondary-light":
-          "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.18) 100%)",
-        "gloss-secondary-dark":
-          "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.06) 100%)",
       },
     },
   },

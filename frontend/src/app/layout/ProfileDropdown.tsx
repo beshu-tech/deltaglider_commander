@@ -12,7 +12,7 @@ import type { ConnState } from "../../types/connection";
 const statusIconColors: Record<ConnState, string> = {
   ok: "text-green-500 dark:text-green-400",
   warn: "text-yellow-500 dark:text-yellow-400",
-  error: "text-red-500 dark:text-red-400",
+  error: "text-primary-500 dark:text-primary-400",
   offline: "text-gray-400 dark:text-gray-500",
   reconnecting: "text-blue-500 dark:text-blue-400 animate-pulse",
 };

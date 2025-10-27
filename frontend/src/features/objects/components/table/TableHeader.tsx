@@ -53,7 +53,7 @@ export function TableHeader({
             aria-label="Select all items on this page"
           />
         </th>
-        <th className="group px-3 py-3 text-left text-label-sm uppercase tracking-wide text-ui-text-muted transition-colors duration-fast hover:bg-ui-surface-hover dark:hover:bg-ui-surface-hover-dark/50">
+        <th className="group px-3 py-3 text-left text-xs font-medium uppercase tracking-wide text-ui-text-muted transition-colors duration-fast hover:bg-ui-surface-hover dark:hover:bg-ui-surface-hover-dark/50">
           <SortButton
             column="name"
             currentSort={sort}
@@ -64,12 +64,12 @@ export function TableHeader({
             Name
           </SortButton>
         </th>
-        <th className="group px-3 py-3 text-left text-label-sm uppercase tracking-wide text-ui-text-muted transition-colors duration-fast hover:bg-ui-surface-hover dark:hover:bg-ui-surface-hover-dark/50">
+        <th className="group px-3 py-3 text-left text-xs font-medium uppercase tracking-wide text-ui-text-muted transition-colors duration-fast hover:bg-ui-surface-hover dark:hover:bg-ui-surface-hover-dark/50">
           <SortButton column="size" currentSort={sort} order={order} onSortChange={onSortChange}>
             Size
           </SortButton>
         </th>
-        <th className="group px-3 py-3 text-left text-label-sm uppercase tracking-wide text-ui-text-muted transition-colors duration-fast hover:bg-ui-surface-hover dark:hover:bg-ui-surface-hover-dark/50">
+        <th className="group px-3 py-3 text-left text-xs font-medium uppercase tracking-wide text-ui-text-muted transition-colors duration-fast hover:bg-ui-surface-hover dark:hover:bg-ui-surface-hover-dark/50">
           <SortButton
             column="modified"
             currentSort={sort}
@@ -79,7 +79,7 @@ export function TableHeader({
             Modified
           </SortButton>
         </th>
-        <th className="px-3 py-3 text-left text-label-sm uppercase tracking-wide text-ui-text-muted transition-colors duration-fast hover:bg-ui-surface-hover dark:hover:bg-ui-surface-hover-dark/50">
+        <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wide text-ui-text-muted transition-colors duration-fast hover:bg-ui-surface-hover dark:hover:bg-ui-surface-hover-dark/50">
           Compression
         </th>
       </tr>

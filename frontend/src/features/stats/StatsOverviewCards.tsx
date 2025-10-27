@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { StatsSummary } from "./useStats";
 import { formatBytesThin } from "../../lib/utils/bytes";
+import styles from "./StatsOverviewCards.module.css";
 
 type Tone = "primary" | "secondary";
 
@@ -24,39 +25,39 @@ interface StatCardProps extends StatCardConfig {
 }
 
 // 2025 Flat Design: Using flat Tailwind colors with semantic opacity modifiers
-// Only gloss gradient kept for subtle liquid surface effect
+// Gloss gradients and special effects now in CSS module (StatsOverviewCards.module.css)
 
 const tonePalette: Record<
   Tone,
   {
     cardClass: string;
     iconClass: string;
-    iconShadowClass: string;
+    iconCssModule: string;
     airFillClass: string;
     waterFillClass: string;
-    glossGradientClass: string;
+    glossCssModule: string;
     waterLineClass: string;
   }
 > = {
   primary: {
     cardClass:
-      "border border-slate-200 bg-white/card-bg text-ui-text shadow-elevation-sm dark:border-slate-700 dark:bg-slate-900/card-bg-dark dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-purple-400 to-purple-500 shadow-icon-purple",
-    iconShadowClass: "shadow-icon-purple",
+      "border border-slate-200 bg-white/85 text-ui-text shadow-elevation-sm dark:border-slate-700 dark:bg-slate-900/65 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+    iconClass: "bg-gradient-to-br from-purple-400 to-purple-500",
+    iconCssModule: styles.iconPurple,
     airFillClass: "bg-primary-50/35 dark:bg-slate-950/30",
     waterFillClass: "bg-blue-700/30 dark:bg-blue-700/22",
-    glossGradientClass: "bg-gloss-primary-light dark:bg-gloss-primary-dark",
-    waterLineClass: "bg-white/waterline dark:bg-blue-400/waterline-dark",
+    glossCssModule: styles.glossPrimary,
+    waterLineClass: "bg-white/45 dark:bg-blue-400/35",
   },
   secondary: {
     cardClass:
-      "border border-slate-200 bg-white/card-bg text-ui-text shadow-elevation-sm dark:border-slate-700 dark:bg-slate-900/card-bg-dark dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
-    iconClass: "bg-gradient-to-br from-emerald-400 to-emerald-500 shadow-icon-emerald",
-    iconShadowClass: "shadow-icon-emerald",
+      "border border-slate-200 bg-white/85 text-ui-text shadow-elevation-sm dark:border-slate-700 dark:bg-slate-900/65 dark:text-ui-text-dark dark:shadow-elevation-sm-dark",
+    iconClass: "bg-gradient-to-br from-emerald-400 to-emerald-500",
+    iconCssModule: styles.iconEmerald,
     airFillClass: "bg-emerald-50/35 dark:bg-slate-950/30",
     waterFillClass: "bg-teal-700/30 dark:bg-teal-700/22",
-    glossGradientClass: "bg-gloss-secondary-light dark:bg-gloss-secondary-dark",
-    waterLineClass: "bg-white/waterline dark:bg-teal-400/waterline-dark",
+    glossCssModule: styles.glossSecondary,
+    waterLineClass: "bg-white/45 dark:bg-teal-400/35",
   },
 };
 
@@ -215,8 +216,8 @@ function StatCard({
               <div
                 className={joinClasses(
                   "absolute inset-x-0 top-0 h-8 transition-opacity duration-500",
-                  palette.glossGradientClass,
-                  effectiveProgress > 0 ? "opacity-gloss dark:opacity-gloss-dark" : "opacity-0",
+                  palette.glossCssModule,
+                  effectiveProgress > 0 ? styles.opacityGloss : "opacity-0",
                 )}
               />
             </div>
@@ -236,6 +237,7 @@ function StatCard({
           className={joinClasses(
             "flex h-12 w-12 items-center justify-center rounded-xl text-white transition-all duration-700 ease-out motion-reduce:transition-none",
             palette.iconClass,
+            palette.iconCssModule,
           )}
           style={{
             transform: `translateY(${effectiveProgress * -2}px)`,
@@ -247,12 +249,22 @@ function StatCard({
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-left text-[1.45rem] font-semibold uppercase tracking-[0.18em] text-ui-text/90 drop-shadow-text-light dark:text-ui-text-dark dark:drop-shadow-text-dark">
+            <span
+              className={joinClasses(
+                "text-left text-[1.45rem] font-semibold uppercase tracking-[0.18em] text-ui-text/90 dark:text-ui-text-dark",
+                styles.textShadow,
+              )}
+            >
               {label}
             </span>
             {sideMetric && <div className="flex flex-col items-end">{sideMetric}</div>}
           </div>
-          <div className="mt-3 text-left text-[2.2rem] font-semibold leading-tight tracking-tight text-ui-text tabular-nums drop-shadow-value-light dark:text-white dark:drop-shadow-value-dark md:text-[2.5rem]">
+          <div
+            className={joinClasses(
+              "mt-3 text-left text-[2.2rem] font-semibold leading-tight tracking-tight text-ui-text tabular-nums dark:text-white md:text-[2.5rem]",
+              styles.valueShadow,
+            )}
+          >
             {value}
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">
@@ -287,13 +299,6 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
     precision: 3,
     minDuration: 800,
     maxDuration: 2200,
-  });
-
-  console.log("[StatsOverviewCards] Raw values:", {
-    analysisCoverage: summary.analysisCoverage,
-    animatedProgress,
-    savingsPct: summary.savingsPct,
-    objectCount: summary.objectCount,
   });
 
   const assistiveText = hasActiveBuckets
@@ -342,12 +347,6 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
       maxDuration: 2200,
     },
   );
-
-  console.log("[StatsOverviewCards] Animated values:", {
-    animatedSavingsPct,
-    animatedSavingsFillProgress,
-    animatedObjectCount,
-  });
 
   const savedBytes = Math.max(0, animatedOriginalBytes - animatedStoredBytes);
 
@@ -413,11 +412,6 @@ export function StatsOverviewCards({ summary }: { summary: StatsSummary }) {
       description: `${formatBytesThin(Math.max(0, Math.round(savedBytes)))} saved (${ratioValue} ratio)`,
     },
   ];
-
-  console.log("[StatsOverviewCards] fillProgress values:", {
-    compression: animatedSavingsFillProgress,
-    objects: animatedProgress,
-  });
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">

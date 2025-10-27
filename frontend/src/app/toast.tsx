@@ -85,10 +85,10 @@ const levelStyles = {
   },
   error: {
     container:
-      "bg-gradient-to-br from-red-900/95 via-red-900 to-red-900/90 border border-red-800/60 dark:border-red-700/60",
+      "bg-gradient-to-br from-primary-900/95 via-primary-900 to-primary-900/90 border border-primary-800/60 dark:border-primary-700/60",
     icon: "text-white",
     title: "text-white",
-    description: "text-red-100",
+    description: "text-primary-100",
     IconComponent: AlertCircle,
   },
 } as const;

@@ -142,7 +142,9 @@ export function ProfileEditModal({ open, profile, onSave, onCancel }: ProfileEdi
               className="w-full px-3 py-2 border border-ui-border dark:border-ui-border-dark rounded-md bg-white dark:bg-ui-surface-active-dark text-ui-text dark:text-ui-text-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="My S3 Profile"
             />
-            {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && (
+              <p className="mt-1 text-sm text-primary-600 dark:text-primary-400">{error}</p>
+            )}
           </div>
 
           {/* Credential preview (read-only) */}

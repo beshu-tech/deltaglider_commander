@@ -29,8 +29,8 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
   });
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-ui-border bg-ui-surface px-group dark:border-ui-border-dark dark:bg-ui-surface-dark">
-      <div className="flex items-center gap-group">
+    <header className="flex h-14 items-center justify-between border-b border-ui-border bg-ui-surface px-4 dark:border-ui-border-dark dark:bg-ui-surface-dark">
+      <div className="flex items-center gap-4">
         {!isDesktop ? (
           <button
             type="button"
@@ -52,7 +52,7 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
           />
         ) : null}
       </div>
-      <div className="flex items-center gap-inline">
+      <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           aria-label="Show keyboard shortcuts (Shift+?)"
@@ -96,9 +96,9 @@ const STATUS_STYLES: Record<ConnectionStatus, { dot: string; text: string; accen
     accent: "text-amber-600/80 dark:text-amber-200/80",
   },
   error: {
-    dot: "bg-red-500",
-    text: "text-red-600 dark:text-red-300",
-    accent: "text-red-500/80 dark:text-red-200/80",
+    dot: "bg-primary-500",
+    text: "text-primary-600 dark:text-primary-300",
+    accent: "text-primary-500/80 dark:text-primary-200/80",
   },
   disconnected: {
     dot: "bg-primary-500 dark:bg-primary-300",

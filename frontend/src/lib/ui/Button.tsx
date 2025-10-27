@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 type Variant = "primary" | "secondary" | "ghost" | "outline";
 
 const baseClasses =
-  "inline-flex items-center justify-center gap-inline rounded-md border px-3 py-2 text-body-sm font-medium transition-all duration-fast focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-primary-900 focus-visible:ring-focus focus-visible:ring-primary-900/20 disabled:cursor-not-allowed disabled:opacity-60 disabled:pointer-events-none";
+  "inline-flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-all duration-fast focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-primary-900 focus-visible:ring-focus focus-visible:ring-primary-900/20 disabled:cursor-not-allowed disabled:opacity-60 disabled:pointer-events-none";
 
 const variantClasses: Record<Variant, string> = {
   primary:

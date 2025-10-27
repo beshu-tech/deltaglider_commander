@@ -173,7 +173,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+        <div className="bg-primary-50 border border-primary-200 text-primary-700 px-4 py-3 rounded dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-400">
           {error}
         </div>
       )}

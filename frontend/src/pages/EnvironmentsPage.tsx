@@ -13,7 +13,7 @@ import { CredentialConfigForm } from "../features/auth/CredentialConfigForm";
 const statusIconColors: Record<ConnState, string> = {
   ok: "text-green-500 dark:text-green-400",
   warn: "text-yellow-500 dark:text-yellow-400",
-  error: "text-red-500 dark:text-red-400",
+  error: "text-primary-500 dark:text-primary-400",
   offline: "text-gray-400 dark:text-gray-500",
   reconnecting: "text-blue-500 dark:text-blue-400 animate-pulse",
 };
@@ -131,7 +131,7 @@ export function EnvironmentsPage() {
                 <button
                   onClick={() => handleDelete(profile.id)}
                   disabled={isDeleting || isSwitching}
-                  className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-600 dark:hover:text-red-400 dark:hover:bg-red-900/20"
+                  className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-600 dark:hover:text-primary-400 dark:hover:bg-primary-900/20"
                   title="Delete profile"
                 >
                   <X className="h-4 w-4" />

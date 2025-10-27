@@ -46,8 +46,8 @@ export function UploadQueue({ queue, hasCompleted, onClearCompleted }: UploadQue
               ? `Compressed · ${savings.toFixed(1)}% saved`
               : "Stored original";
           } else if (item.status === "error") {
-            statusIcon = <AlertCircle className="h-4 w-4 text-rose-500" />;
-            statusColor = "text-rose-600";
+            statusIcon = <AlertCircle className="h-4 w-4 text-primary-500" />;
+            statusColor = "text-primary-600";
             statusText = item.error || "Failed";
           }
 

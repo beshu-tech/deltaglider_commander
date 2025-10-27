@@ -39,7 +39,7 @@ export function StorageStatsCard({
           <div
             className={`text-3xl font-bold ${
               savings.isGrowth
-                ? "text-rose-600 dark:text-rose-300"
+                ? "text-primary-600 dark:text-primary-300"
                 : "text-emerald-600 dark:text-emerald-400"
             }`}
           >

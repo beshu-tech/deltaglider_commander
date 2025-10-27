@@ -39,7 +39,7 @@ export function CompressionBadge({
       <Tooltip
         label={`Delta compression increased this object. The stored delta (${stored}) is larger than the original (${original}). This typically happens when the reference no longer matches closely or the source is already compressed. Re-upload without delta compression or refresh the reference to recover savings.`}
       >
-        <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-1 text-xs font-medium text-rose-800 dark:bg-rose-900 dark:text-rose-200">
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-1 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-200">
           <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
           Growth {percentage.toFixed(1)}%
         </span>

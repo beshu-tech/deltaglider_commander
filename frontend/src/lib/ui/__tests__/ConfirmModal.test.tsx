@@ -85,7 +85,7 @@ describe("ConfirmModal", () => {
       render(<ConfirmModal {...defaultProps} />);
 
       const confirmButton = screen.getByRole("button", { name: "Confirm" });
-      expect(confirmButton.className).toContain("bg-red-600");
+      expect(confirmButton.className).toContain("bg-primary-600");
     });
 
     it("should apply warning variant styles", () => {

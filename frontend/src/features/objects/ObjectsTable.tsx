@@ -173,7 +173,7 @@ export function ObjectsTable({
               <tr>
                 <td
                   colSpan={5}
-                  className="px-3 py-section text-center text-body text-ui-text-muted dark:text-ui-text-muted-dark"
+                  className="px-3 py-8 text-center text-[0.9375rem] text-ui-text-muted dark:text-ui-text-muted-dark"
                 >
                   No objects found for the current filters.
                 </td>

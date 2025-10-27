@@ -65,11 +65,11 @@ interface GridProps {
 
 export function Grid({ children, className = "", gap = "group" }: GridProps) {
   const gapClasses = {
-    inline: "gap-inline",
-    item: "gap-item",
-    group: "gap-group",
-    block: "gap-block",
-    section: "gap-section",
+    inline: "gap-2",
+    item: "gap-3",
+    group: "gap-4",
+    block: "gap-6",
+    section: "gap-8",
   };
 
   return (

@@ -167,7 +167,7 @@ export function ObjectsToolbar({
   }, [breadcrumbs, isNarrowScreen]);
 
   return (
-    <div className="flex flex-col gap-3 border-b border-ui-border px-3 py-3 dark:border-ui-border-dark sm:h-14 sm:flex-row sm:items-center sm:justify-between sm:gap-group sm:px-5 sm:py-0">
+    <div className="flex flex-col gap-3 border-b border-ui-border px-3 py-3 dark:border-ui-border-dark sm:h-14 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-0">
       <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto sm:overflow-visible">
         {visibleBreadcrumbs.items.map((crumb, index) => {
           const isActive = crumb === breadcrumbs[breadcrumbs.length - 1];

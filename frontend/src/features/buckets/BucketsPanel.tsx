@@ -118,7 +118,7 @@ function BucketRow({
 
   const errorIndicator = (
     <span
-      className="text-xs font-medium text-red-600 dark:text-red-400"
+      className="text-xs font-medium text-primary-600 dark:text-primary-400"
       title="Unable to load stats"
     >
       Error
@@ -171,7 +171,7 @@ function BucketRow({
             </p>
             <div className="mt-1 tabular-nums text-ui-text dark:text-ui-text-dark">
               {isError ? (
-                <span className="text-red-600 dark:text-red-400">Error</span>
+                <span className="text-primary-600 dark:text-primary-400">Error</span>
               ) : isLoadingStats ? (
                 <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -188,7 +188,7 @@ function BucketRow({
             </p>
             <div className="mt-1 flex flex-col text-ui-text dark:text-ui-text-dark">
               {isError ? (
-                <span className="text-red-600 dark:text-red-400">Error</span>
+                <span className="text-primary-600 dark:text-primary-400">Error</span>
               ) : isLoadingStats ? (
                 <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -216,7 +216,7 @@ function BucketRow({
             </p>
             <div className="mt-1 tabular-nums text-ui-text dark:text-ui-text-dark">
               {isError ? (
-                <span className="text-red-600 dark:text-red-400">Error</span>
+                <span className="text-primary-600 dark:text-primary-400">Error</span>
               ) : isLoadingStats ? (
                 <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -234,7 +234,7 @@ function BucketRow({
           <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
           <Button
             variant="ghost"
-            className="h-9 rounded-md border border-ui-border px-3 py-2 text-sm text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-ui-border-dark dark:text-red-400 dark:hover:bg-red-950"
+            className="h-9 rounded-md border border-ui-border px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:border-ui-border-dark dark:text-primary-400 dark:hover:bg-primary-950"
             onClick={(event) => {
               event.stopPropagation();
               const confirmed = window.confirm(
@@ -388,7 +388,7 @@ function BucketRow({
           <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
           <Button
             variant="ghost"
-            className="h-9 w-9 p-0 text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:text-red-400 dark:hover:bg-red-950"
+            className="h-9 w-9 p-0 text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:bg-primary-950"
             onClick={() => {
               const confirmed = window.confirm(
                 `Delete bucket "${bucket.name}"? This cannot be undone.`,
@@ -466,10 +466,12 @@ export function BucketsPanel() {
       ref={containerRef}
       className="overflow-hidden rounded-xl border border-ui-border bg-surface-elevated shadow-elevation-md dark:border-ui-border-dark dark:bg-ui-surface-dark dark:shadow-elevation-md-dark"
     >
-      <div className="bg-ui-bg-subtle dark:bg-ui-surface-dark/50 px-group py-3 border-b border-ui-border dark:border-ui-border-dark flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-ui-bg-subtle dark:bg-ui-surface-dark/50 px-4 py-3 border-b border-ui-border dark:border-ui-border-dark flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-title-sm text-ui-text dark:text-ui-text-dark">Storage Buckets</h2>
-          <p className="text-body-sm text-ui-text-muted dark:text-ui-text-subtle mt-1">
+          <h2 className="text-xl font-semibold text-ui-text dark:text-ui-text-dark">
+            Storage Buckets
+          </h2>
+          <p className="text-sm text-ui-text-muted dark:text-ui-text-subtle mt-1">
             Manage and optimize your object storage containers
           </p>
         </div>
@@ -496,19 +498,19 @@ export function BucketsPanel() {
         <Table className="min-w-full">
           <TableHead>
             <tr className="bg-ui-bg-subtle dark:bg-ui-surface-dark/50">
-              <th className="px-6 py-3 text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
+              <th className="px-6 py-3 text-xs font-medium uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Name
               </th>
-              <th className="px-6 py-3 text-right text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Objects
               </th>
-              <th className="px-6 py-3 text-right text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Size
               </th>
-              <th className="px-6 py-3 text-right text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Savings
               </th>
-              <th className="px-6 py-3 text-right text-label-sm uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-ui-text-muted dark:text-ui-text-subtle">
                 Actions
               </th>
             </tr>

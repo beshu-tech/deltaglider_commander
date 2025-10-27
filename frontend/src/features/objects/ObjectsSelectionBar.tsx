@@ -50,7 +50,7 @@ export function ObjectsSelectionBar({
         <Button
           variant="ghost"
           onClick={onBulkDelete}
-          className="w-full text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:hover:bg-red-900 sm:w-auto"
+          className="w-full text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:hover:bg-primary-900 sm:w-auto"
         >
           <Trash2 className="h-4 w-4" />
           Delete

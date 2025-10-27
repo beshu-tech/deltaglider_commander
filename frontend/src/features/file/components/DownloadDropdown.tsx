@@ -111,7 +111,7 @@ export function DownloadDropdown({
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label="Download and share options"
-        className={`w-full justify-between gap-2 bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 dark:bg-red-700 dark:hover:bg-red-800 dark:focus:ring-red-600 ${
+        className={`w-full justify-between gap-2 bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 dark:bg-primary-700 dark:hover:bg-primary-800 dark:focus:ring-primary-600 ${
           isFocused ? "ring-2 ring-primary-600 ring-offset-2 dark:ring-primary-500" : ""
         }`}
       >

@@ -188,7 +188,7 @@ export function DestinationPathSelector({
                 isEditing
                   ? "border-primary-500 bg-ui-surface dark:bg-ui-surface-dark"
                   : "border-transparent bg-ui-surface-secondary hover:bg-ui-surface dark:bg-ui-surface-dark dark:hover:bg-gray-800"
-              } ${showError ? "border-red-500" : ""} ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-text"}`}
+              } ${showError ? "border-primary-500" : ""} ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-text"}`}
               onClick={() => {
                 if (!disabled) {
                   setIsEditing(true);
@@ -367,7 +367,7 @@ export function DestinationPathSelector({
 
       {/* Helper/Error Messages */}
       {showError && validation.error && (
-        <p id="path-error" className="mt-1 text-xs text-red-600 dark:text-red-400">
+        <p id="path-error" className="mt-1 text-xs text-primary-600 dark:text-primary-400">
           {validation.error}
         </p>
       )}

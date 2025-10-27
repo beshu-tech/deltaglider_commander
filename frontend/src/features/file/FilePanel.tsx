@@ -301,7 +301,7 @@ export function FilePanel({
       <div className={`border-t border-ui-border ${footerPadding} dark:border-ui-border-dark`}>
         <Button
           variant="ghost"
-          className={`w-full justify-center gap-2 border border-ui-border text-red-600 hover:bg-red-50 focus-visible:outline-red-500 dark:border-ui-border-dark dark:text-red-300 dark:hover:bg-red-900 ${
+          className={`w-full justify-center gap-2 border border-ui-border text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:border-ui-border-dark dark:text-primary-300 dark:hover:bg-primary-900 ${
             focusedElement === "delete"
               ? "ring-2 ring-primary-600 ring-offset-2 dark:ring-primary-500"
               : ""
