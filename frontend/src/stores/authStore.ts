@@ -50,7 +50,7 @@ interface AuthActions {
   clearActiveProfile: () => void;
 
   // Connection status
-  setConnectionStatus: (status: ConnectionStatus | null) => void;
+  setConnectionStatus: (status: Partial<ConnectionStatus> | ConnectionStatus | null) => void;
 
   // Bulk operations
   clearAll: () => void;
@@ -143,8 +143,16 @@ export const useAuthStore = create<AuthStore>()(
       // Connection Status Actions
       // ============================================================================
 
-      setConnectionStatus: (status: ConnectionStatus | null) => {
-        set({ connectionStatus: status });
+      setConnectionStatus: (status: Partial<ConnectionStatus> | ConnectionStatus | null) => {
+        if (status === null) {
+          set({ connectionStatus: null });
+        } else {
+          set((state) => ({
+            connectionStatus: state.connectionStatus
+              ? { ...state.connectionStatus, ...status }
+              : (status as ConnectionStatus),
+          }));
+        }
       },
 
       // ============================================================================
