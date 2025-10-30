@@ -114,8 +114,8 @@ export function EnvironmentsPage() {
           const statusLabel = statusLabels[effectiveState];
           const iconColor = statusIconColors[effectiveState];
           const region = isActive
-            ? connectionStatus?.region || profile.credentials.region || "unknown"
-            : profile.credentials.region || "unknown";
+            ? connectionStatus?.region || profile.credentials.region || "eu-west-1 (default)"
+            : profile.credentials.region || "eu-west-1 (default)";
 
           return (
             <div
@@ -191,7 +191,9 @@ export function EnvironmentsPage() {
                     Endpoint:
                   </span>
                   <span className="font-mono text-gray-900 dark:text-white truncate">
-                    {profile.credentials.endpoint.replace(/^https?:\/\//, "")}
+                    {profile.credentials.endpoint
+                      ? profile.credentials.endpoint.replace(/^https?:\/\//, "")
+                      : "s3.amazonaws.com (default)"}
                   </span>
                 </div>
               </div>
