@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { RouterProvider } from "@tanstack/react-router";
 import { getPollMs } from "../lib/config/env";
@@ -12,6 +12,24 @@ export function AppProviders() {
   const [queryClient] = useState(
     () =>
       new QueryClient({
+        queryCache: new QueryCache({
+          onSuccess: () => {
+            const authStore = useAuthStore.getState();
+            // Any successful query means we're connected
+            authStore.setConnectionStatus({
+              state: "ok",
+            });
+          },
+          onError: (error: unknown) => {
+            if (error instanceof ApiError) {
+              const authStore = useAuthStore.getState();
+              authStore.setConnectionStatus({
+                state: "error",
+                errorMessage: error.message,
+              });
+            }
+          },
+        }),
         defaultOptions: {
           queries: {
             // Don't retry on client errors (4xx) - these are configuration issues
@@ -58,15 +76,6 @@ export function AppProviders() {
                   });
                 }
               }
-            },
-
-            // Global success handler to update connection status
-            onSuccess: () => {
-              const authStore = useAuthStore.getState();
-              // Any successful query means we're connected
-              authStore.setConnectionStatus({
-                state: "ok",
-              });
             },
           },
         },
