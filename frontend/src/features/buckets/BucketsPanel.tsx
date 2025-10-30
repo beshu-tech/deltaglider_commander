@@ -5,6 +5,7 @@ import { Badge } from "../../lib/ui/Badge";
 import { EmptyState } from "../../lib/ui/EmptyState";
 import { Button } from "../../lib/ui/Button";
 import { ConfirmModal } from "../../lib/ui/ConfirmModal";
+import { LoadingSpinner } from "../../lib/ui/LoadingSpinner";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "../../lib/ui/Table";
 import { formatBytesThin } from "../../lib/utils/bytes";
 import { Bucket } from "./types";
@@ -455,7 +456,7 @@ export function BucketsPanel() {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-ui-text-subtle" />
+        <LoadingSpinner size="md" label="Loading buckets" className="text-ui-text-subtle" />
       </div>
     );
   }
