@@ -97,18 +97,26 @@ describe("BucketsPanel", () => {
   it("confirms delete before calling mutation", async () => {
     const mutate = vi.fn();
     useDeleteBucketMock.mockReturnValue({ mutate, isPending: false, variables: undefined });
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const user = userEvent.setup();
     render(<BucketsPanel />);
 
     const table = screen.getByRole("table");
     const row = within(table).getByText("alpha").closest("tr")!;
     const deleteButton = within(row).getByRole("button", { name: /delete/i });
+
+    // Click delete button - should open modal
     await user.click(deleteButton);
 
-    expect(confirmSpy).toHaveBeenCalled();
-    expect(mutate).toHaveBeenCalledWith("alpha");
+    // Modal should appear
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("Delete Bucket")).toBeInTheDocument();
+    expect(screen.getByText(/are you sure you want to delete "alpha"/i)).toBeInTheDocument();
 
-    confirmSpy.mockRestore();
+    // Click confirm in modal
+    const confirmButton = screen.getByRole("button", { name: "Delete" });
+    await user.click(confirmButton);
+
+    // Mutation should be called
+    expect(mutate).toHaveBeenCalledWith("alpha");
   });
 });

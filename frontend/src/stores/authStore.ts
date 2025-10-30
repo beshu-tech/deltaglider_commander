@@ -4,9 +4,9 @@
  * Uses Zustand with persist middleware for automatic localStorage synchronization
  */
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { ConnectionStatus } from '../types/connection';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { ConnectionStatus } from "../types/connection";
 
 // ============================================================================
 // Types
@@ -128,9 +128,7 @@ export const useAuthStore = create<AuthStore>()(
 
         set((state) => ({
           activeProfileId: id,
-          profiles: state.profiles.map((p) =>
-            p.id === id ? { ...p, lastUsedAt: Date.now() } : p
-          ),
+          profiles: state.profiles.map((p) => (p.id === id ? { ...p, lastUsedAt: Date.now() } : p)),
         }));
       },
 
@@ -162,14 +160,14 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       // Only persist credentials and active profile, not connection status
       partialize: (state) => ({
         profiles: state.profiles,
         activeProfileId: state.activeProfileId,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // ============================================================================
@@ -209,6 +207,6 @@ export function selectHasProfiles(state: AuthStore): boolean {
 /**
  * Get connection status state (idle, connected, error, checking)
  */
-export function selectConnectionState(state: AuthStore): ConnectionStatus['state'] {
-  return state.connectionStatus?.state ?? 'idle';
+export function selectConnectionState(state: AuthStore): ConnectionStatus["state"] {
+  return state.connectionStatus?.state ?? "idle";
 }

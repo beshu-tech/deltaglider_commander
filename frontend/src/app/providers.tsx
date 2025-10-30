@@ -32,7 +32,7 @@ export function AppProviders() {
 
                 // Update connection status to error
                 authStore.setConnectionStatus({
-                  state: 'error',
+                  state: "error",
                   errorMessage: error.message,
                 });
 
@@ -40,13 +40,13 @@ export function AppProviders() {
                 if (error.status === 401 || error.status === 403) {
                   authStore.clearActiveProfile();
                   toast.push({
-                    title: 'Authentication Failed',
-                    description: 'Your credentials are invalid. Please sign in again.',
-                    level: 'error',
+                    title: "Authentication Failed",
+                    description: "Your credentials are invalid. Please sign in again.",
+                    level: "error",
                     action: {
-                      label: 'Sign In',
+                      label: "Sign In",
                       onClick: () => {
-                        window.location.href = '/settings';
+                        window.location.href = "/settings";
                       },
                     },
                   });
@@ -59,7 +59,7 @@ export function AppProviders() {
               const authStore = useAuthStore.getState();
               // Any successful query means we're connected
               authStore.setConnectionStatus({
-                state: 'connected',
+                state: "connected",
               });
             },
           },

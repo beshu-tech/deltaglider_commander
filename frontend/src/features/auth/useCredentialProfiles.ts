@@ -18,9 +18,12 @@ export function useCredentialProfiles() {
   const clearActiveProfile = useAuthStore((state) => state.clearActiveProfile);
 
   // Create a new profile
-  const createProfile = useCallback((name: string, credentials: AWSCredentials) => {
-    return addProfile(name, credentials);
-  }, [addProfile]);
+  const createProfile = useCallback(
+    (name: string, credentials: AWSCredentials) => {
+      return addProfile(name, credentials);
+    },
+    [addProfile],
+  );
 
   // Update a profile
   const updateProfile = useCallback(
@@ -31,27 +34,33 @@ export function useCredentialProfiles() {
   );
 
   // Delete a profile
-  const deleteProfile = useCallback((profileId: string) => {
-    removeProfile(profileId);
-  }, [removeProfile]);
+  const deleteProfile = useCallback(
+    (profileId: string) => {
+      removeProfile(profileId);
+    },
+    [removeProfile],
+  );
 
   // Switch to a different profile
-  const switchProfile = useCallback(async (profileId: string) => {
-    const profile = profiles.find((p) => p.id === profileId);
-    if (!profile) {
-      return false;
-    }
+  const switchProfile = useCallback(
+    async (profileId: string) => {
+      const profile = profiles.find((p) => p.id === profileId);
+      if (!profile) {
+        return false;
+      }
 
-    try {
-      // Create a new session with the switched credentials
-      await SessionManager.createSession(profile.credentials);
-      setActiveProfile(profileId);
-      return true;
-    } catch (error) {
-      console.error("Failed to create session with new profile:", error);
-      return false;
-    }
-  }, [profiles, setActiveProfile]);
+      try {
+        // Create a new session with the switched credentials
+        await SessionManager.createSession(profile.credentials);
+        setActiveProfile(profileId);
+        return true;
+      } catch (error) {
+        console.error("Failed to create session with new profile:", error);
+        return false;
+      }
+    },
+    [profiles, setActiveProfile],
+  );
 
   // Disconnect (clear active profile)
   const disconnect = useCallback(() => {
@@ -59,9 +68,12 @@ export function useCredentialProfiles() {
   }, [clearActiveProfile]);
 
   // Get a specific profile
-  const getProfile = useCallback((profileId: string) => {
-    return profiles.find((p) => p.id === profileId) || null;
-  }, [profiles]);
+  const getProfile = useCallback(
+    (profileId: string) => {
+      return profiles.find((p) => p.id === profileId) || null;
+    },
+    [profiles],
+  );
 
   return {
     profiles,

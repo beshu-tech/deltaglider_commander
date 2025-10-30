@@ -4,6 +4,7 @@ import { ChevronRight, Loader2, RefreshCcw, Trash2 } from "lucide-react";
 import { Badge } from "../../lib/ui/Badge";
 import { EmptyState } from "../../lib/ui/EmptyState";
 import { Button } from "../../lib/ui/Button";
+import { ConfirmModal } from "../../lib/ui/ConfirmModal";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "../../lib/ui/Table";
 import { formatBytesThin } from "../../lib/utils/bytes";
 import { Bucket } from "./types";
@@ -34,6 +35,7 @@ function BucketRow({
   const isError = statsQuery.isError;
   const isLoadingStats = !isError && (statsQuery.isPlaceholderData || statsQuery.isLoading);
   const pendingDelete = deleteMutation.isPending && deleteMutation.variables === bucket.name;
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [displayObjectCount, setDisplayObjectCount] = useState(0);
   const animationFrameRef = useRef<number | null>(null);
   const animationStartRef = useRef<number>(0);
@@ -131,134 +133,128 @@ function BucketRow({
   const savedPct = originalBytes === 0 ? 0 : Math.min(100, (savedBytes / originalBytes) * 100);
   const hasSavings = savedBytes > 0;
 
-  if (variant === "card") {
-    return (
-      <div className="rounded-lg border border-ui-border bg-white p-4 shadow-sm transition hover:border-ui-border-hover dark:hover:border-ui-border-hover-dark hover:shadow-md dark:border-ui-border-dark dark:bg-ui-surface-dark">
-        <button
-          type="button"
-          onClick={goToBucket}
-          className="flex w-full items-center justify-between text-left"
-        >
-          <span className="flex items-center gap-3">
-            <svg
-              className="w-5 h-5 text-ui-text-subtle"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-              />
-            </svg>
-            <span className="text-base font-semibold text-ui-text dark:text-ui-text-dark">
-              {bucket.name}
-            </span>
-            {bucket.pending ? (
-              <Badge className="text-xs bg-ui-surface-active text-ui-text-muted dark:bg-ui-surface-active-dark dark:text-ui-text-muted-dark">
-                Pending
-              </Badge>
-            ) : null}
+  const cardVariant = (
+    <div className="rounded-lg border border-ui-border bg-white p-4 shadow-sm transition hover:border-ui-border-hover dark:hover:border-ui-border-hover-dark hover:shadow-md dark:border-ui-border-dark dark:bg-ui-surface-dark">
+      <button
+        type="button"
+        onClick={goToBucket}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <span className="flex items-center gap-3">
+          <svg
+            className="w-5 h-5 text-ui-text-subtle"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
+          </svg>
+          <span className="text-base font-semibold text-ui-text dark:text-ui-text-dark">
+            {bucket.name}
           </span>
-          <ChevronRight className="h-4 w-4 text-ui-text-subtle" />
-        </button>
-        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-subtle">
-              Objects
-            </p>
-            <div className="mt-1 tabular-nums text-ui-text dark:text-ui-text-dark">
-              {isError ? (
-                <span className="text-primary-600 dark:text-primary-400">Error</span>
-              ) : isLoadingStats ? (
-                <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Loading
-                </span>
-              ) : (
-                displayObjectCount.toLocaleString()
-              )}
-            </div>
+          {bucket.pending ? (
+            <Badge className="text-xs bg-ui-surface-active text-ui-text-muted dark:bg-ui-surface-active-dark dark:text-ui-text-muted-dark">
+              Pending
+            </Badge>
+          ) : null}
+        </span>
+        <ChevronRight className="h-4 w-4 text-ui-text-subtle" />
+      </button>
+      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-subtle">
+            Objects
+          </p>
+          <div className="mt-1 tabular-nums text-ui-text dark:text-ui-text-dark">
+            {isError ? (
+              <span className="text-primary-600 dark:text-primary-400">Error</span>
+            ) : isLoadingStats ? (
+              <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading
+              </span>
+            ) : (
+              displayObjectCount.toLocaleString()
+            )}
           </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-subtle">
-              Size
-            </p>
-            <div className="mt-1 flex flex-col text-ui-text dark:text-ui-text-dark">
-              {isError ? (
-                <span className="text-primary-600 dark:text-primary-400">Error</span>
-              ) : isLoadingStats ? (
-                <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Loading
-                </span>
-              ) : stats.stored_bytes !== stats.original_bytes ? (
-                <>
-                  <span className="font-medium tabular-nums">
-                    {formatBytesThin(stats.stored_bytes)}
-                  </span>
-                  <span className="text-xs text-ui-text-subtle line-through">
-                    {formatBytesThin(stats.original_bytes)}
-                  </span>
-                </>
-              ) : (
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-subtle">
+            Size
+          </p>
+          <div className="mt-1 flex flex-col text-ui-text dark:text-ui-text-dark">
+            {isError ? (
+              <span className="text-primary-600 dark:text-primary-400">Error</span>
+            ) : isLoadingStats ? (
+              <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading
+              </span>
+            ) : stats.stored_bytes !== stats.original_bytes ? (
+              <>
                 <span className="font-medium tabular-nums">
+                  {formatBytesThin(stats.stored_bytes)}
+                </span>
+                <span className="text-xs text-ui-text-subtle line-through">
                   {formatBytesThin(stats.original_bytes)}
                 </span>
-              )}
-            </div>
-          </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-subtle">
-              Savings
-            </p>
-            <div className="mt-1 tabular-nums text-ui-text dark:text-ui-text-dark">
-              {isError ? (
-                <span className="text-primary-600 dark:text-primary-400">Error</span>
-              ) : isLoadingStats ? (
-                <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Loading
-                </span>
-              ) : hasSavings ? (
-                `${formatBytesThin(savedBytes)} (${savedPct.toFixed(1)}%)`
-              ) : (
-                `${formatBytesThin(0)} (0.0%)`
-              )}
-            </div>
+              </>
+            ) : (
+              <span className="font-medium tabular-nums">
+                {formatBytesThin(stats.original_bytes)}
+              </span>
+            )}
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-          <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
-          <Button
-            variant="ghost"
-            className="h-9 rounded-md border border-ui-border px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:border-ui-border-dark dark:text-primary-400 dark:hover:bg-primary-950"
-            onClick={(event) => {
-              event.stopPropagation();
-              const confirmed = window.confirm(
-                `Delete bucket "${bucket.name}"? This cannot be undone.`,
-              );
-              if (!confirmed) return;
-              deleteMutation.mutate(bucket.name);
-            }}
-            disabled={pendingDelete}
-            aria-label={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
-            title={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
-          >
-            {pendingDelete ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-ui-text-muted dark:text-ui-text-subtle">
+            Savings
+          </p>
+          <div className="mt-1 tabular-nums text-ui-text dark:text-ui-text-dark">
+            {isError ? (
+              <span className="text-primary-600 dark:text-primary-400">Error</span>
+            ) : isLoadingStats ? (
+              <span className="inline-flex items-center gap-1 text-ui-text-muted dark:text-ui-text-subtle">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading
+              </span>
+            ) : hasSavings ? (
+              `${formatBytesThin(savedBytes)} (${savedPct.toFixed(1)}%)`
             ) : (
-              <Trash2 className="h-4 w-4" />
+              `${formatBytesThin(0)} (0.0%)`
             )}
-          </Button>
+          </div>
         </div>
       </div>
-    );
-  }
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+        <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
+        <Button
+          variant="ghost"
+          className="h-9 rounded-md border border-ui-border px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:border-ui-border-dark dark:text-primary-400 dark:hover:bg-primary-950"
+          onClick={(event) => {
+            event.stopPropagation();
+            setShowDeleteConfirm(true);
+          }}
+          disabled={pendingDelete}
+          aria-label={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
+          title={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
+        >
+          {pendingDelete ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
 
-  return (
+  const tableVariant = (
     <TableRow
       className={getBucketRowClasses({ isFocused })}
       role="button"
@@ -389,13 +385,7 @@ function BucketRow({
           <Button
             variant="ghost"
             className="h-9 w-9 p-0 text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:bg-primary-950"
-            onClick={() => {
-              const confirmed = window.confirm(
-                `Delete bucket "${bucket.name}"? This cannot be undone.`,
-              );
-              if (!confirmed) return;
-              deleteMutation.mutate(bucket.name);
-            }}
+            onClick={() => setShowDeleteConfirm(true)}
             disabled={pendingDelete}
             aria-label={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
             title={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
@@ -409,6 +399,25 @@ function BucketRow({
         </div>
       </TableCell>
     </TableRow>
+  );
+
+  return (
+    <>
+      {variant === "card" ? cardVariant : tableVariant}
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title="Delete Bucket"
+        message={`Are you sure you want to delete "${bucket.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={() => {
+          deleteMutation.mutate(bucket.name);
+          setShowDeleteConfirm(false);
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+    </>
   );
 }
 

@@ -18,9 +18,9 @@
  * ```
  */
 
-import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { useAuthStore, selectHasActiveProfile, selectConnectionState } from '../stores/authStore';
-import { getPollMs } from '../lib/config/env';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from "@tanstack/react-query";
+import { useAuthStore, selectHasActiveProfile, selectConnectionState } from "../stores/authStore";
+import { getPollMs } from "../lib/config/env";
 
 /**
  * TanStack Query wrapper that automatically handles auth state
@@ -29,7 +29,7 @@ import { getPollMs } from '../lib/config/env';
  * @returns Query result with automatic auth handling
  */
 export function useAuthQuery<TData, TError = Error>(
-  options: UseQueryOptions<TData, TError>
+  options: UseQueryOptions<TData, TError>,
 ): UseQueryResult<TData, TError> {
   // Subscribe to auth state reactively
   const hasActiveProfile = useAuthStore(selectHasActiveProfile);
@@ -45,10 +45,10 @@ export function useAuthQuery<TData, TError = Error>(
   // Only enable automatic refetching when connection is healthy
   const computedRefetchInterval =
     options.refetchInterval !== undefined
-      ? options.refetchInterval  // Explicit override
-      : connectionState === 'error'
-        ? false  // Don't poll on client errors (auth failures handled by global config)
-        : getPollMs();  // Default polling interval
+      ? options.refetchInterval // Explicit override
+      : connectionState === "error"
+        ? false // Don't poll on client errors (auth failures handled by global config)
+        : getPollMs(); // Default polling interval
 
   return useQuery<TData, TError>({
     ...options,
