@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAuthQuery as useQuery } from "../../hooks/useAuthQuery";
 import { fetchBucketStats, BucketStatsMode } from "../../lib/api/endpoints";
 import { qk } from "../../lib/api/queryKeys";
 import { Bucket } from "./types";

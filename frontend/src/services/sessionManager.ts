@@ -3,7 +3,7 @@
  */
 
 import { api, ApiError } from "../lib/api/client";
-import { AWSCredentials, CredentialManager } from "./credentials";
+import { useAuthStore, selectActiveCredentials, type AWSCredentials } from "../stores/authStore";
 
 export interface SessionError {
   code: string;
@@ -53,8 +53,8 @@ export const SessionManager = {
         credentials: "include", // Include cookies
       });
 
-      // Store credentials for auto-renewal
-      CredentialManager.save(credentials);
+      // Note: Profile management is handled by the caller (UI components)
+      // This service only manages the backend session
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) {
         const details = error.details as { message?: string } | undefined;
@@ -68,7 +68,7 @@ export const SessionManager = {
    * Refresh session using stored credentials
    */
   async refreshSession(): Promise<void> {
-    const credentials = CredentialManager.load();
+    const credentials = selectActiveCredentials(useAuthStore.getState());
 
     if (!credentials) {
       throw new Error("No stored credentials for refresh");
@@ -92,7 +92,7 @@ export const SessionManager = {
       });
     } finally {
       // Always clear credentials even if request fails
-      CredentialManager.clear();
+      useAuthStore.getState().clearActiveProfile();
     }
   },
 

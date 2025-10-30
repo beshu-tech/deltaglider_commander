@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useAuthQuery as useQueryClient } from "../../hooks/useAuthQuery";
 import { qk } from "../../lib/api/queryKeys";
 import { fetchObjects } from "../../lib/api/endpoints";
 

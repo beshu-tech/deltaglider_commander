@@ -2,35 +2,17 @@
  * Hook to check and manage credential state
  */
 
-import { useState, useEffect } from "react";
-import { CredentialManager, AWS_CREDENTIALS_STORAGE_KEY } from "../../services/credentials";
+import { useAuthStore, selectHasActiveProfile } from "../../stores/authStore";
 
 export function useCredentials() {
-  const [hasCredentials, setHasCredentials] = useState<boolean>(() =>
-    CredentialManager.hasCredentials(),
-  );
-
-  // Listen for storage events from other tabs
-  useEffect(() => {
-    function handleStorageChange(event: StorageEvent) {
-      if (event.key === AWS_CREDENTIALS_STORAGE_KEY) {
-        setHasCredentials(event.newValue !== null);
-      }
-    }
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
-  const markCredentialsSet = () => setHasCredentials(true);
-  const clearCredentials = () => {
-    CredentialManager.clear();
-    setHasCredentials(false);
-  };
+  const hasCredentials = useAuthStore(selectHasActiveProfile);
+  const clearActiveProfile = useAuthStore((state) => state.clearActiveProfile);
 
   return {
     hasCredentials,
-    markCredentialsSet,
-    clearCredentials,
+    markCredentialsSet: () => {
+      // No-op: credentials are set when addProfile is called from UI
+    },
+    clearCredentials: clearActiveProfile,
   };
 }

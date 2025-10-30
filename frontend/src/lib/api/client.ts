@@ -1,6 +1,6 @@
 import { getApiUrl } from "../config/env";
 import { ApiErrorPayload, apiErrorSchema } from "./schemas";
-import { useConnectionStore } from "../../stores/connectionStore";
+// Connection status is now handled by QueryClient global error handler
 
 export interface ApiRequestOptions extends RequestInit {
   timeoutMs?: number | null;
@@ -128,11 +128,6 @@ export async function api<T>(path: string, options: ApiRequestOptions = {}): Pro
         status: response.status,
       });
 
-      // Bump connection status on API errors (except 4xx client errors)
-      if (response.status >= 500 || response.status === 503) {
-        useConnectionStore.getState().bumpConnectionOnError();
-      }
-
       throw error;
     }
 
@@ -148,19 +143,6 @@ export async function api<T>(path: string, options: ApiRequestOptions = {}): Pro
         }
         return (await response.json()) as T;
     }
-  } catch (error) {
-    // Bump connection status on network errors
-    if (error instanceof TypeError) {
-      const normalized = error.message.toLowerCase();
-      if (
-        normalized.includes("failed to fetch") ||
-        normalized.includes("networkerror") ||
-        normalized.includes("load failed")
-      ) {
-        useConnectionStore.getState().bumpConnectionOnError();
-      }
-    }
-    throw error;
   } finally {
     if (timer) {
       clearTimeout(timer);

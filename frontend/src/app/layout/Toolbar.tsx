@@ -10,8 +10,7 @@ import { useTheme } from "../theme";
 import { useLayoutContext } from "./LayoutContext";
 import { twMerge } from "tailwind-merge";
 import { ConnectionChip } from "../../features/connection/ConnectionChip";
-import { useConnectionStore } from "../../stores/connectionStore";
-import { useCredentials } from "../../features/auth/useCredentials";
+// Connection polling is now handled by TanStack Query's refetchInterval
 
 export interface ToolbarProps {
   /** Breadcrumbs to display (optional) */
@@ -25,15 +24,6 @@ export function Toolbar({ breadcrumbs, onOpenKeyboardShortcuts }: ToolbarProps) 
   const { isDesktop, sidebarOpen, toggleSidebar } = useLayoutContext();
   const [overflowMenuOpen, setOverflowMenuOpen] = useState(false);
   const overflowMenuRef = useRef<HTMLDivElement>(null);
-  const startPolling = useConnectionStore((state) => state.startPolling);
-  const { hasCredentials } = useCredentials();
-
-  // Start polling connection status when component mounts - only if credentials exist
-  useEffect(() => {
-    if (hasCredentials) {
-      startPolling();
-    }
-  }, [startPolling, hasCredentials]);
 
   // Close overflow menu when clicking outside
   useEffect(() => {

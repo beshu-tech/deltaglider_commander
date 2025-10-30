@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAuthQuery as useQuery } from "../../hooks/useAuthQuery";
 import { fetchObjectMetadata } from "../../lib/api/endpoints";
 
 export function useFile(bucket: string | null, key: string | null) {

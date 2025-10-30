@@ -2,9 +2,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { RouterProvider } from "@tanstack/react-router";
 import { getPollMs } from "../lib/config/env";
-import { ToastProvider } from "./toast";
+import { ToastProvider, toast } from "./toast";
 import { router } from "./routes";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { useAuthStore } from "../stores/authStore";
+import { ApiError } from "../lib/api/client";
 
 export function AppProviders() {
   const [queryClient] = useState(
@@ -12,9 +14,54 @@ export function AppProviders() {
       new QueryClient({
         defaultOptions: {
           queries: {
-            retry: 2,
+            // Don't retry on client errors (4xx) - these are configuration issues
+            retry: (failureCount, error) => {
+              if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+                return false;
+              }
+              // Retry server errors (5xx) and network errors up to 2 times
+              return failureCount < 2;
+            },
             refetchOnWindowFocus: false,
             gcTime: getPollMs() * 3,
+
+            // Global error handler for auth failures
+            onError: (error) => {
+              if (error instanceof ApiError) {
+                const authStore = useAuthStore.getState();
+
+                // Update connection status to error
+                authStore.setConnectionStatus({
+                  state: 'error',
+                  errorMessage: error.message,
+                });
+
+                // Handle authentication failures
+                if (error.status === 401 || error.status === 403) {
+                  authStore.clearActiveProfile();
+                  toast.push({
+                    title: 'Authentication Failed',
+                    description: 'Your credentials are invalid. Please sign in again.',
+                    level: 'error',
+                    action: {
+                      label: 'Sign In',
+                      onClick: () => {
+                        window.location.href = '/settings';
+                      },
+                    },
+                  });
+                }
+              }
+            },
+
+            // Global success handler to update connection status
+            onSuccess: () => {
+              const authStore = useAuthStore.getState();
+              // Any successful query means we're connected
+              authStore.setConnectionStatus({
+                state: 'connected',
+              });
+            },
           },
         },
       }),

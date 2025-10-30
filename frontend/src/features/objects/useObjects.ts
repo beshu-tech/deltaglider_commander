@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAuthQuery } from "../../hooks/useAuthQuery";
 import { fetchObjects } from "../../lib/api/endpoints";
 import { qk } from "../../lib/api/queryKeys";
 import { ObjectList } from "./types";
@@ -24,7 +24,7 @@ export function useObjects({
   limit,
   compressed,
 }: UseObjectsOptions) {
-  return useQuery<ObjectList>({
+  return useAuthQuery<ObjectList>({
     queryKey: qk.objects(bucket, prefix, sort, order, limit, compressed ?? "any", cursor, search),
     queryFn: () =>
       fetchObjects({

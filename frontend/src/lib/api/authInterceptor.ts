@@ -8,9 +8,9 @@
  */
 
 import { api, ApiError, ApiRequestOptions } from "./client";
-import { CredentialStorage } from "../../services/credentialStorage";
 import { SessionManager } from "../../services/sessionManager";
 import { toast } from "../../app/toast";
+import { useAuthStore, selectActiveCredentials } from "../../stores/authStore";
 
 // Track if we're already handling an auth error to prevent loops
 let isHandlingAuthError = false;
@@ -43,7 +43,7 @@ export async function apiWithAuth<T>(path: string, options: ApiRequestOptions = 
     }
 
     // Check if we have stored credentials to try recreating the session
-    const storedCredentials = CredentialStorage.load();
+    const storedCredentials = selectActiveCredentials(useAuthStore.getState());
 
     if (!storedCredentials) {
       // No stored credentials, user needs to log in
@@ -71,7 +71,7 @@ export async function apiWithAuth<T>(path: string, options: ApiRequestOptions = 
       return result;
     } catch (refreshError) {
       // Failed to recreate session, credentials might be invalid
-      CredentialStorage.clear();
+      useAuthStore.getState().clearActiveProfile();
 
       if (
         refreshError instanceof ApiError &&
@@ -94,7 +94,7 @@ export async function apiWithAuth<T>(path: string, options: ApiRequestOptions = 
  */
 function handleAuthFailure(message: string) {
   // Clear any stored credentials that might be invalid
-  CredentialStorage.clear();
+  useAuthStore.getState().clearActiveProfile();
 
   // Show error toast
   toast.push({

@@ -1,17 +1,15 @@
 /**
- * ConnectionSheet - Integrates SideSheet with ConnectionPanel
- * Manages sheet open/close state and width persistence
+ * ConnectionSheet - Simplified side sheet for connection management
+ * Uses local state for sheet open/close instead of global store
  */
 
+import { useState } from "react";
 import { SideSheet } from "../../lib/ui/SideSheet";
 import { ConnectionPanel } from "./ConnectionPanel";
-import { useConnectionStore } from "../../stores/connectionStore";
 
 export function ConnectionSheet() {
-  const sheetOpen = useConnectionStore((state) => state.sheetOpen);
-  const sheetWidth = useConnectionStore((state) => state.sheetWidth);
-  const setSheetOpen = useConnectionStore((state) => state.setSheetOpen);
-  const setSheetWidth = useConnectionStore((state) => state.setSheetWidth);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetWidth, setSheetWidth] = useState(400);
 
   return (
     <SideSheet
@@ -20,8 +18,8 @@ export function ConnectionSheet() {
       title="Connection"
       width={sheetWidth}
       onWidthChange={setSheetWidth}
-      minWidth={320} // 20rem
-      maxWidth={768} // 48rem
+      minWidth={320}
+      maxWidth={768}
     >
       <ConnectionPanel />
     </SideSheet>
