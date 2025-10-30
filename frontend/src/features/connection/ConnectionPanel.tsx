@@ -13,17 +13,21 @@ import type { ConnectionStatus } from "../../types/connection";
 type ConnState = ConnectionStatus["state"];
 
 const stateLabels: Record<ConnState, string> = {
-  idle: "Offline",
-  connected: "Connected",
-  checking: "Checking",
+  idle: "Idle",
+  ok: "Connected",
+  warn: "Warning",
   error: "Error",
+  offline: "Offline",
+  reconnecting: "Reconnecting",
 };
 
 const stateBadgeClass: Record<ConnState, string> = {
   idle: "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300",
-  connected: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300",
-  checking: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300",
+  ok: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300",
+  warn: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300",
   error: "bg-primary-100 text-primary-800 dark:bg-primary-900/20 dark:text-primary-300",
+  offline: "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300",
+  reconnecting: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300",
 };
 
 export function ConnectionPanel() {

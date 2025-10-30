@@ -2,7 +2,7 @@
  * Connection status types for ConnectionChip and connection management
  */
 
-export type ConnState = "ok" | "warn" | "error" | "offline" | "reconnecting";
+export type ConnState = "idle" | "ok" | "warn" | "error" | "offline" | "reconnecting";
 
 export interface ConnectionStatus {
   state: ConnState;

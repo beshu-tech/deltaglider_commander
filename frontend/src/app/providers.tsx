@@ -16,7 +16,7 @@ export function AppProviders() {
           queries: {
             // Don't retry on client errors (4xx) - these are configuration issues
             retry: (failureCount, error) => {
-              if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+              if (error instanceof ApiError && error.status !== undefined && error.status >= 400 && error.status < 500) {
                 return false;
               }
               // Retry server errors (5xx) and network errors up to 2 times
@@ -24,9 +24,10 @@ export function AppProviders() {
             },
             refetchOnWindowFocus: false,
             gcTime: getPollMs() * 3,
-
+          },
+          mutations: {
             // Global error handler for auth failures
-            onError: (error) => {
+            onError: (error: unknown) => {
               if (error instanceof ApiError) {
                 const authStore = useAuthStore.getState();
 
@@ -34,7 +35,7 @@ export function AppProviders() {
                 authStore.setConnectionStatus({
                   state: "error",
                   errorMessage: error.message,
-                });
+                } as any); // Type assertion needed due to partial status
 
                 // Handle authentication failures
                 if (error.status === 401 || error.status === 403) {
@@ -59,8 +60,8 @@ export function AppProviders() {
               const authStore = useAuthStore.getState();
               // Any successful query means we're connected
               authStore.setConnectionStatus({
-                state: "connected",
-              });
+                state: "ok",
+              } as any); // Partial status update
             },
           },
         },

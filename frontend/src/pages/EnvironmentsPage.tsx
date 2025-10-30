@@ -14,16 +14,20 @@ type ConnState = ConnectionStatus["state"];
 
 const statusIconColors: Record<ConnState, string> = {
   idle: "text-gray-400 dark:text-gray-500",
-  connected: "text-green-500 dark:text-green-400",
-  checking: "text-blue-500 dark:text-blue-400 animate-pulse",
+  ok: "text-green-500 dark:text-green-400",
+  warn: "text-yellow-500 dark:text-yellow-400",
   error: "text-primary-500 dark:text-primary-400",
+  offline: "text-gray-400 dark:text-gray-500",
+  reconnecting: "text-blue-500 dark:text-blue-400 animate-pulse",
 };
 
 const statusLabels: Record<ConnState, string> = {
-  idle: "Offline",
-  connected: "Connected",
-  checking: "Checking",
+  idle: "Idle",
+  ok: "Connected",
+  warn: "Warning",
   error: "Error",
+  offline: "Offline",
+  reconnecting: "Reconnecting",
 };
 
 export function EnvironmentsPage() {
@@ -62,8 +66,7 @@ export function EnvironmentsPage() {
 
   const handleAddSuccess = () => {
     setShowAddForm(false);
-    // Start polling after first credential is added
-    startPolling();
+    // Polling is handled automatically by TanStack Query
   };
 
   const isFirstTime = profiles.length === 0 && !showAddForm;

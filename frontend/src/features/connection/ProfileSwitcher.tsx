@@ -52,14 +52,8 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
       // Confirmed - actually delete
       console.log("Attempting to delete profile:", profileId);
       try {
-        const success = deleteProfile(profileId);
-        console.log("Delete result:", success);
-        if (!success) {
-          console.error("Failed to delete profile - returned false");
-          alert("Failed to delete profile. Please try again.");
-        } else {
-          console.log("Profile deleted successfully");
-        }
+        deleteProfile(profileId);
+        console.log("Profile deleted successfully");
       } catch (error) {
         console.error("Error deleting profile:", error);
         alert(

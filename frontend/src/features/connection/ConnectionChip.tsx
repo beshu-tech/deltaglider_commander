@@ -26,25 +26,24 @@ const stateConfig: Record<
 > = {
   idle: {
     icon: WifiOff,
-    label: "Offline",
+    label: "Idle",
     iconClass: "text-gray-600 dark:text-gray-400",
     bgClass: "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700",
     textClass: "text-gray-900 dark:text-gray-100",
   },
-  connected: {
+  ok: {
     icon: Cloud,
     label: "Connected",
     iconClass: "text-green-600 dark:text-green-400",
     bgClass: "bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30",
     textClass: "text-green-900 dark:text-green-100",
   },
-  checking: {
-    icon: RefreshCw,
-    label: "Checking",
-    iconClass: "text-blue-600 dark:text-blue-400 animate-spin",
-    bgClass: "bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30",
-    textClass: "text-blue-900 dark:text-blue-100",
-    pulseClass: "animate-pulse",
+  warn: {
+    icon: AlertTriangle,
+    label: "Warning",
+    iconClass: "text-yellow-600 dark:text-yellow-400",
+    bgClass: "bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30",
+    textClass: "text-yellow-900 dark:text-yellow-100",
   },
   error: {
     icon: AlertTriangle,
@@ -53,6 +52,21 @@ const stateConfig: Record<
     bgClass:
       "bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30",
     textClass: "text-primary-900 dark:text-primary-100",
+  },
+  offline: {
+    icon: WifiOff,
+    label: "Offline",
+    iconClass: "text-gray-600 dark:text-gray-400",
+    bgClass: "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700",
+    textClass: "text-gray-900 dark:text-gray-100",
+  },
+  reconnecting: {
+    icon: RefreshCw,
+    label: "Reconnecting",
+    iconClass: "text-blue-600 dark:text-blue-400 animate-spin",
+    bgClass: "bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30",
+    textClass: "text-blue-900 dark:text-blue-100",
+    pulseClass: "animate-pulse",
   },
 };
 
