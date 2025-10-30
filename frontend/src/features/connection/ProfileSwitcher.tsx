@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { Plus, Trash2, Edit2, Database } from "lucide-react";
 import { useCredentialProfiles } from "../auth/useCredentialProfiles";
-import type { CredentialProfile } from "../../services/credentialProfiles";
+import type { CredentialProfile } from "../../stores/authStore";
 
 interface ProfileSwitcherProps {
   onCreateNew?: () => void;

@@ -5,7 +5,7 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { PROFILES_EVENTS } from "../../services/credentialProfiles";
+import { useAuthStore } from "../../stores/authStore";
 
 /**
  * Listens for profile switch events and invalidates all queries
@@ -13,23 +13,11 @@ import { PROFILES_EVENTS } from "../../services/credentialProfiles";
  */
 export function useProfileSwitch() {
   const queryClient = useQueryClient();
+  const activeProfileId = useAuthStore((state) => state.activeProfileId);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const handleProfileChange = () => {
-      // Invalidate all queries to force refetch with new credentials
-      queryClient.invalidateQueries();
-
-      console.log("Profile switched - invalidated all cached queries");
-    };
-
-    window.addEventListener(PROFILES_EVENTS.ACTIVE_PROFILE_CHANGED, handleProfileChange);
-
-    return () => {
-      window.removeEventListener(PROFILES_EVENTS.ACTIVE_PROFILE_CHANGED, handleProfileChange);
-    };
-  }, [queryClient]);
+    // Invalidate all queries when active profile changes
+    queryClient.invalidateQueries();
+    console.log("Profile switched - invalidated all cached queries");
+  }, [activeProfileId, queryClient]);
 }

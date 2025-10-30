@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "../../hooks/useAuthQuery";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { triggerSavings } from "../../lib/api/endpoints";
 import { qk } from "../../lib/api/queryKeys";
 import { useToast } from "../../app/toast";

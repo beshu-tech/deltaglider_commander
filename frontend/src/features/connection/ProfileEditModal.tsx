@@ -7,8 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "../../lib/ui/Button";
 import { escapeStack } from "../objects/logic/escapeStack";
-import type { CredentialProfile } from "../../services/credentialProfiles";
-import type { AWSCredentials } from "../../services/credentialStorage";
+import type { CredentialProfile, AWSCredentials } from "../../stores/authStore";
 
 interface ProfileEditModalProps {
   open: boolean;

@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { AWSCredentials, CredentialStorage } from "../../services/credentialStorage";
+import { useAuthStore, selectActiveCredentials, type AWSCredentials } from "../../stores/authStore";
 import { SessionManager } from "../../services/sessionManager";
 
 export interface CredentialConfigFormProps {
@@ -13,11 +13,13 @@ export interface CredentialConfigFormProps {
 }
 
 export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFormProps) {
+  const addProfile = useAuthStore((state) => state.addProfile);
+  const activeCredentials = useAuthStore(selectActiveCredentials);
+
   const [formData, setFormData] = useState<AWSCredentials>(() => {
     // Load saved credentials on mount
-    const saved = CredentialStorage.load();
     return (
-      saved || {
+      activeCredentials || {
         accessKeyId: "",
         secretAccessKey: "",
         region: "eu-west-1",
@@ -41,7 +43,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
       await SessionManager.createSession(formData);
 
       // Only save profile after successful session creation
-      CredentialStorage.save(formData, profileName || undefined);
+      addProfile(profileName || "Default Profile", formData);
 
       onSuccess();
     } catch (err) {

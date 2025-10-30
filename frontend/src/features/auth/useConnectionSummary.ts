@@ -2,11 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "../../lib/api/queryKeys";
 import { getErrorMessage } from "../../lib/api/client";
-import {
-  AWS_CREDENTIALS_CHANGED_EVENT,
-  AWS_CREDENTIALS_STORAGE_KEY,
-  CredentialStorage,
-} from "../../services/credentialStorage";
+import { useAuthStore, selectActiveCredentials } from "../../stores/authStore";
 import { useSessionStatus } from "./useSessionStatus";
 
 export type ConnectionStatus = "connected" | "checking" | "error" | "disconnected";
@@ -30,7 +26,7 @@ interface SessionIssue {
 }
 
 function readConnectionDetails(): ConnectionDetails | null {
-  const credentials = CredentialStorage.load();
+  const credentials = selectActiveCredentials(useAuthStore.getState());
   if (!credentials || !credentials.accessKeyId) {
     return null;
   }
@@ -79,35 +75,20 @@ export function useConnectionSummary(options?: ConnectionSummaryOptions) {
     error: sessionError,
   } = useSessionStatus({ enabled: sessionStatusEnabled });
 
+  // Subscribe to authStore changes
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
     const updateConnection = () => {
       setConnection(readConnectionDetails());
       queryClient.invalidateQueries({ queryKey: qk.sessionStatus });
     };
 
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === null || event.key === AWS_CREDENTIALS_STORAGE_KEY) {
-        updateConnection();
-      }
-    };
+    // Subscribe to authStore for reactive updates
+    const unsubscribe = useAuthStore.subscribe(updateConnection);
 
-    const handleCredentialEvent: EventListener = () => {
-      updateConnection();
-    };
-
+    // Initialize connection
     updateConnection();
 
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(AWS_CREDENTIALS_CHANGED_EVENT, handleCredentialEvent);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(AWS_CREDENTIALS_CHANGED_EVENT, handleCredentialEvent);
-    };
+    return unsubscribe;
   }, [queryClient]);
 
   const issueIsError = !!options?.issue?.isError;

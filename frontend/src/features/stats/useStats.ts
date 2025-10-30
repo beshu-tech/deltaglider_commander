@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAuthQuery as useQueryClient } from "../../hooks/useAuthQuery";
+import { useQueryClient } from "@tanstack/react-query";
 import { useBuckets } from "../buckets/useBuckets";
 import { qk } from "../../lib/api/queryKeys";
 import { Bucket } from "../buckets/types";
