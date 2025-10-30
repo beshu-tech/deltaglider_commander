@@ -70,6 +70,13 @@ function loadStorage(): ProfilesStorage {
 
 function saveStorage(storage: ProfilesStorage): void {
   if (typeof window === "undefined") return;
+
+  // Don't persist empty storage - if there are no profiles, just remove the key
+  if (storage.profiles.length === 0) {
+    localStorage.removeItem(PROFILES_STORAGE_KEY);
+    return;
+  }
+
   localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(storage));
 }
 

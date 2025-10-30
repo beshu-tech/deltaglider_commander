@@ -12,12 +12,18 @@ import { Check, Info, X, AlertCircle } from "lucide-react";
 
 export type ToastLevel = "info" | "success" | "error";
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface ToastMessage {
   id: number;
   title: string;
   description?: string;
   level: ToastLevel;
   autoDismissMs?: number | null;
+  action?: ToastAction;
 }
 
 interface ToastContextValue {
@@ -205,6 +211,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   >
                     {toast.description}
                   </p>
+                )}
+                {toast.action && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast.action?.onClick();
+                      remove(toast.id);
+                    }}
+                    className="mt-2 inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-white/20 hover:bg-white/30 rounded-md transition-colors duration-fast focus:outline-none focus:ring-2 focus:ring-white/50"
+                  >
+                    {toast.action.label}
+                  </button>
                 )}
               </div>
               <button

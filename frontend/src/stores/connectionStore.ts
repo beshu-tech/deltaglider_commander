@@ -5,7 +5,9 @@
 
 import { create } from "zustand";
 import type { ConnectionStatus, ConnectionActivity } from "../types/connection";
-import { api } from "../lib/api/client";
+import { api, ApiError } from "../lib/api/client";
+import { CredentialManager } from "../services/credentials";
+import { toast } from "../app/toast";
 
 const POLL_INTERVAL = 30_000; // 30 seconds
 const MAX_POLL_INTERVAL = 300_000; // 5 minutes max backoff
@@ -76,6 +78,13 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
     const state = get();
     if (state.isPolling) return;
 
+    // Guard: Don't start polling without an active profile
+    const activeProfile = CredentialManager.getActive();
+    if (!activeProfile) {
+      console.debug("[connectionStore] Skipping polling - no active profile configured");
+      return;
+    }
+
     // Initial fetch
     get().fetchStatus();
 
@@ -129,6 +138,49 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
     } catch (error) {
       console.error("Failed to fetch connection status:", error);
 
+      // Guard: Stop polling on client errors (4xx)
+      // These are configuration/permission issues that won't fix themselves
+      if (error instanceof ApiError && error.status && error.status >= 400 && error.status < 500) {
+        console.warn(
+          `[connectionStore] Stopping polling due to client error (${error.status}) - please check your configuration`,
+        );
+        get().stopPolling();
+
+        // Determine user-friendly message based on error code
+        const isAuthError = error.status === 401 || error.status === 403;
+        const errorTitle = isAuthError ? "Authentication Failed" : "Connection Error";
+        const errorDescription = isAuthError
+          ? "Your credentials couldn't be verified. Please check your profile settings and try again when ready."
+          : `We encountered a configuration issue (error ${error.status}). Please check your settings and try again.`;
+
+        set({
+          status: {
+            state: "error",
+            errorMessage: errorDescription,
+          } as ConnectionStatus,
+          consecutiveErrors: 0,
+          currentPollInterval: POLL_INTERVAL,
+        });
+
+        // Notify user with toast and manual retry option
+        toast.push({
+          title: errorTitle,
+          description: errorDescription,
+          level: "error",
+          autoDismissMs: null, // Don't auto-dismiss
+          action: {
+            label: "Retry Now",
+            onClick: () => {
+              // Restart polling if user manually requests it
+              get().startPolling();
+            },
+          },
+        });
+
+        return;
+      }
+
+      // For transient errors (network, 5xx server), use exponential backoff
       const state = get();
       const newErrors = state.consecutiveErrors + 1;
 
