@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useAuthStore, selectActiveCredentials, type AWSCredentials } from "../../stores/authStore";
 import { SessionManager } from "../../services/sessionManager";
+import { DEFAULT_AWS_REGION } from "../../lib/constants/aws";
 
 export interface CredentialConfigFormProps {
   onSuccess: () => void;
@@ -22,7 +23,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
       activeCredentials || {
         accessKeyId: "",
         secretAccessKey: "",
-        region: "eu-west-1",
+        region: DEFAULT_AWS_REGION,
         endpoint: "",
       }
     );

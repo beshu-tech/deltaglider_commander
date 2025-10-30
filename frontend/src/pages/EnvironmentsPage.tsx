@@ -9,6 +9,7 @@ import { useCredentialProfiles } from "../features/auth/useCredentialProfiles";
 import { useAuthStore } from "../stores/authStore";
 import type { ConnectionStatus } from "../types/connection";
 import { CredentialConfigForm } from "../features/auth/CredentialConfigForm";
+import { DEFAULT_REGION_LABEL, DEFAULT_ENDPOINT_LABEL } from "../lib/constants/aws";
 
 type ConnState = ConnectionStatus["state"];
 
@@ -114,8 +115,8 @@ export function EnvironmentsPage() {
           const statusLabel = statusLabels[effectiveState];
           const iconColor = statusIconColors[effectiveState];
           const region = isActive
-            ? connectionStatus?.region || profile.credentials.region || "eu-west-1 (default)"
-            : profile.credentials.region || "eu-west-1 (default)";
+            ? connectionStatus?.region || profile.credentials.region || DEFAULT_REGION_LABEL
+            : profile.credentials.region || DEFAULT_REGION_LABEL;
 
           return (
             <div
@@ -193,7 +194,7 @@ export function EnvironmentsPage() {
                   <span className="font-mono text-gray-900 dark:text-white truncate">
                     {profile.credentials.endpoint
                       ? profile.credentials.endpoint.replace(/^https?:\/\//, "")
-                      : "s3.amazonaws.com (default)"}
+                      : DEFAULT_ENDPOINT_LABEL}
                   </span>
                 </div>
               </div>
