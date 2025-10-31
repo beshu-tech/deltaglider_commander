@@ -182,6 +182,7 @@ describe("ObjectsView", () => {
       ],
       common_prefixes: ["folder/nested/"],
       cursor: undefined,
+      limited: false,
     }));
 
     fetchObjectsMock.mockImplementationOnce(async () => ({
@@ -196,6 +197,7 @@ describe("ObjectsView", () => {
       ],
       common_prefixes: [],
       cursor: undefined,
+      limited: false,
     }));
 
     await user.click(folderCheckbox);
