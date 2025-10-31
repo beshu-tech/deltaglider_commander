@@ -78,6 +78,7 @@ export function EnvironmentsPage() {
         </div>
       ) : (
         <button
+          data-testid="profiles-button-add-new"
           onClick={() => setShowAddForm(true)}
           className="mb-8 inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors dark:bg-primary-700 dark:hover:bg-primary-600"
         >
@@ -104,6 +105,7 @@ export function EnvironmentsPage() {
           return (
             <div
               key={profile.id}
+              data-testid={`profile-card-${profile.id}`}
               className={`relative rounded-lg border-2 p-6 transition-all duration-200 ${
                 isActive
                   ? "border-primary-500 bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-800 shadow-lg"
@@ -113,6 +115,7 @@ export function EnvironmentsPage() {
               {/* Delete button - top right, only for inactive profiles */}
               {!isActive && profiles.length > 1 && (
                 <button
+                  data-testid={`profile-button-delete-${profile.id}`}
                   onClick={() => handleDelete(profile.id)}
                   disabled={isDeleting || isSwitching}
                   className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-600 dark:hover:text-primary-400 dark:hover:bg-primary-900/20"
@@ -186,6 +189,7 @@ export function EnvironmentsPage() {
               {!isActive && (
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button
+                    data-testid={`profile-button-switch-${profile.id}`}
                     onClick={() => handleSwitch(profile.id)}
                     disabled={isSwitching || isDeleting}
                     className="w-full px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm dark:bg-primary-700 dark:hover:bg-primary-600"

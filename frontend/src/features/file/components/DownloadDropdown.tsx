@@ -107,6 +107,7 @@ export function DownloadDropdown({
   return (
     <div className="relative" ref={dropdownRef}>
       <Button
+        data-testid="file-panel-button-download-toggle"
         onClick={onToggle}
         aria-haspopup="menu"
         aria-expanded={isOpen}
@@ -131,6 +132,7 @@ export function DownloadDropdown({
           <div className="py-1">
             <button
               role="menuitem"
+              data-testid="file-panel-menu-item-download"
               onClick={onDownload}
               aria-label="Download object to your computer"
               className={`flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-text hover:bg-ui-surface-active dark:text-ui-text-dark dark:hover:bg-ui-surface-active-dark ${
@@ -145,6 +147,7 @@ export function DownloadDropdown({
 
             <button
               role="menuitem"
+              data-testid="file-panel-menu-item-copy-s3-uri"
               onClick={onCopyS3Uri}
               aria-label="Copy S3 URI to clipboard"
               className={`flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-text hover:bg-ui-surface-active dark:text-ui-text-dark dark:hover:bg-ui-surface-active-dark ${
@@ -169,6 +172,7 @@ export function DownloadDropdown({
 
             <button
               role="menuitem"
+              data-testid="file-panel-menu-item-copy-presigned-24h"
               onClick={() => onCopyPresignedUrl(24)}
               disabled={isCopyingLink}
               aria-label="Copy presigned URL valid for 24 hours"
@@ -189,6 +193,7 @@ export function DownloadDropdown({
 
             <button
               role="menuitem"
+              data-testid="file-panel-menu-item-copy-presigned-1w"
               onClick={() => onCopyPresignedUrl(168)}
               disabled={isCopyingLink}
               aria-label="Copy presigned URL valid for 7 days"

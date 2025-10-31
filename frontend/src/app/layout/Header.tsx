@@ -37,6 +37,7 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
         {!isDesktop ? (
           <button
             type="button"
+            data-testid="header-button-menu-toggle"
             onClick={toggleSidebar}
             className="x-close-button inline-flex h-9 w-9 items-center justify-center rounded-md border border-ui-border bg-ui-surface text-ui-text shadow-sm transition hover:bg-ui-surface-hover dark:border-ui-border-dark dark:bg-ui-surface-dark dark:text-ui-text-dark dark:hover:bg-ui-surface-hover-dark"
             aria-label={sidebarOpen ? "Close navigation menu" : "Open navigation menu"}
@@ -57,6 +58,7 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
       </div>
       <div className="flex items-center gap-2">
         <Button
+          data-testid="header-button-keyboard-shortcuts"
           variant="ghost"
           aria-label="Show keyboard shortcuts (Shift+?)"
           onClick={onOpenKeyboardShortcuts}
@@ -66,6 +68,7 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
           <Keyboard className="h-4 w-4" />
         </Button>
         <Button
+          data-testid="header-button-theme-toggle"
           variant="ghost"
           aria-label="Toggle theme"
           onClick={toggleTheme}
@@ -139,6 +142,7 @@ function ConnectionSummaryPill({
   return (
     <button
       type="button"
+      data-testid="header-connection-summary"
       onClick={onManage}
       title={title}
       className="group hidden max-w-full items-center gap-2 rounded-md border border-ui-border bg-ui-surface px-3 py-1.5 text-left text-sm text-ui-text shadow-sm transition hover:border-ui-border-hover hover:bg-ui-surface-hover focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-primary-600 dark:border-ui-border-dark dark:bg-ui-surface-dark dark:text-ui-text-dark dark:hover:border-ui-border-hover-dark dark:hover:bg-ui-surface-hover-dark md:flex"

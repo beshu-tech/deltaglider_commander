@@ -202,6 +202,7 @@ export function DestinationPathSelector({
                 <input
                   ref={inputRef}
                   id="destination-path"
+                  data-testid="upload-input-destination-path"
                   type="text"
                   value={inputValue}
                   onChange={handleInputChange}

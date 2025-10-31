@@ -92,6 +92,7 @@ export function FileDropZone({ normalizedPrefix, isUploading, onFilesAdded }: Fi
   return (
     <section>
       <div
+        data-testid="upload-dropzone-area"
         className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition ${
           isDragging
             ? "border-primary-600 bg-primary-50 dark:border-primary-500 dark:bg-primary-900/20"
@@ -123,11 +124,16 @@ export function FileDropZone({ normalizedPrefix, isUploading, onFilesAdded }: Fi
           applied when beneficial.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Button onClick={() => fileInputRef.current?.click()} className="gap-2">
+          <Button
+            data-testid="upload-button-select-files"
+            onClick={() => fileInputRef.current?.click()}
+            className="gap-2"
+          >
             <FileText className="h-4 w-4" />
             Select files
           </Button>
           <Button
+            data-testid="upload-button-select-folder"
             variant="secondary"
             onClick={() => folderInputRef.current?.click()}
             className="gap-2"

@@ -185,10 +185,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
+      {/* Toast container - separate containers for different priorities */}
       <div
         className="pointer-events-none fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2"
-        aria-live="polite"
+        aria-live={toasts.some((t) => t.level === "error") ? "assertive" : "polite"}
         aria-atomic="false"
+        aria-relevant="additions"
       >
         {toasts.map((toast) => {
           const styles = levelStyles[toast.level];
@@ -197,6 +199,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={toast.id}
               role={toast.level === "error" ? "alert" : "status"}
+              aria-live={toast.level === "error" ? "assertive" : "polite"}
               className={`pointer-events-auto flex min-w-[360px] max-w-[520px] items-start gap-4 rounded-xl border p-4 text-base shadow-2xl transition-all duration-base hover:shadow-2xl ${styles.container} animate-in slide-in-from-right-5 fade-in`}
             >
               <Icon className={`mt-0.5 h-6 w-6 flex-shrink-0 ${styles.icon}`} aria-hidden="true" />

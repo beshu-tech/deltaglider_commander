@@ -243,6 +243,7 @@ export function ObjectsToolbar({
         >
           <button
             type="button"
+            data-testid="objects-toolbar-button-search-expand"
             onClick={handleSearchExpand}
             className="flex h-9 w-9 shrink-0 items-center justify-center pl-1 text-ui-text-subtle transition hover:text-ui-text focus-visible:outline-none focus-visible:text-ui-text dark:text-ui-text-muted-dark dark:hover:text-ui-text-dark dark:focus-visible:text-ui-text-dark"
             aria-label={isSearchExpanded ? "Search icon" : "Open search"}
@@ -253,6 +254,7 @@ export function ObjectsToolbar({
 
           <input
             ref={searchInputRef}
+            data-testid="objects-toolbar-input-search"
             type="text"
             value={searchValue}
             onChange={(event) => handleSearchChange(event.target.value)}
@@ -281,6 +283,7 @@ export function ObjectsToolbar({
           {searchValue && isSearchExpanded && (
             <button
               type="button"
+              data-testid="objects-toolbar-button-search-clear"
               onClick={handleClearSearch}
               className="x-close-button flex shrink-0 items-center justify-center text-ui-text-subtle transition hover:text-ui-text dark:text-ui-text-muted-dark dark:hover:text-ui-text-dark"
               aria-label="Clear search"
@@ -294,6 +297,7 @@ export function ObjectsToolbar({
           trigger={
             <button
               type="button"
+              data-testid="objects-toolbar-button-more-actions"
               className="flex h-9 w-9 items-center justify-center rounded-md border border-ui-border bg-surface-elevated text-ui-text transition hover:bg-ui-bg-subtle focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-primary-600 dark:border-ui-border-dark dark:bg-ui-surface-active-dark dark:text-ui-text-muted-dark dark:hover:bg-ui-surface-hover-dark"
               aria-label="More actions"
               title="More actions"
@@ -342,7 +346,12 @@ export function ObjectsToolbar({
         </DropdownMenu>
 
         {onUploadClick ? (
-          <Button type="button" className="h-9 w-9 p-0" onClick={onUploadClick}>
+          <Button
+            type="button"
+            data-testid="objects-toolbar-button-upload"
+            className="h-9 w-9 p-0"
+            onClick={onUploadClick}
+          >
             <UploadCloud className="h-4 w-4" />
           </Button>
         ) : null}

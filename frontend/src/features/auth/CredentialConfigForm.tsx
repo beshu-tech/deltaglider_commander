@@ -61,6 +61,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
 
   return (
     <form
+      data-testid="auth-credentials-form"
       onSubmit={handleSubmit}
       className="mx-auto w-full max-w-2xl space-y-4 rounded-lg border-2 border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
       autoComplete="on"
@@ -74,6 +75,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
         </label>
         <input
           id="profileName"
+          data-testid="auth-form-input-profile-name"
           type="text"
           value={profileName}
           onChange={(e) => setProfileName(e.target.value)}
@@ -91,6 +93,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
         </label>
         <input
           id="accessKeyId"
+          data-testid="auth-form-input-access-key"
           name="aws-access-key-id"
           type="text"
           required
@@ -111,6 +114,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
         </label>
         <input
           id="secretAccessKey"
+          data-testid="auth-form-input-secret-key"
           name="aws-secret-access-key"
           type="password"
           required
@@ -129,6 +133,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
       <div className="border-t pt-4 dark:border-ui-border-dark">
         <button
           type="button"
+          data-testid="auth-form-button-advanced-toggle"
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="flex items-center gap-2 text-sm text-ui-text-muted hover:text-ui-text dark:text-ui-text-subtle dark:hover:text-ui-text-dark"
         >
@@ -147,6 +152,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
               </label>
               <input
                 id="endpoint"
+                data-testid="auth-form-input-endpoint"
                 type="text"
                 value={formData.endpoint}
                 onChange={handleChange("endpoint")}
@@ -164,6 +170,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
               </label>
               <input
                 id="region"
+                data-testid="auth-form-input-region"
                 type="text"
                 value={formData.region}
                 onChange={handleChange("region")}
@@ -176,7 +183,10 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
       </div>
 
       {error && (
-        <div className="bg-primary-50 border border-primary-200 text-primary-700 px-4 py-3 rounded dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-400">
+        <div
+          data-testid="auth-form-error-message"
+          className="bg-primary-50 border border-primary-200 text-primary-700 px-4 py-3 rounded dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-400"
+        >
           {error}
         </div>
       )}
@@ -185,6 +195,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
         {onCancel && (
           <button
             type="button"
+            data-testid="auth-form-button-cancel"
             onClick={onCancel}
             className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
           >
@@ -193,6 +204,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
         )}
         <button
           type="submit"
+          data-testid="auth-form-button-submit"
           disabled={isSubmitting}
           className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors dark:bg-primary-700 dark:hover:bg-primary-600"
         >

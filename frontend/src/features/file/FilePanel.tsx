@@ -254,6 +254,7 @@ export function FilePanel({
           </div>
         </div>
         <Button
+          data-testid="file-panel-button-close"
           variant="ghost"
           onClick={onClose}
           aria-label="Close panel"
@@ -307,6 +308,7 @@ export function FilePanel({
       {/* Fixed Footer */}
       <div className={`border-t border-ui-border ${footerPadding} dark:border-ui-border-dark`}>
         <Button
+          data-testid="file-panel-button-delete"
           variant="ghost"
           className={`w-full justify-center gap-2 border border-ui-border text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:border-ui-border-dark dark:text-primary-300 dark:hover:bg-primary-900 ${
             focusedElement === "delete"

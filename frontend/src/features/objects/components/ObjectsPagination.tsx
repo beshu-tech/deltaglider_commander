@@ -50,10 +50,20 @@ export function ObjectsPagination({
         ) : null}
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="secondary" disabled={!canGoPrevious} onClick={onPreviousPage}>
+        <Button
+          data-testid="objects-pagination-button-previous"
+          variant="secondary"
+          disabled={!canGoPrevious}
+          onClick={onPreviousPage}
+        >
           Previous
         </Button>
-        <Button variant="secondary" disabled={!canGoNext} onClick={onNextPage}>
+        <Button
+          data-testid="objects-pagination-button-next"
+          variant="secondary"
+          disabled={!canGoNext}
+          onClick={onNextPage}
+        >
           Next
         </Button>
       </div>

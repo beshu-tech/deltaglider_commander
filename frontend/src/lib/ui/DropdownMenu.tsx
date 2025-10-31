@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState, useId } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface DropdownMenuProps {
@@ -18,6 +18,7 @@ interface DropdownMenuItemProps {
 export function DropdownMenu({ trigger, children, align = "right", className }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -44,9 +45,20 @@ export function DropdownMenu({ trigger, children, align = "right", className }: 
 
   return (
     <div ref={dropdownRef} className={twMerge("relative inline-block", className)}>
-      <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        role="button"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? menuId : undefined}
+      >
+        {trigger}
+      </div>
       {isOpen && (
         <div
+          id={menuId}
+          role="menu"
+          aria-orientation="vertical"
           className={twMerge(
             "absolute top-full z-50 mt-2 min-w-[200px] rounded-lg border border-ui-border bg-ui-surface py-1 shadow-elevation-md dark:border-ui-border-dark dark:bg-ui-surface-dark dark:shadow-elevation-md-dark",
             align === "right" ? "right-0" : "left-0",
@@ -68,6 +80,7 @@ export function DropdownMenuItem({
   return (
     <button
       type="button"
+      role="menuitem"
       onClick={onClick}
       disabled={disabled}
       className={twMerge(
