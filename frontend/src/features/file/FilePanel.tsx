@@ -105,8 +105,11 @@ export function FilePanel({
         description: String(query.error),
         level: "error",
       });
+      // Close panel if file not found (404) - it was likely deleted
+      // The objects list will be automatically refreshed by useFile hook
+      handleClose();
     }
-  }, [query.error, toast]);
+  }, [query.error, toast, handleClose]);
 
   const handleDownload = useCallback(async () => {
     if (!bucket || !metadata) return;
@@ -178,12 +181,16 @@ export function FilePanel({
   const handleDeleteConfirm = useCallback(() => {
     if (!metadata) return;
     setShowDeleteConfirm(false);
+
+    // Close panel immediately to prevent 404 errors on metadata refetch
+    handleClose();
+
     deleteMutation.mutate(metadata.key, {
       onSuccess: () => {
         onDeleted?.(metadata.key);
       },
     });
-  }, [metadata, deleteMutation, onDeleted]);
+  }, [metadata, deleteMutation, onDeleted, handleClose]);
 
   const handleDeleteCancel = useCallback(() => {
     setShowDeleteConfirm(false);

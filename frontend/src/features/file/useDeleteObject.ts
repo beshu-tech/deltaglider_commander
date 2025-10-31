@@ -41,7 +41,8 @@ export function useDeleteObject(bucket: string | null) {
             (query.queryKey[0] === "objects" || query.queryKey[0] === "objects-full") &&
             query.queryKey[1] === bucket,
         });
-        void queryClient.removeQueries({ queryKey: qk.metadata(bucket, key) });
+        // Invalidate metadata query instead of removing to prevent refetch of deleted object
+        void queryClient.invalidateQueries({ queryKey: qk.metadata(bucket, key) });
         void queryClient.invalidateQueries({ queryKey: qk.buckets });
         void queryClient.invalidateQueries({
           predicate: (query) =>
