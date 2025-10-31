@@ -115,7 +115,9 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
           `[objectsCache] Fetching page ${pageCount + 1}, loaded so far: ${allObjects.length}`,
         );
       } else {
-        console.log(`[objectsCache] Full fetch complete: ${allObjects.length} objects total${isLimited ? " (TRUNCATED at 15K limit)" : ""}`);
+        console.log(
+          `[objectsCache] Full fetch complete: ${allObjects.length} objects total${isLimited ? " (TRUNCATED at 15K limit)" : ""}`,
+        );
       }
     }
   } while (cursor);

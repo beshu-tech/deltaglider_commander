@@ -199,11 +199,12 @@ function BucketRow({
                           <div className="space-y-2">
                             <div className="font-semibold">Object count limited</div>
                             <div>
-                              This bucket contains more than {displayObjectCount.toLocaleString()} objects.
+                              This bucket contains more than {displayObjectCount.toLocaleString()}{" "}
+                              objects.
                             </div>
                             <div>
-                              For performance reasons, the backend limits counting to 15,000. The actual
-                              number may be significantly higher.
+                              For performance reasons, the backend limits counting to 15,000. The
+                              actual number may be significantly higher.
                             </div>
                             <div>Use search or filters when browsing.</div>
                           </div>
@@ -351,7 +352,8 @@ function BucketRow({
                       <div className="space-y-2">
                         <div className="font-semibold">Object count limited</div>
                         <div>
-                          This bucket contains more than {displayObjectCount.toLocaleString()} objects.
+                          This bucket contains more than {displayObjectCount.toLocaleString()}{" "}
+                          objects.
                         </div>
                         <div>
                           For performance reasons, the backend limits counting to 15,000. The actual
