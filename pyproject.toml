@@ -107,9 +107,6 @@ module = [
     "dgcommander.jobs.*",
     "dgcommander.deps",
     "dgcommander.sdk.adapters.*",  # SDK adapters interact with third-party APIs
-    "dgcommander.domain.*",
-    "dgcommander.infrastructure.*",
-    "dgcommander.application.*",
     "dgcommander.api.objects_clean",
     "dgcommander.util.cache"
 ]

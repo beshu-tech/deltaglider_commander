@@ -5,7 +5,7 @@ import { getErrorMessage } from "../../lib/api/client";
 import { useAuthStore, selectActiveCredentials } from "../../stores/authStore";
 import { useSessionStatus } from "./useSessionStatus";
 
-export type ConnectionStatus = "connected" | "checking" | "error" | "disconnected";
+export type ConnectionSummaryStatus = "connected" | "checking" | "error" | "disconnected";
 
 export interface ConnectionDetails {
   accessKeyId: string;
@@ -21,7 +21,7 @@ export interface ConnectionSummaryOptions {
 }
 
 interface SessionIssue {
-  status: ConnectionStatus;
+  status: ConnectionSummaryStatus;
   message?: string;
 }
 
@@ -118,7 +118,7 @@ export function useConnectionSummary(options?: ConnectionSummaryOptions) {
   }, [connection, sessionIssue?.status, queryClient]);
 
   const summary = useMemo(() => {
-    let status: ConnectionStatus = connection ? "connected" : "disconnected";
+    let status: ConnectionSummaryStatus = connection ? "connected" : "disconnected";
     let message: string | undefined;
 
     if (!connection) {
@@ -136,7 +136,7 @@ export function useConnectionSummary(options?: ConnectionSummaryOptions) {
       message = getErrorMessage(options.issue.error);
     }
 
-    const defaultMessages: Record<ConnectionStatus, string> = {
+    const defaultMessages: Record<ConnectionSummaryStatus, string> = {
       connected: "Session healthy and ready to use.",
       checking: "Verifying stored credentials…",
       error: "Action required: review your S3 configuration.",

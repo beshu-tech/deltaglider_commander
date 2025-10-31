@@ -2,7 +2,10 @@ import { Moon, Sun, Menu, X, Keyboard, Settings } from "lucide-react";
 import { useMatch, useNavigate } from "@tanstack/react-router";
 import { Button } from "../../lib/ui/Button";
 import { Badge } from "../../lib/ui/Badge";
-import { ConnectionStatus, useConnectionSummary } from "../../features/auth/useConnectionSummary";
+import {
+  ConnectionSummaryStatus,
+  useConnectionSummary,
+} from "../../features/auth/useConnectionSummary";
 import { useBuckets } from "../../features/buckets/useBuckets";
 import { useTheme } from "../theme";
 import { useLayoutContext } from "./LayoutContext";
@@ -76,7 +79,7 @@ export function Header({ onOpenKeyboardShortcuts }: HeaderProps) {
 }
 
 interface ConnectionSummaryPillProps {
-  status: ConnectionStatus;
+  status: ConnectionSummaryStatus;
   connectionEndpoint: string | null;
   connectionRegion: string | null;
   accessKeyId: string | null;
@@ -84,7 +87,10 @@ interface ConnectionSummaryPillProps {
   onManage: () => void;
 }
 
-const STATUS_STYLES: Record<ConnectionStatus, { dot: string; text: string; accent: string }> = {
+const STATUS_STYLES: Record<
+  ConnectionSummaryStatus,
+  { dot: string; text: string; accent: string }
+> = {
   connected: {
     dot: "bg-emerald-500",
     text: "text-emerald-600 dark:text-emerald-200",
@@ -170,7 +176,7 @@ function ConnectionSummaryPill({
   );
 }
 
-function statusLabel(status: ConnectionStatus) {
+function statusLabel(status: ConnectionSummaryStatus) {
   switch (status) {
     case "connected":
       return "Connected";

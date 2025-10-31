@@ -1,7 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { AlertTriangle } from "lucide-react";
 import { useToast } from "../../app/toast";
+import { OBJECT_COUNT_LIMIT } from "../../lib/constants/api";
 import { ObjectItem, ObjectSortKey, ObjectsSearchState } from "./types";
 import { ObjectsTable } from "./ObjectsTable";
 import { useObjectsCache } from "./useObjectsCache";
@@ -179,6 +181,7 @@ export function ObjectsView({
   }, [navigate]);
 
   const hasData = objects.length > 0 || prefixes.length > 0;
+  const isTruncated = cacheQuery.limited;
 
   // Show loading/error states, otherwise show the table
   let tableContent: JSX.Element;
@@ -245,6 +248,17 @@ export function ObjectsView({
         onForceRefresh={handleForceRefresh}
         isRefreshing={cacheQuery.isFetching}
       />
+      {isTruncated && (
+        <div className="mx-4 mt-3 flex items-center gap-2 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-200">
+          <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+          <div>
+            <strong>Listing truncated:</strong> This bucket contains more than{" "}
+            {OBJECT_COUNT_LIMIT.toLocaleString()} objects. Only the first{" "}
+            {OBJECT_COUNT_LIMIT.toLocaleString()} are displayed. Use search or filters to narrow
+            results.
+          </div>
+        </div>
+      )}
       {hasSelection ? (
         <ObjectsSelectionBar
           totalSelected={totalSelectedCount}

@@ -12,6 +12,7 @@ export interface DirectoryCache {
   directories: string[];
   totalObjects: number;
   totalDirectories: number;
+  limited: boolean;
 }
 
 /**
@@ -67,6 +68,7 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
       directories: previewResponse.common_prefixes,
       totalObjects: previewResponse.objects.length,
       totalDirectories: previewResponse.common_prefixes.length,
+      limited: previewResponse.limited ?? false,
     });
   }
 
@@ -77,6 +79,7 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
   const allDirectories = new Set<string>();
   let cursor: string | undefined;
   let pageCount = 0;
+  let isLimited = false;
 
   do {
     pageCount++;
@@ -95,6 +98,11 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
     allObjects.push(...response.objects);
     response.common_prefixes.forEach((dir) => allDirectories.add(dir));
 
+    // Check if any response indicates the listing was limited
+    if (response.limited) {
+      isLimited = true;
+    }
+
     // Report progress
     if (onProgress) {
       onProgress(allObjects.length, undefined);
@@ -107,7 +115,7 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
           `[objectsCache] Fetching page ${pageCount + 1}, loaded so far: ${allObjects.length}`,
         );
       } else {
-        console.log(`[objectsCache] Full fetch complete: ${allObjects.length} objects total`);
+        console.log(`[objectsCache] Full fetch complete: ${allObjects.length} objects total${isLimited ? " (TRUNCATED at 15K limit)" : ""}`);
       }
     }
   } while (cursor);
@@ -117,6 +125,7 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
     directories: Array.from(allDirectories),
     totalObjects: allObjects.length,
     totalDirectories: allDirectories.size,
+    limited: isLimited,
   };
 }
 

@@ -30,20 +30,7 @@ def list_objects(query: ObjectListRequest):
     """List objects with automatic validation and serialization."""
     catalog = get_catalog()
 
-    # Convert ObjectSortOrder from contracts to util.types
-    from ..util.types import ObjectSortOrder as UtilObjectSortOrder
-
-    sort_order_map = {
-        ObjectSortOrder.name_asc: UtilObjectSortOrder.name_asc,
-        ObjectSortOrder.name_desc: UtilObjectSortOrder.name_desc,
-        ObjectSortOrder.modified_asc: UtilObjectSortOrder.modified_asc,
-        ObjectSortOrder.modified_desc: UtilObjectSortOrder.modified_desc,
-        ObjectSortOrder.size_asc: UtilObjectSortOrder.size_asc,
-        ObjectSortOrder.size_desc: UtilObjectSortOrder.size_desc,
-    }
-
-    contract_sort_order = ObjectSortOrder.from_query(query.sort, query.order)
-    util_sort_order = sort_order_map[contract_sort_order]
+    sort_order = ObjectSortOrder.from_query(query.sort, query.order)
 
     # Check if bucket exists efficiently
     if not catalog.bucket_exists(query.bucket):
@@ -63,7 +50,7 @@ def list_objects(query: ObjectListRequest):
             prefix=query.prefix,
             limit=query.limit,
             cursor=query.cursor,
-            sort_order=util_sort_order,
+            sort_order=sort_order,
             compressed=query.compressed,
             search=query.search,
             credentials_key=credentials_key,  # SECURITY: Isolate cache by credentials
@@ -85,7 +72,10 @@ def list_objects(query: ObjectListRequest):
         converted_objects.append(contract_obj)
 
     return ObjectListResponse(
-        objects=converted_objects, common_prefixes=object_list.common_prefixes, cursor=object_list.cursor
+        objects=converted_objects,
+        common_prefixes=object_list.common_prefixes,
+        cursor=object_list.cursor,
+        limited=object_list.limited,
     )
 
 

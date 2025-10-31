@@ -317,6 +317,9 @@ class CatalogService:
         page = sorted_objects[offset : offset + limit]
         next_cursor = encode_cursor(offset + len(page)) if offset + len(page) < len(sorted_objects) else None
 
+        # Check if listing was truncated at OBJECT_COUNT_LIMIT
+        limited = len(sorted_objects) >= OBJECT_COUNT_LIMIT
+
         return ObjectList(
             objects=[
                 ObjectItem(
@@ -330,6 +333,7 @@ class CatalogService:
             ],
             common_prefixes=common_prefixes,
             cursor=next_cursor,
+            limited=limited,
         )
 
     def get_metadata(self, bucket: str, key: str) -> FileMetadata:

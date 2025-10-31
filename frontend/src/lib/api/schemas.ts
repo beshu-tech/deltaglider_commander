@@ -38,6 +38,7 @@ export const objectListSchema = z.object({
   objects: z.array(objectItemSchema),
   common_prefixes: z.array(z.string()),
   cursor: z.string().nullable().optional(),
+  limited: z.boolean().optional().default(false),
 });
 
 export const fileMetadataSchema = z.object({

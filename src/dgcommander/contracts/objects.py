@@ -3,40 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
 
 from pydantic import BaseModel, Field, field_validator
 
+from ..shared.object_sort_order import ObjectSortOrder as SharedObjectSortOrder
 from .base import BaseContract
-
-
-class ObjectSortOrder(str, Enum):
-    """Object sorting options."""
-
-    name_asc = "name_asc"
-    name_desc = "name_desc"
-    modified_desc = "modified_desc"
-    modified_asc = "modified_asc"
-    size_asc = "size_asc"
-    size_desc = "size_desc"
-
-    @classmethod
-    def from_query(cls, sort: str | None, direction: str | None) -> ObjectSortOrder:
-        """Parse sort order from query parameters."""
-        if not sort:
-            return cls.modified_desc
-
-        key = sort.lower()
-        dir_normalized = (direction or "desc").lower()
-
-        if key in {"name", "key"}:
-            return cls.name_desc if dir_normalized == "desc" else cls.name_asc
-        if key in {"size", "original_bytes"}:
-            return cls.size_desc if dir_normalized == "desc" else cls.size_asc
-        if key == "modified":
-            return cls.modified_desc if dir_normalized == "desc" else cls.modified_asc
-
-        return cls.modified_desc
 
 
 class ObjectItem(BaseContract):
@@ -67,6 +38,7 @@ class ObjectListResponse(BaseContract):
     objects: list[ObjectItem]
     common_prefixes: list[str] = Field(default_factory=list)
     cursor: str | None = None
+    limited: bool = Field(default=False, description="True if object count was truncated at OBJECT_COUNT_LIMIT")
 
 
 class ObjectListRequest(BaseModel):
@@ -184,3 +156,19 @@ class ObjectMetadataUpdate(BaseModel):
 
     metadata: dict = Field(default_factory=dict)
     tags: dict = Field(default_factory=dict)
+
+
+# Re-export for backwards compatibility
+ObjectSortOrder = SharedObjectSortOrder
+
+__all__ = [
+    "ObjectSortOrder",
+    "ObjectItem",
+    "ObjectListResponse",
+    "ObjectListRequest",
+    "FileMetadata",
+    "DeleteObjectRequest",
+    "BulkDeleteRequest",
+    "BulkDeleteResponse",
+    "ObjectMetadataUpdate",
+]

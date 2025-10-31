@@ -36,6 +36,7 @@ export interface UseObjectsCacheResult {
   totalObjects: number;
   totalDirectories: number;
   totalItems: number;
+  limited: boolean;
 
   // Pagination
   currentPage: number;
@@ -274,6 +275,7 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     totalObjects: sortedObjects.length, // Filtered count
     totalDirectories: sortedDirectories.length, // Filtered count
     totalItems,
+    limited: cache?.limited ?? false,
 
     // Pagination
     currentPage: paginationInfo.currentPage,

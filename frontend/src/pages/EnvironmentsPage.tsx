@@ -7,29 +7,12 @@ import { useState } from "react";
 import { Plus, X, Database } from "lucide-react";
 import { useCredentialProfiles } from "../features/auth/useCredentialProfiles";
 import { useAuthStore } from "../stores/authStore";
-import type { ConnectionStatus } from "../types/connection";
 import { CredentialConfigForm } from "../features/auth/CredentialConfigForm";
+import {
+  CONNECTION_STATE_ICON_CLASSES,
+  CONNECTION_STATE_LABELS,
+} from "../features/connection/connectionStateStyles";
 import { DEFAULT_REGION_LABEL, DEFAULT_ENDPOINT_LABEL } from "../lib/constants/aws";
-
-type ConnState = ConnectionStatus["state"];
-
-const statusIconColors: Record<ConnState, string> = {
-  idle: "text-gray-400 dark:text-gray-500",
-  ok: "text-green-500 dark:text-green-400",
-  warn: "text-yellow-500 dark:text-yellow-400",
-  error: "text-primary-500 dark:text-primary-400",
-  offline: "text-gray-400 dark:text-gray-500",
-  reconnecting: "text-blue-500 dark:text-blue-400 animate-pulse",
-};
-
-const statusLabels: Record<ConnState, string> = {
-  idle: "Idle",
-  ok: "Connected",
-  warn: "Warning",
-  error: "Error",
-  offline: "Offline",
-  reconnecting: "Reconnecting",
-};
 
 export function EnvironmentsPage() {
   const { profiles, activeProfile, switchProfile, deleteProfile } = useCredentialProfiles();
@@ -112,8 +95,8 @@ export function EnvironmentsPage() {
 
           // Only show connection status for active profile
           const effectiveState = isActive ? connectionStatus?.state || "offline" : "offline";
-          const statusLabel = statusLabels[effectiveState];
-          const iconColor = statusIconColors[effectiveState];
+          const statusLabel = CONNECTION_STATE_LABELS[effectiveState];
+          const iconColor = CONNECTION_STATE_ICON_CLASSES[effectiveState];
           const region = isActive
             ? connectionStatus?.region || profile.credentials.region || DEFAULT_REGION_LABEL
             : profile.credentials.region || DEFAULT_REGION_LABEL;

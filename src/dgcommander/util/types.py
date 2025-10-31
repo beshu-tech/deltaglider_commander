@@ -4,32 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 
 from ..sdk import FileMetadata, UploadSummary
-
-
-class ObjectSortOrder(str, Enum):
-    name_asc = "name_asc"
-    name_desc = "name_desc"
-    modified_desc = "modified_desc"
-    modified_asc = "modified_asc"
-    size_asc = "size_asc"
-    size_desc = "size_desc"
-
-    @classmethod
-    def from_query(cls, sort: str | None, direction: str | None) -> ObjectSortOrder:
-        if not sort:
-            return cls.modified_desc
-        key = sort.lower()
-        dir_normalized = (direction or "desc").lower()
-        if key in {"name", "key"}:
-            return cls.name_desc if dir_normalized == "desc" else cls.name_asc
-        if key in {"size", "original_bytes"}:
-            return cls.size_desc if dir_normalized == "desc" else cls.size_asc
-        if key == "modified":
-            return cls.modified_desc if dir_normalized == "desc" else cls.modified_asc
-        return cls.modified_desc
+from ..shared.object_sort_order import ObjectSortOrder
 
 
 @dataclass(slots=True)
@@ -69,6 +46,7 @@ class ObjectList:
     objects: list[ObjectItem]
     common_prefixes: list[str]
     cursor: str | None = None
+    limited: bool = False
 
     def to_dict(self) -> dict:
         data = {

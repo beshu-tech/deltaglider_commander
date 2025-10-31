@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Loader2, RefreshCcw, Trash2 } from "lucide-react";
+import { AlertTriangle, ChevronRight, Loader2, RefreshCcw, Trash2 } from "lucide-react";
+import * as Tooltip from "@radix-ui/react-tooltip";
 import { Badge } from "../../lib/ui/Badge";
 import { EmptyState } from "../../lib/ui/EmptyState";
 import { Button } from "../../lib/ui/Button";
@@ -180,7 +181,39 @@ function BucketRow({
                 Loading
               </span>
             ) : (
-              displayObjectCount.toLocaleString()
+              <span className="inline-flex items-center gap-1.5">
+                {displayObjectCount.toLocaleString()}
+                {stats.object_count_is_limited && (
+                  <Tooltip.Provider delayDuration={300}>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <span className="inline-flex items-center cursor-help">
+                          <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                        </span>
+                      </Tooltip.Trigger>
+                      <Tooltip.Portal>
+                        <Tooltip.Content
+                          className="max-w-xs rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900"
+                          sideOffset={5}
+                        >
+                          <div className="space-y-2">
+                            <div className="font-semibold">Object count limited</div>
+                            <div>
+                              This bucket contains more than {displayObjectCount.toLocaleString()} objects.
+                            </div>
+                            <div>
+                              For performance reasons, the backend limits counting to 15,000. The actual
+                              number may be significantly higher.
+                            </div>
+                            <div>Use search or filters when browsing.</div>
+                          </div>
+                          <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
+                        </Tooltip.Content>
+                      </Tooltip.Portal>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
+                )}
+              </span>
             )}
           </div>
         </div>
@@ -300,7 +333,39 @@ function BucketRow({
             <span className="text-xs font-medium">Loading</span>
           </span>
         ) : (
-          displayObjectCount.toLocaleString()
+          <span className="inline-flex items-center justify-end gap-1.5">
+            {displayObjectCount.toLocaleString()}
+            {stats.object_count_is_limited && (
+              <Tooltip.Provider delayDuration={300}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <span className="inline-flex items-center cursor-help">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                    </span>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      className="max-w-xs rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900"
+                      sideOffset={5}
+                    >
+                      <div className="space-y-2">
+                        <div className="font-semibold">Object count limited</div>
+                        <div>
+                          This bucket contains more than {displayObjectCount.toLocaleString()} objects.
+                        </div>
+                        <div>
+                          For performance reasons, the backend limits counting to 15,000. The actual
+                          number may be significantly higher.
+                        </div>
+                        <div>Use search or filters when browsing.</div>
+                      </div>
+                      <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
+            )}
+          </span>
         )}
       </TableCell>
       <TableCell className="px-6 py-4 text-right text-ui-text dark:text-ui-text-dark">
