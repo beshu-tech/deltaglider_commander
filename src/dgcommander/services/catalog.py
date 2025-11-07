@@ -181,6 +181,7 @@ class CatalogService:
             self.sdk.create_bucket(name)
         except ClientError as exc:
             error_code = exc.response.get("Error", {}).get("Code", "")
+            error_message = exc.response.get("Error", {}).get("Message", "")
             context_details = self._get_s3_error_context()
 
             if error_code == "BucketAlreadyExists":
@@ -193,11 +194,32 @@ class CatalogService:
             elif error_code == "BucketAlreadyOwnedByYou":
                 # Bucket exists but is owned by the user, treat as success
                 return
+            elif error_code == "InvalidBucketName":
+                raise APIError(
+                    code="invalid_bucket_name",
+                    message=error_message or "Bucket name is invalid",
+                    http_status=400,
+                    details={**context_details, "reason": error_message},
+                ) from exc
+            elif error_code == "TooManyBuckets":
+                raise APIError(
+                    code="too_many_buckets",
+                    message="You have reached the maximum number of buckets allowed",
+                    http_status=400,
+                    details=context_details,
+                ) from exc
+            elif error_code == "AccessDenied":
+                raise APIError(
+                    code="access_denied",
+                    message="You don't have permission to create buckets",
+                    http_status=403,
+                    details=context_details,
+                ) from exc
             raise APIError(
                 code="bucket_create_failed",
-                message="Unable to create bucket",
+                message=error_message or "Unable to create bucket",
                 http_status=500,
-                details={**context_details, "aws_error_code": error_code},
+                details={**context_details, "aws_error_code": error_code, "reason": error_message},
             ) from exc
         except ValueError as exc:
             # InMemoryDeltaGliderSDK raises ValueError for existing bucket

@@ -122,9 +122,12 @@ class S3DeltaGliderSDK(BaseDeltaGliderAdapter):
         return snapshots
 
     def create_bucket(self, name: str) -> None:
-        # Use deltaglider client's create_bucket method
         region = self._region
-        if not self._settings.endpoint_url and region != "eu-west-1":
+
+        # us-east-1 is the only AWS region that REQUIRES LocationConstraint to be null or empty
+        # All other regions require it (including eu-west-1)
+        # For custom endpoints (MinIO, etc.), LocationConstraint is optional but harmless
+        if region and region != "us-east-1":
             self._client.create_bucket(Bucket=name, CreateBucketConfiguration={"LocationConstraint": region})
         else:
             self._client.create_bucket(Bucket=name)

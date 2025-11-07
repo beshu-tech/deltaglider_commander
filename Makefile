@@ -10,7 +10,7 @@
 #   make run          Run development servers
 #   make clean        Clean build artifacts
 
-.PHONY: help install test lint format ci run clean backend-test frontend-test build-static docker typecheck security pre-commit dev-setup benchmark
+.PHONY: help install test lint format ci ci-backend ci-frontend run clean backend-test frontend-test build-static docker typecheck security pre-commit dev-setup benchmark
 
 # Default target
 help:
@@ -22,7 +22,12 @@ help:
 	@echo "make lint         - Run all linters"
 	@echo "make format       - Format all code"
 	@echo "make build-static - Build frontend and copy to Flask static"
-	@echo "make ci           - Run full CI suite"
+	@echo ""
+	@echo "⚠️  IMPORTANT: Run before committing:"
+	@echo "make ci-backend   - Backend CI: lint, typecheck, test"
+	@echo "make ci-frontend  - Frontend CI: lint, typecheck, test, build"
+	@echo "make ci           - Run full CI suite (backend + frontend)"
+	@echo ""
 	@echo "make run          - Run development servers"
 	@echo "make docker       - Build and run with Docker"
 	@echo "make clean        - Clean build artifacts"
@@ -85,10 +90,53 @@ typecheck:
 	@echo "📝 Type checking frontend..."
 	cd frontend && pnpm typecheck
 
-# Run full CI suite locally
-ci:
-	@echo "🚀 Running full CI suite..."
-	./scripts/ci.sh all
+# Backend CI suite
+ci-backend:
+	@echo "🚀 Running backend CI suite..."
+	@echo "================================"
+	@echo "Step 1/3: Linting backend..."
+	@ruff check src/ tests/
+	@echo "✅ Backend linting passed"
+	@echo ""
+	@echo "Step 2/3: Type checking backend..."
+	@mypy src/dgcommander --ignore-missing-imports
+	@echo "✅ Backend type checking passed"
+	@echo ""
+	@echo "Step 3/3: Running backend tests..."
+	@pytest tests/ -v --cov=src/dgcommander --cov-report=term-missing
+	@echo "✅ Backend tests passed"
+	@echo ""
+	@echo "✅ Backend CI suite completed successfully!"
+
+# Frontend CI suite
+ci-frontend:
+	@echo "🚀 Running frontend CI suite..."
+	@echo "================================"
+	@echo "Step 1/4: Linting frontend..."
+	@cd frontend && pnpm lint
+	@echo "✅ Frontend linting passed"
+	@echo ""
+	@echo "Step 2/4: Type checking frontend..."
+	@cd frontend && pnpm typecheck
+	@echo "✅ Frontend type checking passed"
+	@echo ""
+	@echo "Step 3/4: Running frontend tests..."
+	@cd frontend && pnpm test --run
+	@echo "✅ Frontend tests passed"
+	@echo ""
+	@echo "Step 4/4: Building frontend..."
+	@cd frontend && pnpm build
+	@echo "✅ Frontend build completed with no errors/warnings"
+	@echo ""
+	@echo "✅ Frontend CI suite completed successfully!"
+
+# Run full CI suite (backend + frontend)
+ci: ci-backend ci-frontend
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ Full CI suite completed successfully!"
+	@echo "=========================================="
+	@echo "You are ready to commit your changes."
 
 # Run development servers
 run:
@@ -125,7 +173,9 @@ clean:
 	cd frontend && rm -rf dist/ node_modules/.vite/
 
 # Quick checks before commit
-pre-commit: format lint typecheck test
+pre-commit: format ci
+	@echo ""
+	@echo "✅ All pre-commit checks passed!"
 	@echo "✅ Ready to commit!"
 
 # Development setup

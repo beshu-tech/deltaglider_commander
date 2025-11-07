@@ -11,14 +11,30 @@ import { DEFAULT_AWS_REGION } from "../../lib/constants/aws";
 export interface CredentialConfigFormProps {
   onSuccess: () => void;
   onCancel?: () => void;
+  /**
+   * Optional: Profile ID to edit. If provided, form will be in edit mode.
+   */
+  editProfileId?: string;
 }
 
-export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFormProps) {
+export function CredentialConfigForm({ onSuccess, onCancel, editProfileId }: CredentialConfigFormProps) {
   const addProfile = useAuthStore((state) => state.addProfile);
+  const updateProfile = useAuthStore((state) => state.updateProfile);
+  const profiles = useAuthStore((state) => state.profiles);
+  const activeProfileId = useAuthStore((state) => state.activeProfileId);
   const activeCredentials = useAuthStore(selectActiveCredentials);
 
+  // Find the profile being edited
+  const editProfile = editProfileId ? profiles.find((p) => p.id === editProfileId) : null;
+  const isEditMode = !!editProfile;
+  const isEditingActiveProfile = isEditMode && editProfileId === activeProfileId;
+
   const [formData, setFormData] = useState<AWSCredentials>(() => {
-    // Load saved credentials on mount
+    // If editing, use the profile's credentials
+    if (editProfile) {
+      return editProfile.credentials;
+    }
+    // Otherwise load active credentials or defaults
     return (
       activeCredentials || {
         accessKeyId: "",
@@ -29,10 +45,10 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
     );
   });
 
-  const [profileName, setProfileName] = useState<string>("");
+  const [profileName, setProfileName] = useState<string>(editProfile?.name || "");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(!!editProfile?.credentials.endpoint);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,15 +56,30 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
     setIsSubmitting(true);
 
     try {
-      // First validate credentials by creating session
-      await SessionManager.createSession(formData);
+      if (isEditMode && editProfileId) {
+        // Update existing profile first
+        updateProfile(editProfileId, {
+          name: profileName || editProfile?.name || "Default Environment",
+          credentials: formData,
+        });
 
-      // Only save profile after successful session creation
-      addProfile(profileName || "Default Profile", formData);
+        // If editing the currently active profile, we need to create a new session
+        // with the updated credentials to ensure the backend session is updated
+        if (isEditingActiveProfile) {
+          await SessionManager.createSession(formData);
+        } else {
+          // For inactive profiles, just validate the credentials
+          await SessionManager.createSession(formData);
+        }
+      } else {
+        // For new profiles: validate credentials first, then add profile
+        await SessionManager.createSession(formData);
+        addProfile(profileName || "Default Environment", formData);
+      }
 
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create session");
+      setError(err instanceof Error ? err.message : "Failed to validate credentials");
     } finally {
       setIsSubmitting(false);
     }
@@ -68,7 +99,7 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
     >
       <div>
         <label htmlFor="profileName" className="block text-sm font-medium mb-1">
-          Profile Name
+          Environment Name
           <span className="ml-1 text-xs text-ui-text-muted dark:text-ui-text-subtle">
             (optional)
           </span>
@@ -80,10 +111,10 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
           value={profileName}
           onChange={(e) => setProfileName(e.target.value)}
           className="w-full px-3 py-2 border rounded-md dark:bg-ui-surface-active-dark dark:border-ui-border-dark"
-          placeholder="My S3 Profile"
+          placeholder="My S3 Environment"
         />
         <p className="mt-1 text-xs text-ui-text-muted dark:text-ui-text-subtle">
-          Give this profile a memorable name to easily switch between multiple S3 accounts
+          Give this environment a memorable name to easily switch between multiple S3 accounts
         </p>
       </div>
 
@@ -208,7 +239,11 @@ export function CredentialConfigForm({ onSuccess, onCancel }: CredentialConfigFo
           disabled={isSubmitting}
           className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors dark:bg-primary-700 dark:hover:bg-primary-600"
         >
-          {isSubmitting ? "Connecting..." : "Connect to object storage service"}
+          {isSubmitting
+            ? "Connecting..."
+            : isEditMode
+              ? "Update environment"
+              : "Connect to object storage service"}
         </button>
       </div>
     </form>
