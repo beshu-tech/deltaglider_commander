@@ -1,6 +1,6 @@
 {
   "name": "dg-frontend",
-  "version": "1.2.3",
+  "version": "1.2.6",
   "private": true,
   "type": "module",
   "scripts": {
