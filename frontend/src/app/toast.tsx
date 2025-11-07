@@ -75,10 +75,10 @@ export function useToast(): ToastContextValue {
 const levelStyles = {
   info: {
     container:
-      "bg-gradient-to-br from-emerald-900/95 via-emerald-900 to-emerald-900/90 border border-emerald-800/60 dark:border-emerald-700/60",
+      "bg-gradient-to-br from-blue-900/95 via-blue-900 to-blue-900/90 border border-blue-800/60 dark:border-blue-700/60",
     icon: "text-white",
     title: "text-white",
-    description: "text-emerald-100",
+    description: "text-blue-100",
     IconComponent: Info,
   },
   success: {

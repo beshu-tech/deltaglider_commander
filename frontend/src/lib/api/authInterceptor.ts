@@ -65,7 +65,7 @@ export async function apiWithAuth<T>(path: string, options: ApiRequestOptions = 
       toast.push({
         title: "Session restored",
         description: "Your session has been automatically renewed",
-        level: "info",
+        level: "success",
       });
 
       return result;
