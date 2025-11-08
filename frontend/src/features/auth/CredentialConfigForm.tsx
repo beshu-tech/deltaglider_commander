@@ -17,7 +17,11 @@ export interface CredentialConfigFormProps {
   editProfileId?: string;
 }
 
-export function CredentialConfigForm({ onSuccess, onCancel, editProfileId }: CredentialConfigFormProps) {
+export function CredentialConfigForm({
+  onSuccess,
+  onCancel,
+  editProfileId,
+}: CredentialConfigFormProps) {
   const addProfile = useAuthStore((state) => state.addProfile);
   const updateProfile = useAuthStore((state) => state.updateProfile);
   const profiles = useAuthStore((state) => state.profiles);
