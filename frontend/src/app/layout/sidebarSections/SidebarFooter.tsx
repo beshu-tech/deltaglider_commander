@@ -33,7 +33,7 @@ export function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
         </div>
       </Link>
 
-      <div className="space-y-1 text-[13px] text-ui-text-muted dark:text-ui-text-dark">
+      <div className="mt-6 space-y-1 text-[13px] text-ui-text-muted dark:text-ui-text-dark">
         <Link
           to="/settings"
           className="flex items-center gap-3 rounded-lg py-2 transition-all duration-200 hover:bg-ui-surface-hover hover:text-ui-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 dark:hover:bg-ui-surface-active-dark/50 dark:hover:text-white"

@@ -16,7 +16,7 @@ export function CompressionBadge({
 }: CompressionBadgeProps) {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-start">
         <Loader2 className="h-4 w-4 animate-spin text-ui-text-subtle" />
       </div>
     );

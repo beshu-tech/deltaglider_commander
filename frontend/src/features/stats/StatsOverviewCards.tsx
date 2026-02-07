@@ -251,7 +251,7 @@ function StatCard({
           <div className="flex items-center justify-between gap-3">
             <span
               className={joinClasses(
-                "text-left text-[1.45rem] font-semibold uppercase tracking-[0.18em] text-ui-text/90 dark:text-ui-text-dark",
+                "text-left text-[1.1rem] font-normal tracking-[0.04em] text-ui-text-muted dark:text-ui-text-muted-dark",
                 styles.textShadow,
               )}
             >

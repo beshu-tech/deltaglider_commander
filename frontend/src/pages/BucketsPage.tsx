@@ -15,7 +15,7 @@ export function BucketsPage() {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="h-1 w-12 rounded-full bg-ui-border-hover dark:bg-ui-border-hover-dark sm:w-16"></div>
-                <span className="text-xs font-semibold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-muted-dark sm:text-sm">
+                <span className="text-[11px] font-medium tracking-[0.25em] uppercase text-ui-text-muted/60 dark:text-ui-text-muted-dark/60">
                   Differential Object Storage Platform
                 </span>
               </div>
