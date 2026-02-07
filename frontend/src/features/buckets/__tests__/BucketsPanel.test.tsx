@@ -149,9 +149,6 @@ describe("BucketsPanel", () => {
     const deleteButton = within(row).getByRole("button", { name: /cannot delete/i });
 
     // Button should indicate it cannot be deleted
-    expect(deleteButton).toHaveAttribute(
-      "aria-label",
-      expect.stringContaining("not empty"),
-    );
+    expect(deleteButton).toHaveAttribute("aria-label", expect.stringContaining("not empty"));
   });
 });
