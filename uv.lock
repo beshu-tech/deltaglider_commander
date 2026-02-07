@@ -470,7 +470,7 @@ wheels = [
 
 [[package]]
 name = "deltaglider"
-version = "6.0.2"
+version = "6.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -479,14 +479,14 @@ dependencies = [
     { name = "python-dateutil" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/63/43/cb0084ca96fd6761d092c7dd5581748a91fb66f608ff674c2a49565b714e/deltaglider-6.0.2.tar.gz", hash = "sha256:b86f9c14ee787a704627cb4a78ceed73ed0c600899702bca72f8c39bf2057978", size = 502035 }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/67/8e66c0aa3a61cb685d3932e9655f9d9172855c5f4ecd804b3adc509814e8/deltaglider-6.1.0.tar.gz", hash = "sha256:9389792ed3e5b4315e4477aa23433fe60ae71ec5133da3507ceda0ec849e8ea6", size = 4200908 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e7/6d/2844182c6de4e90609b54ba2e7475cb32fbb261e3fbd5883fcece75c1fa3/deltaglider-6.0.2-py3-none-any.whl", hash = "sha256:89e9b6c7295fc95efa08f5a7d95fe86cfde09af27eeede3e378a3ccf82149e85", size = 104356 },
+    { url = "https://files.pythonhosted.org/packages/b3/1f/94d0bc0a404cbb62c2990b8f45b845daba54fb22ab191816492daed01322/deltaglider-6.1.0-py3-none-any.whl", hash = "sha256:27d9b907eedc7ce15e99e4a189cf6e65e42dd750e8a32691aae491ddacae15bc", size = 107126 },
 ]
 
 [[package]]
 name = "dgcommander"
-version = "1.2.0"
+version = "1.2.6"
 source = { editable = "." }
 dependencies = [
     { name = "apscheduler" },
@@ -522,7 +522,7 @@ requires-dist = [
     { name = "apscheduler", specifier = ">=3.10.0,<4" },
     { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.5" },
     { name = "cachetools", specifier = ">=5.3" },
-    { name = "deltaglider", specifier = "==6.0.2" },
+    { name = "deltaglider", specifier = "==6.1.0" },
     { name = "flask", specifier = ">=3.0,<4" },
     { name = "flask-cors", specifier = ">=4.0" },
     { name = "freezegun", marker = "extra == 'dev'", specifier = ">=1.5" },
@@ -1496,6 +1496,8 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/6b/fa/3234f913fe9a6525a7b97c6dad1f51e72b917e6872e051a5e2ffd8b16fbb/ruamel.yaml.clib-0.2.14-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:70eda7703b8126f5e52fcf276e6c0f40b0d314674f896fc58c47b0aef2b9ae83", size = 137970 },
     { url = "https://files.pythonhosted.org/packages/ef/ec/4edbf17ac2c87fa0845dd366ef8d5852b96eb58fcd65fc1ecf5fe27b4641/ruamel.yaml.clib-0.2.14-cp314-cp314-musllinux_1_2_i686.whl", hash = "sha256:a0cb71ccc6ef9ce36eecb6272c81afdc2f565950cdcec33ae8e6cd8f7fc86f27", size = 739639 },
     { url = "https://files.pythonhosted.org/packages/15/18/b0e1fafe59051de9e79cdd431863b03593ecfa8341c110affad7c8121efc/ruamel.yaml.clib-0.2.14-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:e7cb9ad1d525d40f7d87b6df7c0ff916a66bc52cb61b66ac1b2a16d0c1b07640", size = 764456 },
+    { url = "https://files.pythonhosted.org/packages/e7/cd/150fdb96b8fab27fe08d8a59fe67554568727981806e6bc2677a16081ec7/ruamel_yaml_clib-0.2.14-cp314-cp314-win32.whl", hash = "sha256:9b4104bf43ca0cd4e6f738cb86326a3b2f6eef00f417bd1e7efb7bdffe74c539", size = 102394 },
+    { url = "https://files.pythonhosted.org/packages/bd/e6/a3fa40084558c7e1dc9546385f22a93949c890a8b2e445b2ba43935f51da/ruamel_yaml_clib-0.2.14-cp314-cp314-win_amd64.whl", hash = "sha256:13997d7d354a9890ea1ec5937a219817464e5cc344805b37671562a401ca3008", size = 122673 },
 ]
 
 [[package]]
