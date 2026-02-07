@@ -96,11 +96,11 @@ class ListObjectsCache:
     cache sharing across sessions/browsers with the same credentials (efficient!).
     """
 
-    def __init__(self, ttl_seconds: int = 30, max_size: int = 100):
+    def __init__(self, ttl_seconds: int = 5, max_size: int = 100):
         """Initialize cache with TTL and maximum size.
 
         Args:
-            ttl_seconds: Time-to-live for cached entries in seconds (default: 30)
+            ttl_seconds: Time-to-live for cached entries in seconds (default: 5)
             max_size: Maximum number of cached entries (LRU eviction, default: 100)
         """
         self._cache: TTLCache = TTLCache(maxsize=max_size, ttl=ttl_seconds)

@@ -45,7 +45,7 @@ class DGCommanderConfig:
     test_mode: bool = False
     s3: S3Config = field(default_factory=S3Config)
     # Object listing cache configuration
-    list_cache_ttl: int = 30  # seconds
+    list_cache_ttl: int = 5  # seconds – short TTL to absorb bursts, not mask staleness
     list_cache_max_size: int = 100  # max cached folders
 
 
@@ -65,7 +65,7 @@ def load_config(env: dict[str, str] | None = None) -> DGCommanderConfig:
     session_max = int(env.get("DGCOMM_SESSION_MAX_SIZE", "20"))
     session_ttl = int(env.get("DGCOMM_SESSION_IDLE_TTL", "1800"))
     test_mode = _coerce_bool(env.get("DGCOMM_TEST_MODE") or env.get("TEST_MODE"), default=False)
-    list_cache_ttl = int(env.get("DGCOMM_LIST_CACHE_TTL", "30"))
+    list_cache_ttl = int(env.get("DGCOMM_LIST_CACHE_TTL", "5"))
     list_cache_max_size = int(env.get("DGCOMM_LIST_CACHE_MAX_SIZE", "100"))
     s3 = S3Config(
         endpoint_url=env.get("DGCOMM_S3_ENDPOINT"),
