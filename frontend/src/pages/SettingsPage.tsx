@@ -55,8 +55,8 @@ export function SettingsPage() {
                 Client-side cache TTL
               </label>
               <p className="text-xs text-ui-text-muted dark:text-ui-text-muted-dark mt-0.5">
-                How long object listings stay fresh before re-fetching from the server.
-                The server also caches listings for 5 seconds.
+                How long object listings stay fresh before re-fetching from the server. The server
+                also caches listings for 5 seconds.
               </p>
             </div>
             <Select

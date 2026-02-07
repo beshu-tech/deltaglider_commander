@@ -173,9 +173,7 @@ def test_session_files_created(store, credentials, mock_sdk, temp_session_dir):
     assert index_file.exists()
 
 
-def test_session_persistence_across_store_instances(
-    credentials, mock_sdk, mock_sdk_factory, temp_session_dir
-):
+def test_session_persistence_across_store_instances(credentials, mock_sdk, mock_sdk_factory, temp_session_dir):
     """Test that sessions persist across different store instances."""
     # Create session with first store instance
     store1 = FileSystemSessionStore(
