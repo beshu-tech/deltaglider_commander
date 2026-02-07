@@ -1,25 +1,15 @@
 """Session store for managing user sessions with AWS credentials and SDK clients."""
 
-import hashlib
 import secrets
 import threading
 import time
-from dataclasses import dataclass
 
 from dgcommander.sdk.protocol import DeltaGliderSDK
 
-
-@dataclass
-class SessionData:
-    """Session data containing credentials and cached SDK client."""
-
-    credentials: dict
-    sdk_client: DeltaGliderSDK
-    last_accessed: float
-    created_at: float
+from .session_base import BaseSessionStore, SessionData
 
 
-class SessionStore:
+class SessionStore(BaseSessionStore):
     """Thread-safe in-memory session store with LRU eviction and TTL."""
 
     def __init__(self, max_size: int = 20, ttl_seconds: int = 1800):
@@ -30,21 +20,10 @@ class SessionStore:
             max_size: Maximum number of concurrent sessions (default: 20)
             ttl_seconds: Idle timeout in seconds (default: 1800 = 30 minutes)
         """
+        super().__init__(max_size=max_size, ttl_seconds=ttl_seconds)
         self._sessions: dict[str, SessionData] = {}
         self._access_order: list[str] = []  # For LRU tracking
         self._lock = threading.RLock()
-        self._max_size = max_size
-        self._ttl = ttl_seconds
-
-    def _hash_credentials(self, credentials: dict) -> str:
-        """Generate hash of credentials for deduplication."""
-        # Sort keys for consistent hashing
-        cred_str = f"{credentials.get('access_key_id')}:{credentials.get('secret_access_key')}:{credentials.get('region')}:{credentials.get('endpoint')}"
-        return hashlib.sha256(cred_str.encode()).hexdigest()
-
-    def _is_expired(self, session_data: SessionData) -> bool:
-        """Check if session has exceeded idle TTL."""
-        return (time.time() - session_data.last_accessed) > self._ttl
 
     def _update_access_order(self, session_id: str) -> None:
         """Update LRU access order (must be called with lock held)."""
@@ -102,7 +81,7 @@ class SessionStore:
             if existing_id:
                 # Reuse existing session, update access time
                 session_data = self._sessions[existing_id]
-                session_data.last_accessed = time.time()
+                self._touch(session_data)
                 self._update_access_order(existing_id)
                 return existing_id, session_data
 
@@ -150,7 +129,7 @@ class SessionStore:
                 return None
 
             # Update access time and LRU order
-            session_data.last_accessed = time.time()
+            self._touch(session_data)
             self._update_access_order(session_id)
 
             return session_data

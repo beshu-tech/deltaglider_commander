@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 import { escapeStack } from "../../features/objects/logic/escapeStack";
@@ -36,6 +37,21 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
+  const portalRef = useRef<HTMLDivElement | null>(null);
+
+  if (typeof document !== "undefined" && !portalRef.current) {
+    portalRef.current = document.createElement("div");
+  }
+
+  useEffect(() => {
+    const portalNode = portalRef.current;
+    if (!portalNode || typeof document === "undefined") return;
+
+    document.body.appendChild(portalNode);
+    return () => {
+      document.body.removeChild(portalNode);
+    };
+  }, []);
 
   // Register with Escape stack
   useEffect(() => {
@@ -79,7 +95,9 @@ export function ConfirmModal({
     info: "bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 dark:bg-primary-700 dark:hover:bg-primary-800",
   };
 
-  return (
+  if (!portalRef.current) return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       role="dialog"
@@ -135,6 +153,7 @@ export function ConfirmModal({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    portalRef.current,
   );
 }

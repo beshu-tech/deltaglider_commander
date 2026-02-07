@@ -83,6 +83,13 @@ pnpm test         # Run tests with Vitest
 pnpm format       # Check Prettier formatting
 ```
 
+### Running Frontend Tests
+
+**IMPORTANT**: Never run `pnpm test --run` directly — pnpm interprets `--run` as its own flag and it won't be passed to vitest, causing vitest to start in watch mode and hang forever. Instead:
+
+- Use `make ci-frontend` or `make ci` (preferred — runs lint, typecheck, tests, and build)
+- Or run vitest directly: `cd frontend && ./node_modules/.bin/vitest run`
+
 ## Architecture
 
 ### Backend Structure

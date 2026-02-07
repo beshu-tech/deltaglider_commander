@@ -8,6 +8,7 @@ import {
   sortDirectories,
   calculatePaginationInfo,
   DirectoryCache,
+  IndexedObjectItem,
 } from "./objectsCache";
 import { useDirectoryCounts, DirectoryCounts } from "./useDirectoryCounts";
 import { useSettingsStore, selectCacheTtlMs } from "../../stores/settingsStore";
@@ -68,6 +69,33 @@ export interface UseObjectsCacheResult {
 }
 
 /**
+ * Single-pass filter over IndexedObjectItems.
+ * Uses pre-computed _keyLower to avoid repeated toLowerCase() calls.
+ */
+function filterObjects(
+  objects: IndexedObjectItem[],
+  compressed: "true" | "false" | "any" | undefined,
+  search: string | undefined,
+): IndexedObjectItem[] {
+  const wantCompressed = compressed === "true" ? true : compressed === "false" ? false : null;
+  const searchLower = search?.trim() ? search.trim().toLowerCase() : null;
+
+  // Fast path: no filtering needed at all
+  if (wantCompressed === null && searchLower === null) {
+    return objects;
+  }
+
+  const result: IndexedObjectItem[] = [];
+  for (let i = 0; i < objects.length; i++) {
+    const obj = objects[i];
+    if (wantCompressed !== null && obj.compressed !== wantCompressed) continue;
+    if (searchLower !== null && !obj._keyLower.includes(searchLower)) continue;
+    result.push(obj);
+  }
+  return result;
+}
+
+/**
  * Hook that fetches and caches all objects in a directory for client-side sorting and pagination.
  *
  * This hook replaces useObjects for better performance when sorting. It:
@@ -75,9 +103,6 @@ export interface UseObjectsCacheResult {
  * 2. Caches the complete dataset in TanStack Query
  * 3. Performs sorting and pagination client-side (instant, no network requests)
  * 4. Automatically invalidates cache when needed
- *
- * @param options - Hook options including bucket, prefix, sort, pagination
- * @returns Paginated and sorted objects with query state
  */
 export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCacheResult {
   const { bucket, prefix = "", search, compressed, sort, order, pageIndex, pageSize } = options;
@@ -134,26 +159,15 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
   // so externally-deleted files disappear as soon as Stage 1 completes
   const cache = isLoadingFull && previewData ? previewData : query.data || previewData;
 
-  // Filter objects by compression type (client-side)
-  const compressionFilteredObjects = useMemo(() => {
+  // Single-pass filter + sort for objects (uses pre-computed _keyLower / _modifiedMs)
+  const sortedObjects = useMemo(() => {
     if (!cache) return [];
-    if (!compressed || compressed === "any") return cache.objects;
-
-    if (compressed === "true") {
-      return cache.objects.filter((obj) => obj.compressed);
-    } else if (compressed === "false") {
-      return cache.objects.filter((obj) => !obj.compressed);
-    }
-    return cache.objects;
-  }, [cache, compressed]);
-
-  // Filter objects by search term (client-side)
-  const filteredObjects = useMemo(() => {
-    if (!search || search.trim() === "") return compressionFilteredObjects;
-
-    const searchLower = search.toLowerCase();
-    return compressionFilteredObjects.filter((obj) => obj.key.toLowerCase().includes(searchLower));
-  }, [compressionFilteredObjects, search]);
+    const filtered = filterObjects(cache.objects, compressed, search);
+    // sortObjects sorts in-place — filterObjects already returns a new array
+    // (or the original if no filtering needed, in which case we must copy)
+    const toSort = filtered === cache.objects ? [...filtered] : filtered;
+    return sortObjects(toSort, sort, order);
+  }, [cache, compressed, search, sort, order]);
 
   // Filter directories by search term (client-side)
   const filteredDirectories = useMemo(() => {
@@ -163,11 +177,6 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     const searchLower = search.toLowerCase();
     return cache.directories.filter((dir) => dir.toLowerCase().includes(searchLower));
   }, [cache, search]);
-
-  // Sort objects client-side
-  const sortedObjects = useMemo(() => {
-    return sortObjects(filteredObjects, sort, order);
-  }, [filteredObjects, sort, order]);
 
   // Sort directories by name (directories don't have size/modified, so only name sorting applies)
   const sortedDirectories = useMemo(() => {
@@ -211,7 +220,7 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     }
 
     // If page extends into objects, include objects
-    let objs: ObjectItem[] = [];
+    let objs: IndexedObjectItem[] = [];
     if (endIndex > dirCount) {
       const objStart = Math.max(0, startIndex - dirCount);
       const objEnd = endIndex - dirCount;
@@ -242,17 +251,13 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
       ? directoryPrefix
       : `${directoryPrefix}/`;
 
-    // Count objects that start with this prefix
-    // but don't contain another / after the prefix (direct files only)
-    return cache.objects.filter((obj) => {
-      if (!obj.key.startsWith(normalizedPrefix)) return false;
-
-      // Get the part after the prefix
-      const remainder = obj.key.substring(normalizedPrefix.length);
-
-      // If there's no /, it's a direct file in this directory
-      return !remainder.includes("/");
-    }).length;
+    let count = 0;
+    for (let i = 0; i < cache.objects.length; i++) {
+      const key = cache.objects[i].key;
+      if (!key.startsWith(normalizedPrefix)) continue;
+      if (key.indexOf("/", normalizedPrefix.length) === -1) count++;
+    }
+    return count;
   };
 
   return {

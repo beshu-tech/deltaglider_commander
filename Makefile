@@ -57,7 +57,7 @@ backend-test:
 
 frontend-test:
 	@echo "🧪 Running frontend tests..."
-	cd frontend && pnpm test --run
+	cd frontend && ./node_modules/.bin/vitest run
 
 # Build frontend and copy to static folder
 build-static:
@@ -121,7 +121,7 @@ ci-frontend:
 	@echo "✅ Frontend type checking passed"
 	@echo ""
 	@echo "Step 3/4: Running frontend tests..."
-	@cd frontend && pnpm test --run
+	@cd frontend && ./node_modules/.bin/vitest run
 	@echo "✅ Frontend tests passed"
 	@echo ""
 	@echo "Step 4/4: Building frontend..."

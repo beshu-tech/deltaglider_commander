@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
 import pickle
 import secrets
@@ -15,15 +14,7 @@ from pathlib import Path
 
 from dgcommander.sdk.protocol import DeltaGliderSDK
 
-
-@dataclass
-class SessionData:
-    """Session data containing credentials and cached SDK client."""
-
-    credentials: dict
-    sdk_client: DeltaGliderSDK
-    last_accessed: float
-    created_at: float
+from .session_base import BaseSessionStore, SessionData
 
 
 @dataclass
@@ -35,7 +26,7 @@ class FileSessionData:
     created_at: float
 
 
-class FileSystemSessionStore:
+class FileSystemSessionStore(BaseSessionStore):
     """Thread-safe filesystem-based session store with LRU eviction and TTL.
 
     Designed for multi-worker environments where sessions must be shared
@@ -60,6 +51,8 @@ class FileSystemSessionStore:
             sdk_factory: Callable to reconstruct SDK from credentials dict.
                          Defaults to ``create_sdk_from_credentials``.
         """
+        super().__init__(max_size=max_size, ttl_seconds=ttl_seconds)
+
         if session_dir is None:
             session_dir = str(Path(tempfile.gettempdir()) / "dgcommander-sessions")
 
@@ -69,9 +62,6 @@ class FileSystemSessionStore:
         self._lock_file = self._session_dir / ".lock"
         self._index_file = self._session_dir / ".index"
         self._local_lock = threading.RLock()
-
-        self._max_size = max_size
-        self._ttl = ttl_seconds
 
         if sdk_factory is None:
             from dgcommander.auth.credentials import create_sdk_from_credentials
@@ -125,15 +115,6 @@ class FileSystemSessionStore:
     def _session_file(self, session_id: str) -> Path:
         """Get path to session file."""
         return self._session_dir / f"{session_id}.session"
-
-    def _hash_credentials(self, credentials: dict) -> str:
-        """Generate hash of credentials for deduplication."""
-        cred_str = f"{credentials.get('access_key_id')}:{credentials.get('secret_access_key')}:{credentials.get('region')}:{credentials.get('endpoint')}"
-        return hashlib.sha256(cred_str.encode()).hexdigest()
-
-    def _is_expired(self, session_data: SessionData) -> bool:
-        """Check if session has exceeded idle TTL."""
-        return (time.time() - session_data.last_accessed) > self._ttl
 
     def _load_session(self, session_id: str) -> SessionData | None:
         """Load session data from filesystem and reconstruct SDK client."""
@@ -273,7 +254,7 @@ class FileSystemSessionStore:
                     # Reuse existing session, update access time
                     session_data = self._load_session(existing_id)
                     if session_data:
-                        session_data.last_accessed = time.time()
+                        self._touch(session_data)
                         self._save_session(existing_id, session_data)
                         access_order = self._update_access_order(existing_id, access_order)
                         self._write_index(access_order)
@@ -330,7 +311,7 @@ class FileSystemSessionStore:
                     return None
 
                 # Update access time and LRU order
-                session_data.last_accessed = time.time()
+                self._touch(session_data)
                 self._save_session(session_id, session_data)
 
                 access_order = self._read_index()

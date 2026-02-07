@@ -137,10 +137,10 @@ describe("ConfirmModal", () => {
     it("should call onCancel when backdrop clicked", async () => {
       const user = userEvent.setup();
       const onCancel = vi.fn();
-      const { container } = render(<ConfirmModal {...defaultProps} onCancel={onCancel} />);
+      render(<ConfirmModal {...defaultProps} onCancel={onCancel} />);
 
-      // Click backdrop (first child of container)
-      const backdrop = container.firstChild?.firstChild as HTMLElement;
+      // The modal renders via createPortal; find the backdrop by its aria-hidden attribute
+      const backdrop = document.querySelector('[aria-hidden="true"]') as HTMLElement;
       await user.click(backdrop);
 
       expect(onCancel).toHaveBeenCalledTimes(1);

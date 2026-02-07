@@ -4,11 +4,42 @@ import { ObjectItem, ObjectSortKey } from "./types";
 // Set to true to enable debug logging for cache operations
 const DEBUG_CACHE = false;
 
+// Hard cap: stop fetching once we have this many objects in the browser.
+// Matches the backend LISTING_MAX_OBJECTS so both sides agree on the ceiling.
+const MAX_CLIENT_OBJECTS = 15_000;
+
+/**
+ * ObjectItem with pre-computed fields for fast search and sort.
+ * Extends ObjectItem so it's assignable everywhere ObjectItem is expected.
+ */
+export interface IndexedObjectItem extends ObjectItem {
+  /** Pre-computed key.toLowerCase() — avoids repeated allocation during search */
+  _keyLower: string;
+  /** Pre-parsed Date.parse(modified) — avoids repeated parsing during date sort */
+  _modifiedMs: number;
+}
+
+function indexObject(obj: ObjectItem): IndexedObjectItem {
+  return {
+    ...obj,
+    _keyLower: obj.key.toLowerCase(),
+    _modifiedMs: Date.parse(obj.modified),
+  };
+}
+
+function indexObjects(objects: ObjectItem[]): IndexedObjectItem[] {
+  const result = new Array<IndexedObjectItem>(objects.length);
+  for (let i = 0; i < objects.length; i++) {
+    result[i] = indexObject(objects[i]);
+  }
+  return result;
+}
+
 /**
  * Complete directory cache with all objects and subdirectories
  */
 export interface DirectoryCache {
-  objects: ObjectItem[];
+  objects: IndexedObjectItem[];
   directories: string[];
   totalObjects: number;
   totalDirectories: number;
@@ -64,11 +95,12 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
       );
     }
 
-    // Provide quick preview to UI immediately
+    // Provide quick preview to UI immediately (indexed for fast filter/sort)
+    const indexedPreview = indexObjects(previewResponse.objects);
     onPreviewReady({
-      objects: previewResponse.objects,
+      objects: indexedPreview,
       directories: previewResponse.common_prefixes,
-      totalObjects: previewResponse.objects.length,
+      totalObjects: indexedPreview.length,
       totalDirectories: previewResponse.common_prefixes.length,
       limited: previewResponse.limited ?? false,
     });
@@ -77,7 +109,7 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
   // Stage 2: Full data fetch (all items, with metadata)
   if (DEBUG_CACHE)
     console.log("[objectsCache] Stage 2: Fetching full data (all items, with metadata)");
-  const allObjects: ObjectItem[] = [];
+  const allObjects: IndexedObjectItem[] = [];
   const allDirectories = new Set<string>();
   let cursor: string | undefined;
   let pageCount = 0;
@@ -98,7 +130,9 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
       bypassCache: !cursor ? bypassCache : undefined, // Only bypass on first page
     });
 
-    allObjects.push(...response.objects);
+    // Index each page as it arrives — pre-compute search/sort fields once
+    const indexed = indexObjects(response.objects);
+    allObjects.push(...indexed);
     response.common_prefixes.forEach((dir) => allDirectories.add(dir));
 
     // Check if any response indicates the listing was limited
@@ -106,12 +140,22 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
       isLimited = true;
     }
 
+    // Hard cap: stop fetching if we've reached the client-side limit
+    if (allObjects.length >= MAX_CLIENT_OBJECTS) {
+      isLimited = true;
+      cursor = undefined;
+      if (DEBUG_CACHE)
+        console.log(
+          `[objectsCache] Reached client cap (${MAX_CLIENT_OBJECTS}), stopping fetch`,
+        );
+    } else {
+      cursor = response.cursor ?? undefined;
+    }
+
     // Report progress
     if (onProgress) {
       onProgress(allObjects.length, undefined);
     }
-
-    cursor = response.cursor ?? undefined;
     if (DEBUG_CACHE) {
       if (cursor) {
         console.log(
@@ -135,51 +179,42 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
 }
 
 /**
- * Sorts objects array by the specified key and order.
- * This is used for client-side sorting without network requests.
+ * Sorts an already-filtered array of indexed objects **in-place** and returns it.
+ * Callers must pass a copy if the original must remain untouched.
  *
- * @param objects - Array of objects to sort
- * @param sortKey - Key to sort by (name, size, modified)
- * @param order - Sort order (asc or desc)
- * @returns Sorted array (new array, does not mutate input)
+ * Uses pre-computed `_keyLower` / `_modifiedMs` and avoids `localeCompare`
+ * for ~10x faster name comparisons on ASCII-dominated S3 keys.
  */
 export function sortObjects(
-  objects: ObjectItem[],
+  objects: IndexedObjectItem[],
   sortKey: ObjectSortKey,
   order: "asc" | "desc",
-): ObjectItem[] {
-  const sorted = [...objects].sort((a, b) => {
-    let comparison = 0;
+): IndexedObjectItem[] {
+  const dir = order === "asc" ? 1 : -1;
 
-    switch (sortKey) {
-      case "name":
-        comparison = a.key.localeCompare(b.key);
-        break;
-      case "size":
-        comparison = a.original_bytes - b.original_bytes;
-        break;
-      case "modified":
-        comparison = new Date(a.modified).getTime() - new Date(b.modified).getTime();
-        break;
-    }
+  switch (sortKey) {
+    case "name":
+      objects.sort((a, b) => (a._keyLower < b._keyLower ? -dir : a._keyLower > b._keyLower ? dir : 0));
+      break;
+    case "size":
+      objects.sort((a, b) => (a.original_bytes - b.original_bytes) * dir);
+      break;
+    case "modified":
+      objects.sort((a, b) => (a._modifiedMs - b._modifiedMs) * dir);
+      break;
+  }
 
-    return order === "asc" ? comparison : -comparison;
-  });
-
-  return sorted;
+  return objects;
 }
 
 /**
- * Sorts directories array by name.
- * Directories are sorted by name only (size/modified don't apply to directories).
- *
- * @param directories - Array of directory prefixes to sort
- * @param order - Sort order (asc or desc)
- * @returns Sorted array (new array, does not mutate input)
+ * Sorts a copy of directories array by name using fast ordinal comparison.
  */
 export function sortDirectories(directories: string[], order: "asc" | "desc" = "asc"): string[] {
-  const sorted = [...directories].sort((a, b) => a.localeCompare(b));
-  return order === "desc" ? sorted.reverse() : sorted;
+  const sorted = [...directories];
+  const dir = order === "asc" ? 1 : -1;
+  sorted.sort((a, b) => (a < b ? -dir : a > b ? dir : 0));
+  return sorted;
 }
 
 /**

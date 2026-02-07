@@ -40,9 +40,31 @@ def create_app(
         static_folder=None,  # Disable automatic static file handling
     )
 
-    # Configure logging
+    _configure_logging(app)
+    _log_and_sanitize_environment()
+
+    cfg = config or load_config()
+    app.config["DGCOMM_CONFIG"] = cfg
+
+    services, sdk = _resolve_services(cfg, sdk, services)
+    app.extensions["dgcommander"] = services
+
+    session_store = _init_session_store(cfg)
+    app.extensions["session_store"] = session_store
+
+    _maybe_start_purge_scheduler(app, cfg, sdk)
+    register_error_handlers(app)
+    _configure_cors(app, cfg)
+    _register_request_hooks(app, cfg)
+    _register_blueprints(app)
+    _register_static_routes(app)
+    _register_teardown(app)
+
+    return app
+
+
+def _configure_logging(app: Flask) -> None:
     # Use DGCOMM_LOG_LEVEL env var (default: INFO) to control verbosity
-    # Set to DEBUG for development, WARNING or ERROR for production
     log_level = os.environ.get("DGCOMM_LOG_LEVEL", "INFO").upper()
     logging.basicConfig(
         level=getattr(logging, log_level, logging.INFO), format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -55,8 +77,11 @@ def create_app(
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("s3transfer").setLevel(logging.WARNING)
 
-    # IMPORTANT: Unset AWS_* environment variables to prevent boto3/deltaglider from using them
-    # The app should ONLY use credentials provided via UI (passed as DGCOMM_S3_* or per-session)
+
+def _log_and_sanitize_environment() -> None:
+    # IMPORTANT: Unset AWS_* environment variables to prevent boto3/deltaglider
+    # from using them.  The app should ONLY use credentials provided via the UI
+    # (passed as DGCOMM_S3_* or per-session).
     aws_vars_to_clear = [
         "AWS_ACCESS_KEY_ID",
         "AWS_SECRET_ACCESS_KEY",
@@ -70,18 +95,14 @@ def create_app(
     print("=" * 80)
     print("DGCOMMANDER STARTUP - ENVIRONMENT CLEANUP")
     print("=" * 80)
-
-    # Show and clear AWS_* variables
     for key in aws_vars_to_clear:
         if key in os.environ:
             print(f"  WARNING: Removing {key} from environment (value: {os.environ[key][:10]}...)")
             del os.environ[key]
 
-    # Print DGCOMM_* variables (these are OK to use)
     print("\nDGCOMM Configuration:")
     for key, value in sorted(os.environ.items()):
         if key.startswith("DGCOMM_") or key in ["FLASK_ENV", "FLASK_DEBUG", "PORT"]:
-            # Mask sensitive values
             if "SECRET" in key or "PASSWORD" in key or "KEY" in key.upper():
                 display_value = f"{value[:8]}..." if value and len(value) > 8 else "***"
             else:
@@ -89,113 +110,102 @@ def create_app(
             print(f"  {key}={display_value}")
     print("=" * 80)
 
-    cfg = config or load_config()
-    app.config["DGCOMM_CONFIG"] = cfg
 
+def _resolve_services(
+    cfg: DGCommanderConfig,
+    sdk: DeltaGliderSDK | None,
+    services: ServiceContainer | None,
+) -> tuple[ServiceContainer, DeltaGliderSDK | None]:
     if services is None:
-        if sdk is None:
-            # Only initialize container-level SDK in TEST_MODE
-            # In production, SDK is created per-session from user credentials
-            if cfg.test_mode:
-                sdk = build_default_sdk(cfg)
+        # Only initialize a container-level SDK in TEST_MODE.
+        # In production, SDK is created per-session from user credentials.
+        if sdk is None and cfg.test_mode:
+            sdk = build_default_sdk(cfg)
         services = build_services(cfg, sdk)
     else:
-        # When services are provided directly (e.g., in tests), extract SDK if available
         if sdk is None and hasattr(services, "catalog") and hasattr(services.catalog, "sdk"):
             sdk = services.catalog.sdk
+    return services, sdk
 
-    app.extensions["dgcommander"] = services
 
-    # Initialize session store for client-side credentials
-    # Use filesystem-based store for multi-worker deployments, in-memory for tests
+def _init_session_store(cfg: DGCommanderConfig):
+    # Use in-memory store for tests (faster, simpler with mock SDKs).
+    # Use filesystem-based store in production for multi-worker Gunicorn.
     if cfg.test_mode:
-        # Test mode: use in-memory store (faster, simpler for tests with mock SDKs)
         from .auth.session_store import SessionStore
 
-        session_store: SessionStore | FileSystemSessionStore = SessionStore(
-            max_size=cfg.session_max_size,
-            ttl_seconds=cfg.session_idle_ttl,
-        )
-    else:
-        # Production mode: use filesystem-based store for multi-worker support
-        session_dir = os.environ.get("DGCOMM_SESSION_DIR")
-        session_store = FileSystemSessionStore(
-            max_size=cfg.session_max_size,
-            ttl_seconds=cfg.session_idle_ttl,
-            session_dir=session_dir,
-        )
-    app.extensions["session_store"] = session_store
+        return SessionStore(max_size=cfg.session_max_size, ttl_seconds=cfg.session_idle_ttl)
 
-    # Initialize purge scheduler for cleaning up temporary files
-    # Try to use housekeeping SDK first, fall back to main SDK if available
-    if not cfg.test_mode:
-        housekeeping_sdk = build_housekeeping_sdk()
-        purge_sdk = housekeeping_sdk if housekeeping_sdk else sdk
+    session_dir = os.environ.get("DGCOMM_SESSION_DIR")
+    return FileSystemSessionStore(
+        max_size=cfg.session_max_size,
+        ttl_seconds=cfg.session_idle_ttl,
+        session_dir=session_dir,
+    )
 
-        if purge_sdk is not None:
-            purge_interval_hours = int(os.environ.get("DGCOMM_PURGE_INTERVAL_HOURS", "1"))  # Default 1 hour
-            purge_scheduler = PurgeScheduler(sdk=purge_sdk, interval_hours=purge_interval_hours)
-            app.extensions["purge_scheduler"] = purge_scheduler
 
-            # Start the purge scheduler when the app starts
-            # Filesystem locking ensures only one process runs the scheduler
-            if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
-                if purge_scheduler.start():
-                    sdk_type = "housekeeping" if housekeeping_sdk else "default"
-                    app.logger.info(
-                        f"Started purge scheduler with {sdk_type} SDK, interval {purge_interval_hours} hour(s)"
-                    )
-                else:
-                    app.logger.info("Purge scheduler not started (another process already has the lock)")
-        else:
-            app.logger.info("Purge scheduler disabled - no SDK configured (set DGCOMM_HOUSEKEEPING_* env vars)")
-    else:
+def _maybe_start_purge_scheduler(app: Flask, cfg: DGCommanderConfig, sdk: DeltaGliderSDK | None) -> None:
+    if cfg.test_mode:
         app.logger.info("Purge scheduler disabled in test mode")
+        return
 
-    register_error_handlers(app)
+    housekeeping_sdk = build_housekeeping_sdk()
+    purge_sdk = housekeeping_sdk if housekeeping_sdk else sdk
 
-    # CORS configuration
-    # In development mode (FLASK_DEBUG=1 or test_mode), allow any localhost/127.0.0.1 origin
-    # In production, use specific origins from CORS_ORIGINS env var
+    if purge_sdk is None:
+        app.logger.info("Purge scheduler disabled - no SDK configured (set DGCOMM_HOUSEKEEPING_* env vars)")
+        return
+
+    purge_interval_hours = int(os.environ.get("DGCOMM_PURGE_INTERVAL_HOURS", "1"))
+    purge_scheduler = PurgeScheduler(sdk=purge_sdk, interval_hours=purge_interval_hours)
+    app.extensions["purge_scheduler"] = purge_scheduler
+
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
+        if purge_scheduler.start():
+            sdk_type = "housekeeping" if housekeeping_sdk else "default"
+            app.logger.info(f"Started purge scheduler with {sdk_type} SDK, interval {purge_interval_hours} hour(s)")
+        else:
+            app.logger.info("Purge scheduler not started (another process already has the lock)")
+
+
+def _configure_cors(app: Flask, cfg: DGCommanderConfig) -> None:
+    # Development: allow any localhost/127.0.0.1 origin with any port.
+    # Production: use specific origins from CORS_ORIGINS env var.
     is_dev_mode = app.debug or cfg.test_mode
-
     if is_dev_mode:
-        # Development: Allow any localhost/127.0.0.1 origin with any port
-        # Regex pattern matches: http://localhost:*, http://127.0.0.1:*, https://localhost:*, https://127.0.0.1:*
         CORS(
             app,
             resources={r"/*": {"origins": r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"}},
             allow_headers=["Content-Type", "Authorization"],
             methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-            supports_credentials=True,  # Enable credentials for session cookies
+            supports_credentials=True,
         )
         app.logger.info("CORS: Development mode - allowing all localhost/127.0.0.1 origins")
-    else:
-        # Production: Specific origins with credentials support
-        cors_origins = os.environ.get(
-            "CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:3000"
-        ).split(",")
-        CORS(
-            app,
-            resources={r"/*": {"origins": cors_origins}},
-            allow_headers=["Content-Type", "Authorization"],
-            methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-            supports_credentials=True,  # Enable credentials for session cookies
-        )
-        app.logger.info(f"CORS: Production mode - allowing origins: {cors_origins}")
+        return
 
-    # Before request hook to inject config and session store into g
+    cors_origins = os.environ.get(
+        "CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:3000"
+    ).split(",")
+    CORS(
+        app,
+        resources={r"/*": {"origins": cors_origins}},
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        supports_credentials=True,
+    )
+    app.logger.info(f"CORS: Production mode - allowing origins: {cors_origins}")
+
+
+def _register_request_hooks(app: Flask, cfg: DGCommanderConfig) -> None:
     @app.before_request
     def inject_dependencies():
         g.config = cfg
         g.session_store = app.extensions["session_store"]
 
-    # HTTP request logging middleware
     @app.before_request
     def log_request():
         from flask import request as flask_request
 
-        # Sensitive headers that should never be logged
         SENSITIVE_HEADERS = {
             "authorization",
             "cookie",
@@ -209,24 +219,19 @@ def create_app(
         }
 
         def sanitize_header(value: str | None, max_length: int = 80) -> str:
-            """Sanitize and truncate header values for safe logging."""
             if not value:
                 return ""
-            # Remove newlines and control characters for security
             sanitized = "".join(c if c.isprintable() and c not in "\r\n" else " " for c in str(value))
-            # Truncate if too long
             if len(sanitized) > max_length:
                 return sanitized[:max_length] + "..."
             return sanitized
 
         def is_sensitive_header(header_name: str) -> bool:
-            """Check if header contains sensitive data that should not be logged."""
             normalized = header_name.lower()
             return normalized in SENSITIVE_HEADERS or any(
                 sensitive in normalized for sensitive in ["password", "secret", "token", "key", "credential"]
             )
 
-        # Log all requests with method, path, and selected headers
         headers_to_log = {
             "Content-Type": sanitize_header(flask_request.headers.get("Content-Type"), 40),
             "Content-Length": sanitize_header(flask_request.headers.get("Content-Length"), 20),
@@ -234,16 +239,13 @@ def create_app(
             "Origin": sanitize_header(flask_request.headers.get("Origin"), 80),
         }
 
-        # Add non-sensitive custom headers for debugging (if any)
         for header_name in flask_request.headers.keys():
             if header_name.startswith("X-") and not is_sensitive_header(header_name):
                 if header_name not in ["X-Api-Key", "X-Auth-Token", "X-Session-Token", "X-CSRF-Token"]:
                     headers_to_log[header_name] = sanitize_header(flask_request.headers.get(header_name), 40)
 
-        # Filter out empty values
         headers_str = ", ".join(f"{k}: {v}" for k, v in headers_to_log.items() if v)
 
-        # Log bucket API requests at debug level to reduce noise
         if flask_request.path.startswith("/api/buckets/"):
             app.logger.debug(f"{flask_request.method} {flask_request.path} | Headers: {{{headers_str}}}")
         else:
@@ -253,13 +255,14 @@ def create_app(
     def log_response(response):
         from flask import request as flask_request
 
-        # Log bucket API responses at debug level to reduce noise
         if flask_request.path.startswith("/api/buckets/"):
             app.logger.debug(f"{flask_request.method} {flask_request.path} → {response.status_code}")
         else:
             app.logger.info(f"{flask_request.method} {flask_request.path} → {response.status_code}")
         return response
 
+
+def _register_blueprints(app: Flask) -> None:
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(buckets_bp)
     app.register_blueprint(connection_bp)
@@ -271,10 +274,10 @@ def create_app(
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    # Define static directory explicitly
+
+def _register_static_routes(app: Flask) -> None:
     static_dir = Path(__file__).parent / "static"
 
-    # Serve static assets (CSS, JS, etc.)
     @app.route("/assets/<path:filename>")
     def serve_assets(filename):
         return send_from_directory(static_dir / "assets", filename)
@@ -290,11 +293,10 @@ def create_app(
             mimetype="application/json",
         )
 
-    # SPA fallback using 404 error handler
-    # This ensures API routes are checked first before falling back to SPA routing
+    # SPA fallback: API routes get JSON 404; everything else falls through
+    # to index.html for client-side routing.
     @app.errorhandler(404)
     def spa_fallback(e):
-        # If the request is for an API endpoint that doesn't exist, return JSON 404
         from flask import request as flask_request
 
         if flask_request.path.startswith("/api/"):
@@ -304,27 +306,24 @@ def create_app(
                 mimetype="application/json",
             )
 
-        # For all other 404s (SPA routes), serve index.html for client-side routing
         index_path = static_dir / "index.html"
         if index_path.exists():
             return send_from_directory(static_dir, "index.html")
 
-        # Fallback if no index.html
         return app.response_class(
             response='{"status": "ok", "message": "Deltaglider Commander backend"}',
             status=200,
             mimetype="application/json",
         )
 
-    # Register cleanup handler for purge scheduler
+
+def _register_teardown(app: Flask) -> None:
     @app.teardown_appcontext
     def stop_purge_scheduler(error=None):
         if "purge_scheduler" in app.extensions:
             purge_scheduler = app.extensions["purge_scheduler"]
             app.logger.info("Stopping purge scheduler on shutdown...")
             purge_scheduler.stop()
-
-    return app
 
 
 __all__ = ["create_app"]
