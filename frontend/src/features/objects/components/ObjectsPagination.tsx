@@ -11,8 +11,18 @@ interface ObjectsPaginationProps {
   canGoNext: boolean;
   isFetching: boolean;
   isLoadingMetadata: boolean;
+  fetchProgress?: { loaded: number; total: number | undefined };
   onPreviousPage: () => void;
   onNextPage: () => void;
+}
+
+function LoadingStage({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-1.5 text-ui-text-subtle dark:text-ui-text-muted-dark">
+      <Loader2 className="h-3 w-3 animate-spin" />
+      <span className="text-xs">{label}</span>
+    </div>
+  );
 }
 
 export function ObjectsPagination({
@@ -25,9 +35,22 @@ export function ObjectsPagination({
   canGoNext,
   isFetching,
   isLoadingMetadata,
+  fetchProgress,
   onPreviousPage,
   onNextPage,
 }: ObjectsPaginationProps) {
+  // Determine stage label
+  let stageIndicator: JSX.Element | null = null;
+  if (isLoadingMetadata && fetchProgress) {
+    stageIndicator = (
+      <LoadingStage label={`Syncing metadata · ${fetchProgress.loaded.toLocaleString()} objects`} />
+    );
+  } else if (isLoadingMetadata) {
+    stageIndicator = <LoadingStage label="Syncing metadata…" />;
+  } else if (isFetching) {
+    stageIndicator = <LoadingStage label="Refreshing…" />;
+  }
+
   return (
     <div className="flex items-center justify-between gap-3 border-t border-ui-border px-5 py-3 text-sm text-ui-text-muted dark:border-ui-border-subtle-dark dark:text-ui-text-muted-dark">
       <div className="flex items-center gap-2">
@@ -36,19 +59,7 @@ export function ObjectsPagination({
           {pageSelectedCount ? ` · ${pageSelectedCount} selected` : ""}
         </span>
       </div>
-      <div className="flex items-center gap-2">
-        {isFetching && !isLoadingMetadata ? (
-          <div className="flex items-center gap-2 text-ui-text-muted dark:text-ui-text-subtle">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            <span>Fetching files...</span>
-          </div>
-        ) : isLoadingMetadata ? (
-          <div className="flex items-center gap-2 text-ui-text-muted dark:text-ui-text-subtle">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            <span>Retrieving compression metadata...</span>
-          </div>
-        ) : null}
-      </div>
+      <div className="flex items-center gap-2">{stageIndicator}</div>
       <div className="flex items-center gap-2">
         <Button
           data-testid="objects-pagination-button-previous"

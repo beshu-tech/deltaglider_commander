@@ -257,6 +257,7 @@ export function ObjectsView({
         canGoNext={cacheQuery.hasNextPage}
         isFetching={cacheQuery.isFetching}
         isLoadingMetadata={cacheQuery.isLoadingFull}
+        fetchProgress={cacheQuery.fetchProgress}
         onPreviousPage={onPreviousPage}
         onNextPage={onNextPage}
       />

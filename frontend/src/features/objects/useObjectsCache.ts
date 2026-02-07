@@ -128,8 +128,9 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
   });
 
   // Use preview data while full data is loading, otherwise use full data
-  // Priority: full data > preview data > null
-  const cache = query.data || previewData;
+  // During refetch (isLoadingFull=true), prefer fresh preview over stale query.data
+  // so externally-deleted files disappear as soon as Stage 1 completes
+  const cache = isLoadingFull && previewData ? previewData : query.data || previewData;
 
   // Filter objects by compression type (client-side)
   const compressionFilteredObjects = useMemo(() => {
