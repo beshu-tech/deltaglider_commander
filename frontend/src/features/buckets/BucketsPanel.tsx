@@ -129,6 +129,9 @@ function BucketRow({
     </span>
   );
 
+  const isEmpty = !isLoadingStats && !isError && stats.object_count === 0;
+  const canDelete = isEmpty && !pendingDelete && !bucket.pending;
+
   const originalBytes = Math.max(0, stats.original_bytes);
   const rawSavedBytes = Math.max(0, originalBytes - stats.stored_bytes);
   const savedBytes = rawSavedBytes;
@@ -268,23 +271,49 @@ function BucketRow({
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
         <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
-        <Button
-          variant="ghost"
-          className="h-9 rounded-md border border-ui-border px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:border-ui-border-dark dark:text-primary-400 dark:hover:bg-primary-950"
-          onClick={(event) => {
-            event.stopPropagation();
-            setShowDeleteConfirm(true);
-          }}
-          disabled={pendingDelete}
-          aria-label={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
-          title={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
-        >
-          {pendingDelete ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Trash2 className="h-4 w-4" />
-          )}
-        </Button>
+        <Tooltip.Provider delayDuration={300}>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <span className="inline-flex">
+                <Button
+                  variant="ghost"
+                  className={`h-9 rounded-md border border-ui-border px-3 py-2 text-sm focus-visible:outline-primary-500 dark:border-ui-border-dark ${canDelete ? "text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-950" : "text-ui-text-muted opacity-40 cursor-not-allowed dark:text-ui-text-muted-dark"}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (canDelete) setShowDeleteConfirm(true);
+                  }}
+                  disabled={pendingDelete}
+                  aria-label={
+                    pendingDelete
+                      ? "Deleting..."
+                      : canDelete
+                        ? `Delete bucket ${bucket.name}`
+                        : `Cannot delete bucket ${bucket.name} — not empty`
+                  }
+                >
+                  {pendingDelete ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </span>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content
+                className="max-w-xs rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900"
+                sideOffset={5}
+              >
+                {pendingDelete
+                  ? "Deleting..."
+                  : canDelete
+                    ? "Delete this empty bucket"
+                    : `Empty the bucket first (${stats.object_count.toLocaleString()} objects)`}
+                <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Tooltip.Provider>
       </div>
     </div>
   );
@@ -450,20 +479,48 @@ function BucketRow({
       >
         <div className="flex items-center justify-end gap-2 pr-1">
           <BucketSavingsButton bucket={bucket.name} disabled={bucket.pending} />
-          <Button
-            variant="ghost"
-            className="h-9 w-9 p-0 text-primary-600 hover:bg-primary-50 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:bg-primary-950"
-            onClick={() => setShowDeleteConfirm(true)}
-            disabled={pendingDelete}
-            aria-label={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
-            title={pendingDelete ? "Deleting..." : `Delete bucket ${bucket.name}`}
-          >
-            {pendingDelete ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
-          </Button>
+          <Tooltip.Provider delayDuration={300}>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    variant="ghost"
+                    className={`h-9 w-9 p-0 focus-visible:outline-primary-500 ${canDelete ? "text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-950" : "text-ui-text-muted opacity-40 cursor-not-allowed dark:text-ui-text-muted-dark"}`}
+                    onClick={() => {
+                      if (canDelete) setShowDeleteConfirm(true);
+                    }}
+                    disabled={pendingDelete}
+                    aria-label={
+                      pendingDelete
+                        ? "Deleting..."
+                        : canDelete
+                          ? `Delete bucket ${bucket.name}`
+                          : `Cannot delete bucket ${bucket.name} — not empty`
+                    }
+                  >
+                    {pendingDelete ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </span>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content
+                  className="max-w-xs rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900"
+                  sideOffset={5}
+                >
+                  {pendingDelete
+                    ? "Deleting..."
+                    : canDelete
+                      ? "Delete this empty bucket"
+                      : `Empty the bucket first (${stats.object_count.toLocaleString()} objects)`}
+                  <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </Tooltip.Provider>
         </div>
       </TableCell>
     </TableRow>
@@ -475,7 +532,7 @@ function BucketRow({
       <ConfirmModal
         open={showDeleteConfirm}
         title="Delete Bucket"
-        message={`Are you sure you want to delete "${bucket.name}"? This action cannot be undone.`}
+        message={`Permanently delete "${bucket.name}"? This cannot be undone.`}
         confirmLabel="Delete"
         cancelLabel="Cancel"
         variant="danger"

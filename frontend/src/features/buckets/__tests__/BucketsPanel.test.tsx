@@ -95,6 +95,27 @@ describe("BucketsPanel", () => {
   });
 
   it("confirms delete before calling mutation", async () => {
+    const emptyBucket = {
+      name: "alpha",
+      object_count: 0,
+      original_bytes: 0,
+      stored_bytes: 0,
+      savings_pct: 0,
+      pending: false,
+    };
+    useBucketsMock.mockReturnValue({
+      data: [emptyBucket],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    useBucketStatsMock.mockReturnValue({
+      data: emptyBucket,
+      isLoading: false,
+      isError: false,
+      error: null,
+      isPlaceholderData: false,
+    });
     const mutate = vi.fn();
     useDeleteBucketMock.mockReturnValue({ mutate, isPending: false, variables: undefined });
     const user = userEvent.setup();
@@ -110,7 +131,7 @@ describe("BucketsPanel", () => {
     // Modal should appear
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("Delete Bucket")).toBeInTheDocument();
-    expect(screen.getByText(/are you sure you want to delete "alpha"/i)).toBeInTheDocument();
+    expect(screen.getByText(/permanently delete "alpha"/i)).toBeInTheDocument();
 
     // Click confirm in modal
     const confirmButton = screen.getByRole("button", { name: "Delete" });
@@ -118,5 +139,19 @@ describe("BucketsPanel", () => {
 
     // Mutation should be called
     expect(mutate).toHaveBeenCalledWith("alpha");
+  });
+
+  it("disables delete button for non-empty buckets", () => {
+    render(<BucketsPanel />);
+
+    const table = screen.getByRole("table");
+    const row = within(table).getByText("alpha").closest("tr")!;
+    const deleteButton = within(row).getByRole("button", { name: /cannot delete/i });
+
+    // Button should indicate it cannot be deleted
+    expect(deleteButton).toHaveAttribute(
+      "aria-label",
+      expect.stringContaining("not empty"),
+    );
   });
 });
