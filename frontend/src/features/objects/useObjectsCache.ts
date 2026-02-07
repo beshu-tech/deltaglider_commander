@@ -10,6 +10,7 @@ import {
   DirectoryCache,
 } from "./objectsCache";
 import { useDirectoryCounts, DirectoryCounts } from "./useDirectoryCounts";
+import { useSettingsStore, selectCacheTtlMs } from "../../stores/settingsStore";
 
 /**
  * Options for the cached objects hook
@@ -88,6 +89,7 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
   const [previewData, setPreviewData] = useState<DirectoryCache | null>(null);
   const [isLoadingFull, setIsLoadingFull] = useState(false);
   const bypassBackendCacheRef = useRef(false);
+  const staleTimeMs = useSettingsStore(selectCacheTtlMs);
 
   const queryKey = qk.objectsFull(bucket, prefix, undefined, "any");
 
@@ -123,7 +125,7 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
 
       return result;
     },
-    staleTime: 30_000, // Cache fresh for 30 seconds in memory
+    staleTime: staleTimeMs,
     gcTime: 5 * 60 * 1000, // Keep in memory cache for 5 minutes
   });
 

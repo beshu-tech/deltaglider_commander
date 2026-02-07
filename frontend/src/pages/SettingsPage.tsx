@@ -3,9 +3,13 @@
  */
 
 import { useNavigate, Link } from "@tanstack/react-router";
+import { Select } from "../lib/ui/Select";
+import { useSettingsStore } from "../stores/settingsStore";
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const cacheTtlSeconds = useSettingsStore((s) => s.cacheTtlSeconds);
+  const setCacheTtlSeconds = useSettingsStore((s) => s.setCacheTtlSeconds);
 
   return (
     <div className="flex h-full flex-col overflow-auto bg-ui-bg-subtle dark:bg-ui-bg-subtle-dark">
@@ -37,14 +41,39 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* Placeholder for future settings */}
+        {/* Application Preferences */}
         <div className="rounded-lg bg-ui-surface p-6 shadow-sm dark:bg-ui-surface-dark">
           <h2 className="text-xl font-semibold text-ui-text dark:text-ui-text-dark mb-4">
             Application Preferences
           </h2>
-          <p className="text-sm text-ui-text-muted dark:text-ui-text-muted-dark">
-            Additional application settings will appear here in future releases.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <label
+                htmlFor="cache-ttl"
+                className="text-sm font-medium text-ui-text dark:text-ui-text-dark"
+              >
+                Client-side cache TTL
+              </label>
+              <p className="text-xs text-ui-text-muted dark:text-ui-text-muted-dark mt-0.5">
+                How long object listings stay fresh before re-fetching from the server.
+                The server also caches listings for 5 seconds.
+              </p>
+            </div>
+            <Select
+              id="cache-ttl"
+              value={String(cacheTtlSeconds)}
+              onChange={(e) => setCacheTtlSeconds(Number(e.target.value))}
+              className="w-44"
+            >
+              <option value="0">Disabled (always fresh)</option>
+              <option value="5">5 seconds</option>
+              <option value="30">30 seconds</option>
+              <option value="60">1 minute</option>
+              <option value="300">5 minutes</option>
+              <option value="3600">1 hour</option>
+              <option value="86400">24 hours</option>
+            </Select>
+          </div>
         </div>
 
         <div className="mt-6">

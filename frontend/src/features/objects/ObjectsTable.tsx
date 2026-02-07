@@ -1,3 +1,4 @@
+import { UploadCloud } from "lucide-react";
 import { Table, TableBody } from "../../lib/ui/Table";
 import { ObjectItem, ObjectSortKey } from "./types";
 import { SelectionTarget } from "./useObjectSelection";
@@ -31,6 +32,7 @@ interface ObjectsTableProps {
   isFetching: boolean;
   isLoadingMetadata?: boolean;
   directoryFileCounts: Map<string, DirectoryCounts>;
+  onUploadClick?: () => void;
 }
 
 export function ObjectsTable({
@@ -54,6 +56,7 @@ export function ObjectsTable({
   isFetching,
   isLoadingMetadata = false,
   directoryFileCounts,
+  onUploadClick,
 }: ObjectsTableProps) {
   const allSelected = pageSelectableCount > 0 && pageSelectedCount === pageSelectableCount;
   const selectionDisabled = pageSelectableCount === 0;
@@ -171,11 +174,22 @@ export function ObjectsTable({
             {renderObjectRows()}
             {directories.length === 0 && objects.length === 0 ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="px-3 py-8 text-center text-[0.9375rem] text-ui-text-muted dark:text-ui-text-muted-dark"
-                >
-                  No objects found for the current filters.
+                <td colSpan={5} className="px-3 py-12">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <UploadCloud className="mb-3 h-10 w-10 text-ui-text-muted/50 dark:text-ui-text-muted-dark/50" />
+                    <p className="text-[0.9375rem] font-medium text-ui-text-muted dark:text-ui-text-muted-dark">
+                      This bucket is empty
+                    </p>
+                    {onUploadClick ? (
+                      <button
+                        onClick={onUploadClick}
+                        className="mt-3 inline-flex items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600"
+                      >
+                        <UploadCloud className="h-4 w-4" />
+                        Upload files
+                      </button>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             ) : null}

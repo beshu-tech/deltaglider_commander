@@ -204,6 +204,7 @@ export function ObjectsView({
         isFetching={cacheQuery.isFetching}
         isLoadingMetadata={cacheQuery.isLoadingFull}
         directoryFileCounts={directoryFileCounts}
+        onUploadClick={onUploadClick}
       />
     );
   }
