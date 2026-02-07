@@ -17,6 +17,30 @@ from dgcommander.services.catalog import CatalogService
 from dgcommander.util.errors import APIError, SDKError
 
 
+@pytest.fixture(autouse=True)
+def _mock_deltaglider_client():
+    """Mock deltaglider.client.create_client so S3DeltaGliderSDK can be constructed
+    without the real deltaglider package (which requires cffi/cryptography)."""
+    import sys
+    from types import ModuleType
+
+    # Ensure deltaglider.client is importable even without cffi/cryptography
+    if "deltaglider" not in sys.modules:
+        deltaglider_mod = ModuleType("deltaglider")
+        client_mod = ModuleType("deltaglider.client")
+        deltaglider_mod.client = client_mod  # type: ignore[attr-defined]
+        sys.modules["deltaglider"] = deltaglider_mod
+        sys.modules["deltaglider.client"] = client_mod
+
+    # Ensure the attribute exists so patch() can find and replace it
+    client_mod = sys.modules["deltaglider.client"]
+    if not hasattr(client_mod, "create_client"):
+        client_mod.create_client = None  # type: ignore[attr-defined]
+
+    with patch("deltaglider.client.create_client", return_value=Mock()):
+        yield
+
+
 def test_s3_context_in_bucket_exists_error():
     """Test that bucket_exists errors include S3 context."""
     from dgcommander.sdk.adapters.s3 import S3DeltaGliderSDK, S3Settings

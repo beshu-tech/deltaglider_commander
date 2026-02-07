@@ -1,5 +1,7 @@
 """Filesystem-based session store for multi-worker deployments."""
 
+from __future__ import annotations
+
 import hashlib
 import os
 import pickle
@@ -7,10 +9,10 @@ import secrets
 import tempfile
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from dgcommander.auth.credentials import create_sdk_from_credentials
 from dgcommander.sdk.protocol import DeltaGliderSDK
 
 
@@ -41,7 +43,13 @@ class FileSystemSessionStore:
     locking for thread-safety.
     """
 
-    def __init__(self, max_size: int = 20, ttl_seconds: int = 1800, session_dir: str | None = None):
+    def __init__(
+        self,
+        max_size: int = 20,
+        ttl_seconds: int = 1800,
+        session_dir: str | None = None,
+        sdk_factory: Callable[[dict], DeltaGliderSDK] | None = None,
+    ):
         """
         Initialize filesystem session store.
 
@@ -49,6 +57,8 @@ class FileSystemSessionStore:
             max_size: Maximum number of concurrent sessions (default: 20)
             ttl_seconds: Idle timeout in seconds (default: 1800 = 30 minutes)
             session_dir: Directory for storing session files (default: temp directory)
+            sdk_factory: Callable to reconstruct SDK from credentials dict.
+                         Defaults to ``create_sdk_from_credentials``.
         """
         if session_dir is None:
             session_dir = str(Path(tempfile.gettempdir()) / "dgcommander-sessions")
@@ -62,6 +72,12 @@ class FileSystemSessionStore:
 
         self._max_size = max_size
         self._ttl = ttl_seconds
+
+        if sdk_factory is None:
+            from dgcommander.auth.credentials import create_sdk_from_credentials
+
+            sdk_factory = create_sdk_from_credentials
+        self._sdk_factory = sdk_factory
 
     def _acquire_file_lock(self):
         """Acquire filesystem lock for cross-process synchronization."""
@@ -131,7 +147,7 @@ class FileSystemSessionStore:
                 file_data: FileSessionData = pickle.load(f)  # noqa: S301 - Loading trusted session data from our own files
 
             # Reconstruct SDK client from credentials
-            sdk_client = create_sdk_from_credentials(file_data.credentials)
+            sdk_client = self._sdk_factory(file_data.credentials)
 
             # Return full SessionData with SDK client
             return SessionData(

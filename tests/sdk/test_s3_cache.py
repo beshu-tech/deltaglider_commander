@@ -133,7 +133,18 @@ def fake_environment(monkeypatch):
             pass
 
     monkeypatch.setattr("boto3.session.Config", DummyConfig)
-    monkeypatch.setattr("deltaglider.client.create_client", lambda **kwargs: fake_dg)
+
+    # Ensure deltaglider.client is importable even without cffi/cryptography
+    import sys
+    from types import ModuleType
+
+    if "deltaglider" not in sys.modules:
+        deltaglider_mod = ModuleType("deltaglider")
+        client_mod = ModuleType("deltaglider.client")
+        deltaglider_mod.client = client_mod  # type: ignore[attr-defined]
+        sys.modules["deltaglider"] = deltaglider_mod
+        sys.modules["deltaglider.client"] = client_mod
+    sys.modules["deltaglider.client"].create_client = lambda **kwargs: fake_dg  # type: ignore[attr-defined]
 
     return fake_dg
 
