@@ -57,7 +57,8 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
       } catch (error) {
         console.error("Error deleting environment:", error);
         alert(
-          "Error deleting environment: " + (error instanceof Error ? error.message : "Unknown error"),
+          "Error deleting environment: " +
+            (error instanceof Error ? error.message : "Unknown error"),
         );
       } finally {
         setDeletingId(null);

@@ -17,9 +17,7 @@ export function ObjectsStatusBar({
   let label: string | null = null;
 
   if (isLoadingMetadata && fetchProgress) {
-    const totalLabel = fetchProgress.total
-      ? ` of ${fetchProgress.total.toLocaleString()}`
-      : "";
+    const totalLabel = fetchProgress.total ? ` of ${fetchProgress.total.toLocaleString()}` : "";
     label = `Syncing metadata\u2026 ${fetchProgress.loaded.toLocaleString()}${totalLabel} objects`;
   } else if (isLoadingMetadata) {
     label = "Syncing metadata\u2026";
