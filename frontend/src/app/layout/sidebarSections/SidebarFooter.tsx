@@ -25,6 +25,9 @@ export function SidebarFooter({ className, onSignOut }: SidebarFooterProps) {
             </span>
             <span className="pl-0.5 text-xs font-light uppercase tracking-[0.3em] text-white/85">
               Commander
+              <span className="ml-2 text-[10px] font-normal tracking-wider text-white/50">
+                v{__APP_VERSION__}
+              </span>
             </span>
           </div>
         </div>
