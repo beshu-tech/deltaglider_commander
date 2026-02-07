@@ -11,6 +11,7 @@ import { SelectionTarget, useObjectSelection } from "./useObjectSelection";
 import { getCompressionQueryParam } from "./search";
 import { ObjectsPagination } from "./components/ObjectsPagination";
 import { ObjectsLoadingState } from "./components/ObjectsLoadingState";
+import { ObjectsStatusBar } from "./components/ObjectsStatusBar";
 import { useBreadcrumbs } from "./hooks/useBreadcrumbs";
 import { useBulkOperations } from "./hooks/useBulkOperations";
 
@@ -245,7 +246,12 @@ export function ObjectsView({
           onBulkDelete={() => handleBulkDelete(totalSelectedCount)}
         />
       ) : (
-        <div className="h-3" />
+        <ObjectsStatusBar
+          isFetching={cacheQuery.isFetching}
+          isLoadingMetadata={cacheQuery.isLoadingFull}
+          isLoadingCounts={cacheQuery.isLoadingCounts}
+          fetchProgress={cacheQuery.fetchProgress}
+        />
       )}
       <div className="flex-1 overflow-hidden">{tableContent}</div>
       <ObjectsPagination
