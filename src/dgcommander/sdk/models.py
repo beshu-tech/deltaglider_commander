@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 
 @dataclass(slots=True)
@@ -40,7 +40,7 @@ class ObjectListing:
     common_prefixes: list[str]
 
 
-class StatsMode(str, Enum):
+class StatsMode(StrEnum):
     """Supported bucket statistics modes."""
 
     quick = "quick"

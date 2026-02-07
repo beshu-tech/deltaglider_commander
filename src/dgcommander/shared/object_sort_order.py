@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ObjectSortOrder(str, Enum):
+class ObjectSortOrder(StrEnum):
     """Canonical object sorting options used across API and services."""
 
     name_asc = "name_asc"
