@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { qk } from "../../lib/api/queryKeys";
 import { ObjectItem, ObjectSortKey } from "./types";
@@ -9,7 +9,6 @@ import {
   calculatePaginationInfo,
   DirectoryCache,
 } from "./objectsCache";
-import { loadFromLocalStorage, saveToLocalStorage } from "../../lib/cache/localStorage";
 import { useDirectoryCounts, DirectoryCounts } from "./useDirectoryCounts";
 
 /**
@@ -51,7 +50,7 @@ export interface UseObjectsCacheResult {
   isFetching: boolean;
   isLoadingFull: boolean; // True when loading full data after preview
   error: Error | null;
-  refetch: () => void;
+  refetch: (options?: { bypassBackendCache?: boolean }) => void;
 
   // Progress (during initial fetch)
   fetchProgress?: {
@@ -88,7 +87,7 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
   }>();
   const [previewData, setPreviewData] = useState<DirectoryCache | null>(null);
   const [isLoadingFull, setIsLoadingFull] = useState(false);
-  const skipLocalStorageRef = useRef(false);
+  const bypassBackendCacheRef = useRef(false);
 
   const queryKey = qk.objectsFull(bucket, prefix, undefined, "any");
 
@@ -100,16 +99,8 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
       setPreviewData(null); // Clear any previous preview
       setIsLoadingFull(false);
 
-      // Try to load from localStorage first (unless skipLocalStorageRef is true)
-      if (!skipLocalStorageRef.current) {
-        const cached = loadFromLocalStorage<DirectoryCache>(queryKey);
-        if (cached) {
-          return cached;
-        }
-      }
-
-      // Reset the flag for next query
-      skipLocalStorageRef.current = false;
+      const bypassCache = bypassBackendCacheRef.current;
+      bypassBackendCacheRef.current = false;
 
       // Fetch from network with two-stage loading
       const result = await fetchAllObjects({
@@ -117,6 +108,7 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
         prefix,
         search: undefined, // Don't pass search to API, we'll filter client-side
         compressed: "any", // Fetch all objects, we'll filter client-side
+        bypassCache,
         onProgress: (loaded, total) => {
           setFetchProgress({ loaded, total });
         },
@@ -129,21 +121,11 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
       setFetchProgress(undefined); // Clear progress when done
       setIsLoadingFull(false);
 
-      // Save to localStorage for future use
-      saveToLocalStorage(queryKey, result);
-
       return result;
     },
     staleTime: 30_000, // Cache fresh for 30 seconds in memory
     gcTime: 5 * 60 * 1000, // Keep in memory cache for 5 minutes
   });
-
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    if (query.data) {
-      saveToLocalStorage(queryKey, query.data);
-    }
-  }, [query.data, queryKey]);
 
   // Use preview data while full data is loading, otherwise use full data
   // Priority: full data > preview data > null
@@ -239,9 +221,11 @@ export function useObjectsCache(options: UseObjectsCacheOptions): UseObjectsCach
     };
   }, [cache, sortedDirectories, sortedObjects, paginationInfo]);
 
-  // Custom refetch that bypasses localStorage
-  const refetch = () => {
-    skipLocalStorageRef.current = true;
+  // Custom refetch that bypasses both TanStack cache and backend cache
+  const refetch = (options?: { bypassBackendCache?: boolean }) => {
+    if (options?.bypassBackendCache) {
+      bypassBackendCacheRef.current = true;
+    }
     return query.refetch();
   };
 

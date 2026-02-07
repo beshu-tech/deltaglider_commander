@@ -55,6 +55,7 @@ def list_objects(query: ObjectListRequest):
             search=query.search,
             credentials_key=credentials_key,  # SECURITY: Isolate cache by credentials
             fetch_metadata=query.fetch_metadata,
+            bypass_cache=query.bypass_cache,
         )
     except KeyError:
         raise NotFoundError("bucket", "bucket_not_found")

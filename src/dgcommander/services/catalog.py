@@ -277,6 +277,7 @@ class CatalogService:
         search: str | None = None,
         credentials_key: str | None = None,
         fetch_metadata: bool = True,
+        bypass_cache: bool = False,
     ) -> ObjectList:
         # Try to get from cache first (if cache and credentials_key provided)
         # IMPORTANT: Only use cache when fetch_metadata=True to avoid storing incomplete preview data
@@ -284,7 +285,11 @@ class CatalogService:
         search_key = search.lower() if search else None
         offset = decode_cursor(cursor) or 0
 
-        cache = self.list_cache if fetch_metadata else None
+        cache = self.list_cache if fetch_metadata and not bypass_cache else None
+
+        # When bypassing, invalidate existing cache so subsequent requests also get fresh data
+        if bypass_cache and self.list_cache is not None:
+            self.list_cache.invalidate_bucket(bucket)
 
         sorted_objects: list[LogicalObject] | None = None
         base_objects: list[LogicalObject] | None = None

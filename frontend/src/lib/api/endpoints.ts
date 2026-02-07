@@ -29,6 +29,7 @@ export interface ObjectsParams {
   order?: "asc" | "desc";
   compressed?: "true" | "false" | "any";
   fetchMetadata?: boolean;
+  bypassCache?: boolean;
 }
 
 export async function fetchBuckets(): Promise<Bucket[]> {
@@ -168,6 +169,9 @@ export async function fetchObjects(params: ObjectsParams): Promise<ObjectList> {
   }
   if (params.fetchMetadata !== undefined) {
     query.set("fetch_metadata", String(params.fetchMetadata));
+  }
+  if (params.bypassCache) {
+    query.set("bypass_cache", "true");
   }
   const data = await apiWithAuth<unknown>(`/api/objects/?${query.toString()}`);
   return objectListSchema.parse(data);

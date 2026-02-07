@@ -23,6 +23,7 @@ export interface FetchAllObjectsParams {
   prefix?: string;
   search?: string;
   compressed?: "true" | "false" | "any";
+  bypassCache?: boolean;
   onProgress?: (loaded: number, total: number | undefined) => void;
   onPreviewReady?: (preview: DirectoryCache) => void;
 }
@@ -38,7 +39,7 @@ export interface FetchAllObjectsParams {
  * @returns Complete directory cache with all objects and directories
  */
 export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<DirectoryCache> {
-  const { bucket, prefix, search, compressed, onProgress, onPreviewReady } = params;
+  const { bucket, prefix, search, compressed, bypassCache, onProgress, onPreviewReady } = params;
 
   // Stage 1: Quick preview (first 100 items, no metadata)
   if (onPreviewReady) {
@@ -54,6 +55,7 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
       order: "asc",
       compressed,
       fetchMetadata: false, // FAST: Skip metadata
+      bypassCache,
     });
 
     if (DEBUG_CACHE) {
@@ -93,6 +95,7 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
       order: "asc",
       compressed,
       fetchMetadata: true, // COMPLETE: Include all metadata
+      bypassCache: !cursor ? bypassCache : undefined, // Only bypass on first page
     });
 
     allObjects.push(...response.objects);
@@ -257,20 +260,4 @@ export function calculatePaginationInfo(
     startIndex: pageIndex * pageSize,
     endIndex: Math.min((pageIndex + 1) * pageSize, totalItems),
   };
-}
-
-/**
- * Clears all cached object listings from localStorage and TanStack Query cache.
- * This forces fresh data fetch on next directory access.
- */
-export function clearObjectsCache(): void {
-  // Clear localStorage items that store object cache backups
-  Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith("tanstack-query-")) {
-      localStorage.removeItem(key);
-    }
-  });
-
-  if (DEBUG_CACHE)
-    console.log("[objectsCache] Cleared all cached object listings from localStorage");
 }

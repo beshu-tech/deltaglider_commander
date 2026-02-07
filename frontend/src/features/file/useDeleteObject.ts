@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../app/toast";
 import { deleteObject } from "../../lib/api/endpoints";
 import { qk } from "../../lib/api/queryKeys";
-import { removeFromLocalStorage } from "../../lib/cache/localStorage";
 
 export function useDeleteObject(bucket: string | null) {
   const queryClient = useQueryClient();
@@ -18,22 +17,6 @@ export function useDeleteObject(bucket: string | null) {
     onSuccess: (_data, key) => {
       toast.push({ title: "Object deleted", description: key, level: "success" });
       if (bucket) {
-        // Clear localStorage cache for affected directories (smart invalidation)
-        // Extract prefix from the deleted key
-        const lastSlashIndex = key.lastIndexOf("/");
-        const prefix = lastSlashIndex >= 0 ? key.substring(0, lastSlashIndex + 1) : "";
-
-        // Clear cache for the directory containing the deleted file
-        removeFromLocalStorage(qk.objectsFull(bucket, prefix, undefined, "any"));
-
-        // Clear cache for parent directories (deletion affects parent listings)
-        const prefixParts = prefix.split("/").filter(Boolean);
-        for (let i = 0; i < prefixParts.length; i++) {
-          const parentPrefix = prefixParts.slice(0, i).join("/");
-          const normalizedParent = parentPrefix ? `${parentPrefix}/` : "";
-          removeFromLocalStorage(qk.objectsFull(bucket, normalizedParent, undefined, "any"));
-        }
-
         // Invalidate TanStack Query cache (memory) for both old cursor-based and new full cache
         void queryClient.invalidateQueries({
           predicate: (query) =>

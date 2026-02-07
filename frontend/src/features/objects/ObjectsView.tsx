@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
-import { useToast } from "../../app/toast";
 import { OBJECT_COUNT_LIMIT } from "../../lib/constants/api";
 import { ObjectItem, ObjectSortKey, ObjectsSearchState } from "./types";
 import { ObjectsTable } from "./ObjectsTable";
@@ -11,7 +9,6 @@ import { ObjectsToolbar } from "./ObjectsToolbar";
 import { ObjectsSelectionBar } from "./ObjectsSelectionBar";
 import { SelectionTarget, useObjectSelection } from "./useObjectSelection";
 import { getCompressionQueryParam } from "./search";
-import { clearObjectsCache } from "./objectsCache";
 import { ObjectsPagination } from "./components/ObjectsPagination";
 import { ObjectsLoadingState } from "./components/ObjectsLoadingState";
 import { useBreadcrumbs } from "./hooks/useBreadcrumbs";
@@ -40,8 +37,6 @@ export function ObjectsView({
   selectionResetKey,
   onUploadClick,
 }: ObjectsViewProps) {
-  const toast = useToast();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const updateSearchState = useCallback(
@@ -109,7 +104,6 @@ export function ObjectsView({
 
   const { handleBulkDownload, handleBulkDelete } = useBulkOperations({
     bucket,
-    currentPrefix: search.prefix,
     selectedObjects,
     selectedPrefixes,
     clearSelection,
@@ -132,26 +126,8 @@ export function ObjectsView({
   );
 
   const handleForceRefresh = useCallback(() => {
-    void cacheQuery.refetch();
+    void cacheQuery.refetch({ bypassBackendCache: true });
   }, [cacheQuery]);
-
-  const handleClearCache = useCallback(() => {
-    const confirmed = confirm(
-      "Clear all cached directory listings? This will reload data from the server.",
-    );
-    if (!confirmed) {
-      return;
-    }
-
-    clearObjectsCache();
-    void queryClient.invalidateQueries({ queryKey: ["objects", "full"] });
-
-    toast.push({
-      title: "Cache cleared",
-      description: "All cached directory listings have been cleared",
-      level: "success",
-    });
-  }, [queryClient, toast]);
 
   const handleDirectoryEnter = useCallback(
     (prefixValue: string) => {
@@ -244,7 +220,6 @@ export function ObjectsView({
         onCompressionChange={(value) => updateSearchState({ compression: value })}
         onBreadcrumbNavigate={handleBreadcrumbNavigate}
         onUploadClick={onUploadClick}
-        onClearCache={handleClearCache}
         onForceRefresh={handleForceRefresh}
         isRefreshing={cacheQuery.isFetching}
       />

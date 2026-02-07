@@ -53,6 +53,7 @@ class ObjectListRequest(BaseModel):
     order: str | None = None
     compressed: bool | None = None
     fetch_metadata: bool = True  # Default to True for backward compatibility
+    bypass_cache: bool = False  # When True, skip backend list cache and fetch fresh from S3
 
     @field_validator("bucket")
     @classmethod

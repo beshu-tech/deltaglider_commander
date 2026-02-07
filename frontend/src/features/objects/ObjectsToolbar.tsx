@@ -1,7 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronRight,
-  Eraser,
   Home,
   MoreHorizontal,
   MoreVertical,
@@ -26,7 +25,6 @@ export interface ObjectsToolbarProps {
   onBreadcrumbNavigate: (value: string | null, isHome?: boolean) => void;
   onUploadClick?: () => void;
   onForceRefresh?: () => void;
-  onClearCache?: () => void;
   isRefreshing?: boolean;
 }
 
@@ -40,7 +38,6 @@ export function ObjectsToolbar({
   onBreadcrumbNavigate,
   onUploadClick,
   onForceRefresh,
-  onClearCache,
   isRefreshing = false,
 }: ObjectsToolbarProps) {
   const [searchValue, setSearchValue] = useState(search || "");
@@ -333,14 +330,7 @@ export function ObjectsToolbar({
           {onForceRefresh ? (
             <DropdownMenuItem onClick={onForceRefresh} disabled={isRefreshing}>
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              <span>Refresh from server</span>
-            </DropdownMenuItem>
-          ) : null}
-
-          {onClearCache ? (
-            <DropdownMenuItem onClick={onClearCache}>
-              <Eraser className="h-4 w-4" />
-              <span>Clear cache</span>
+              <span>Refresh</span>
             </DropdownMenuItem>
           ) : null}
         </DropdownMenu>

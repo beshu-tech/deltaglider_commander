@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../lib/ui/Button";
 import { UploadManager } from "../features/upload/UploadManager";
 import { normalizeObjectsSearch, serializeObjectsSearch } from "../features/objects/search";
-import { removeFromLocalStorage } from "../lib/cache/localStorage";
 import { qk } from "../lib/api/queryKeys";
 import { useBucketPaths } from "../features/upload/hooks/useBucketPaths";
 
@@ -30,20 +29,6 @@ export function UploadPage() {
   }, [bucket, currentSearch, navigate]);
 
   const handleCompleted = useCallback(() => {
-    // Clear localStorage cache for this bucket (smart invalidation)
-    // We need to clear the cache for the current prefix and any parent prefixes
-    const prefixParts = currentSearch.prefix.split("/").filter(Boolean);
-
-    // Clear cache for current prefix
-    removeFromLocalStorage(qk.objectsFull(bucket, currentSearch.prefix, undefined, "any"));
-
-    // Clear cache for parent prefixes (since new files affect parent directory listings)
-    for (let i = 0; i < prefixParts.length; i++) {
-      const parentPrefix = prefixParts.slice(0, i).join("/");
-      const normalizedParent = parentPrefix ? `${parentPrefix}/` : "";
-      removeFromLocalStorage(qk.objectsFull(bucket, normalizedParent, undefined, "any"));
-    }
-
     // Invalidate TanStack Query cache (memory) for both old cursor-based and new full cache
     queryClient.invalidateQueries({
       predicate: (query) =>
@@ -60,7 +45,7 @@ export function UploadPage() {
     queryClient.invalidateQueries({
       predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "stats",
     });
-  }, [bucket, currentSearch.prefix, queryClient]);
+  }, [bucket, queryClient]);
 
   return (
     <div className="flex-1 overflow-auto">

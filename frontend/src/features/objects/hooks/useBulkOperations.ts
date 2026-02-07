@@ -7,12 +7,10 @@ import {
   fetchObjects,
 } from "../../../lib/api/endpoints";
 import { downloadObject } from "../../../lib/utils/download";
-import { removeFromLocalStorage } from "../../../lib/cache/localStorage";
 import { qk } from "../../../lib/api/queryKeys";
 
 interface UseBulkOperationsProps {
   bucket: string;
-  currentPrefix: string;
   selectedObjects: string[];
   selectedPrefixes: string[];
   clearSelection: () => void;
@@ -21,7 +19,6 @@ interface UseBulkOperationsProps {
 
 export function useBulkOperations({
   bucket,
-  currentPrefix,
   selectedObjects,
   selectedPrefixes,
   clearSelection,
@@ -246,17 +243,6 @@ export function useBulkOperations({
         });
       }
 
-      // Clear localStorage cache for affected directories
-      const prefixParts = currentPrefix.split("/").filter(Boolean);
-
-      removeFromLocalStorage(qk.objectsFull(bucket, currentPrefix, undefined, "any"));
-
-      for (let i = 0; i < prefixParts.length; i++) {
-        const parentPrefix = prefixParts.slice(0, i).join("/");
-        const normalizedParent = parentPrefix ? `${parentPrefix}/` : "";
-        removeFromLocalStorage(qk.objectsFull(bucket, normalizedParent, undefined, "any"));
-      }
-
       clearSelection();
       refetchObjects();
       queryClient.invalidateQueries({ queryKey: qk.buckets });
@@ -270,7 +256,7 @@ export function useBulkOperations({
         predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "stats",
       });
     },
-    [bucket, currentPrefix, clearSelection, expandSelectedKeys, toast, queryClient, refetchObjects],
+    [bucket, clearSelection, expandSelectedKeys, toast, queryClient, refetchObjects],
   );
 
   return {
