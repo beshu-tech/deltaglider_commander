@@ -1,6 +1,6 @@
 /**
- * React hook for managing credential profiles
- * Provides access to profile CRUD operations and active profile state
+ * React hook for managing credential environments
+ * Provides access to environment CRUD operations and active environment state
  */
 
 import { useCallback } from "react";
@@ -55,7 +55,7 @@ export function useCredentialProfiles() {
         setActiveProfile(profileId);
         return true;
       } catch (error) {
-        console.error("Failed to create session with new profile:", error);
+        console.error("Failed to create session with new environment:", error);
         return false;
       }
     },

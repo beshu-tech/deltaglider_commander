@@ -39,7 +39,7 @@ export function EnvironmentsPage() {
         setSwitchError("Failed to switch environment. Please check your credentials.");
       }
     } catch (error) {
-      console.error("Failed to switch profile:", error);
+      console.error("Failed to switch environment:", error);
       setSwitchError(error instanceof Error ? error.message : "Failed to switch environment");
     } finally {
       setSwitchingId(null);
@@ -54,7 +54,7 @@ export function EnvironmentsPage() {
     try {
       deleteProfile(profileId);
     } catch (error) {
-      console.error("Failed to delete profile:", error);
+      console.error("Failed to delete environment:", error);
     } finally {
       setDeletingId(null);
     }
@@ -82,7 +82,7 @@ export function EnvironmentsPage() {
         <p className="mt-2 text-gray-600 dark:text-gray-400">
           {isFirstTime
             ? "Configure your AWS credentials to get started with S3 bucket management."
-            : "Manage your S3 credential environments. Switch between environments or add new ones."}
+            : "Manage your S3 environments. Switch between them or add new ones."}
         </p>
       </div>
 

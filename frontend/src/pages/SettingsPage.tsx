@@ -26,10 +26,10 @@ export function SettingsPage() {
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-xl font-semibold text-ui-text dark:text-ui-text-dark">
-                Connection Profiles
+                Environments
               </h2>
               <p className="mt-1 text-sm text-ui-text-muted dark:text-ui-text-muted-dark">
-                Manage your S3 credential profiles and switch between environments
+                Manage your S3 environments and switch between them
               </p>
             </div>
             <Link

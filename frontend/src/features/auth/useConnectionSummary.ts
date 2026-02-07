@@ -53,7 +53,7 @@ function resolveSessionIssue(
   }
 
   if (sessionValid === false) {
-    return { status: "error", message: "Session expired. Reconnect from settings." };
+    return { status: "error", message: "Session expired. Reconnect from Environments." };
   }
 
   return null;
@@ -140,7 +140,7 @@ export function useConnectionSummary(options?: ConnectionSummaryOptions) {
       connected: "Session healthy and ready to use.",
       checking: "Verifying stored credentials…",
       error: "Action required: review your S3 configuration.",
-      disconnected: "Connect your S3 credentials to start using Commander.",
+      disconnected: "Add an environment to start using Commander.",
     };
 
     if (!message) {

@@ -1,6 +1,6 @@
 /**
- * Profile button with connection status
- * Shows active profile info and navigates to environments page
+ * Environment button with connection status
+ * Shows active environment info and navigates to environments page
  */
 
 import { useNavigate } from "@tanstack/react-router";
@@ -51,7 +51,7 @@ export function ProfileDropdown() {
           </div>
         </div>
 
-        {/* Profile info - aligned to right of icon */}
+        {/* Environment info - aligned to right of icon */}
         <div className="flex-1 min-w-0">
           <div className="text-sm font-bold leading-tight text-primary-900 dark:text-primary-100 truncate">
             {activeProfile.name}

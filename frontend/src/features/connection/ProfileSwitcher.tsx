@@ -1,6 +1,6 @@
 /**
- * Profile switcher component
- * Displays all saved credential profiles and allows switching between them
+ * Environment switcher component
+ * Displays all saved environments and allows switching between them
  */
 
 import { useState } from "react";
@@ -33,12 +33,12 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
     try {
       const success = await switchProfile(profileId);
       if (!success) {
-        console.error("Failed to switch profile");
-        alert("Failed to switch profile. Please check your credentials.");
+        console.error("Failed to switch environment");
+        alert("Failed to switch environment. Please check your credentials.");
       }
     } catch (error) {
-      console.error("Error switching profile:", error);
-      alert("Error switching profile. Please try again.");
+      console.error("Error switching environment:", error);
+      alert("Error switching environment. Please try again.");
     } finally {
       setSwitchingId(null);
     }
@@ -50,14 +50,14 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
 
     if (deletingId === profileId) {
       // Confirmed - actually delete
-      console.log("Attempting to delete profile:", profileId);
+      console.log("Attempting to delete environment:", profileId);
       try {
         deleteProfile(profileId);
-        console.log("Profile deleted successfully");
+        console.log("Environment deleted successfully");
       } catch (error) {
-        console.error("Error deleting profile:", error);
+        console.error("Error deleting environment:", error);
         alert(
-          "Error deleting profile: " + (error instanceof Error ? error.message : "Unknown error"),
+          "Error deleting environment: " + (error instanceof Error ? error.message : "Unknown error"),
         );
       } finally {
         setDeletingId(null);
@@ -84,7 +84,7 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
     return (
       <div className="p-4 text-center">
         <p className="text-sm text-ui-text-muted dark:text-ui-text-subtle mb-4">
-          No saved profiles yet
+          No saved environments yet
         </p>
         {onCreateNew && (
           <button
@@ -92,7 +92,7 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Create First Profile
+            Create First Environment
           </button>
         )}
       </div>
@@ -103,13 +103,13 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
     <div className="space-y-2">
       <div className="flex items-center justify-between px-4 py-2">
         <h3 className="text-sm font-medium text-ui-text dark:text-ui-text-dark">
-          Saved Profiles ({profiles.length})
+          Saved Environments ({profiles.length})
         </h3>
         {onCreateNew && (
           <button
             onClick={onCreateNew}
             className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
-            title="Add new profile"
+            title="Add new environment"
           >
             <Plus className="w-3 h-3" />
             New
@@ -148,7 +148,7 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
                     }`}
                   />
 
-                  {/* Profile info */}
+                  {/* Environment info */}
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-ui-text dark:text-ui-text-dark truncate">
                       {profile.name}
@@ -164,7 +164,7 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
                     <button
                       onClick={(e) => handleEdit(e, profile)}
                       className="p-1.5 text-ui-text-muted hover:text-ui-text hover:bg-ui-surface-secondary dark:hover:bg-gray-700 rounded transition-colors"
-                      title="Edit profile"
+                      title="Edit environment"
                       aria-label={`Edit ${profile.name}`}
                     >
                       <Edit2 className="w-4 h-4" />
@@ -182,7 +182,7 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
                     <button
                       onClick={(e) => handleDelete(e, profile.id)}
                       className="p-1.5 text-ui-text-muted hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
-                      title="Delete profile"
+                      title="Delete environment"
                       aria-label={`Delete ${profile.name}`}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -196,7 +196,7 @@ export function ProfileSwitcher({ onCreateNew, onEditProfile }: ProfileSwitcherP
       </div>
 
       <div className="px-4 py-2 text-xs text-ui-text-muted dark:text-ui-text-subtle border-t border-ui-border dark:border-ui-border-dark">
-        Click a profile to switch, or create a new one to save multiple S3 endpoints
+        Click an environment to switch, or create a new one to save multiple S3 endpoints
       </div>
     </div>
   );

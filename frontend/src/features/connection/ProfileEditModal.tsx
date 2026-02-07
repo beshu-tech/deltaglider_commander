@@ -1,6 +1,6 @@
 /**
- * Profile edit modal
- * Allows editing profile name and credentials
+ * Environment edit modal
+ * Allows editing environment name and credentials
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -17,7 +17,7 @@ interface ProfileEditModalProps {
 }
 
 /**
- * Modal for editing profile name and optionally credentials
+ * Modal for editing environment name and optionally credentials
  */
 export function ProfileEditModal({ open, profile, onSave, onCancel }: ProfileEditModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -74,7 +74,7 @@ export function ProfileEditModal({ open, profile, onSave, onCancel }: ProfileEdi
 
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError("Profile name cannot be empty");
+      setError("Environment name cannot be empty");
       return;
     }
 
@@ -109,7 +109,7 @@ export function ProfileEditModal({ open, profile, onSave, onCancel }: ProfileEdi
             id="modal-title"
             className="text-xl font-semibold text-ui-text dark:text-ui-text-dark"
           >
-            Edit Profile
+            Edit Environment
           </h2>
           <button
             onClick={onCancel}
@@ -127,7 +127,7 @@ export function ProfileEditModal({ open, profile, onSave, onCancel }: ProfileEdi
               htmlFor="profile-name"
               className="block text-sm font-medium text-ui-text dark:text-ui-text-dark mb-2"
             >
-              Profile Name
+              Environment Name
             </label>
             <input
               ref={nameInputRef}
@@ -139,7 +139,7 @@ export function ProfileEditModal({ open, profile, onSave, onCancel }: ProfileEdi
                 setError(null);
               }}
               className="w-full px-3 py-2 border border-ui-border dark:border-ui-border-dark rounded-md bg-white dark:bg-ui-surface-active-dark text-ui-text dark:text-ui-text-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="My S3 Profile"
+              placeholder="My S3 Environment"
             />
             {error && (
               <p className="mt-1 text-sm text-primary-600 dark:text-primary-400">{error}</p>

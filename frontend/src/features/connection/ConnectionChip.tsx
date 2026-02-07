@@ -1,5 +1,5 @@
 /**
- * Connection status chip - displays connection state from authStore
+ * Environment status chip - displays connection state from authStore
  */
 
 import { Settings } from "lucide-react";
@@ -21,7 +21,7 @@ export function ConnectionChip({ onClick }: ConnectionChipProps) {
   const errorMsg = connectionStatus?.errorMessage || "";
   const tooltipText = connectionStatus
     ? `${config.label}${errorMsg ? ` • ${errorMsg}` : ""}`
-    : "No active credentials";
+    : "No active environment";
 
   return (
     <button
@@ -35,7 +35,7 @@ export function ConnectionChip({ onClick }: ConnectionChipProps) {
         "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
       )}
       title={tooltipText}
-      aria-label={`Connection status: ${config.label}`}
+      aria-label={`Environment status: ${config.label}`}
     >
       <Icon className={twMerge("w-4 h-4", config.iconClass)} aria-hidden="true" />
       <span className="hidden sm:inline">{config.label}</span>

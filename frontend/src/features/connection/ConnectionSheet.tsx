@@ -1,5 +1,5 @@
 /**
- * ConnectionSheet - Simplified side sheet for connection management
+ * ConnectionSheet - Simplified side sheet for environment management
  * Uses local state for sheet open/close instead of global store
  */
 
@@ -15,7 +15,7 @@ export function ConnectionSheet() {
     <SideSheet
       open={sheetOpen}
       onClose={() => setSheetOpen(false)}
-      title="Connection"
+      title="Environment"
       width={sheetWidth}
       onWidthChange={setSheetWidth}
       minWidth={320}

@@ -1,5 +1,5 @@
 /**
- * Unified authentication and connection state management
+ * Unified authentication and environment state management
  * Combines credential management and connection status in a single reactive store
  * Uses Zustand with persist middleware for automatic localStorage synchronization
  */

@@ -1,6 +1,6 @@
 /**
- * Hook for handling profile switching with automatic query invalidation
- * Ensures all cached data is cleared when switching between credential profiles
+ * Hook for handling environment switching with automatic query invalidation
+ * Ensures all cached data is cleared when switching between environments
  */
 
 import { useEffect } from "react";
@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../stores/authStore";
 
 /**
- * Listens for profile switch events and invalidates all queries
+ * Listens for environment switch events and invalidates all queries
  * This ensures fresh data is fetched with the new credentials
  */
 export function useProfileSwitch() {
@@ -18,6 +18,6 @@ export function useProfileSwitch() {
   useEffect(() => {
     // Invalidate all queries when active profile changes
     queryClient.invalidateQueries();
-    console.log("Profile switched - invalidated all cached queries");
+    console.log("Environment switched - invalidated all cached queries");
   }, [activeProfileId, queryClient]);
 }

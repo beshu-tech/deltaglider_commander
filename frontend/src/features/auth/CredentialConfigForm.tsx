@@ -12,7 +12,7 @@ export interface CredentialConfigFormProps {
   onSuccess: () => void;
   onCancel?: () => void;
   /**
-   * Optional: Profile ID to edit. If provided, form will be in edit mode.
+   * Optional: Environment ID to edit. If provided, form will be in edit mode.
    */
   editProfileId?: string;
 }

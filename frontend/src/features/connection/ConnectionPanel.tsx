@@ -1,6 +1,6 @@
 /**
- * ConnectionPanel - Simplified connection management panel
- * Shows active profile and connection status
+ * ConnectionPanel - Simplified environment management panel
+ * Shows active environment and connection status
  */
 
 import { Database } from "lucide-react";
@@ -19,7 +19,7 @@ export function ConnectionPanel() {
   if (!activeProfile) {
     return (
       <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-        <p>No active profile</p>
+        <p>No active environment</p>
         <button
           onClick={() => navigate({ to: "/settings" })}
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
@@ -79,7 +79,7 @@ export function ConnectionPanel() {
           onClick={() => navigate({ to: "/settings" })}
           className="w-full px-4 py-2 text-sm font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
         >
-          Manage Profiles
+          Manage Environments
         </button>
       </div>
     </div>

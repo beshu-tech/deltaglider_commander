@@ -187,7 +187,7 @@ function statusLabel(status: ConnectionSummaryStatus) {
     case "checking":
       return "Verifying";
     case "error":
-      return "Connection issue";
+      return "Environment issue";
     case "disconnected":
     default:
       return "Not connected";
