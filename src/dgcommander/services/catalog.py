@@ -390,7 +390,9 @@ class ObjectListingService(_S3ContextMixin):
 
         if sorted_objects is None:
             if base_objects is None:
-                listing = self.sdk.list_objects(bucket, prefix, max_items=LISTING_MAX_OBJECTS, quick_mode=not fetch_metadata)
+                listing = self.sdk.list_objects(
+                    bucket, prefix, max_items=LISTING_MAX_OBJECTS, quick_mode=not fetch_metadata
+                )
                 base_objects = list(listing.objects)
                 common_prefixes = list(listing.common_prefixes)
 
@@ -635,6 +637,7 @@ class CatalogService:
 
     def update_savings(self, bucket: str, snapshot: BucketSnapshot) -> BucketStats:
         return self._bucket_stats.update_savings(bucket, snapshot)
+
 
 def _summarize_exception(exc: Exception) -> str:
     message = str(exc).strip()

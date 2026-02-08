@@ -127,9 +127,15 @@ class TestFilterAndSort:
     @pytest.fixture
     def objs(self, now):
         return [
-            LogicalObject(key="b.txt", original_bytes=200, stored_bytes=200, compressed=False, modified=now, physical_key="b.txt"),
-            LogicalObject(key="a.txt", original_bytes=100, stored_bytes=100, compressed=True, modified=now, physical_key="a.txt"),
-            LogicalObject(key="c.txt", original_bytes=300, stored_bytes=300, compressed=False, modified=now, physical_key="c.txt"),
+            LogicalObject(
+                key="b.txt", original_bytes=200, stored_bytes=200, compressed=False, modified=now, physical_key="b.txt"
+            ),
+            LogicalObject(
+                key="a.txt", original_bytes=100, stored_bytes=100, compressed=True, modified=now, physical_key="a.txt"
+            ),
+            LogicalObject(
+                key="c.txt", original_bytes=300, stored_bytes=300, compressed=False, modified=now, physical_key="c.txt"
+            ),
         ]
 
     def test_sort_name_asc(self, objs):
@@ -333,14 +339,22 @@ class TestObjectListingService:
 
         # First call primes cache
         svc.list_objects(
-            bucket="test-bucket", prefix="", limit=50, cursor=None,
-            sort_order=ObjectSortOrder.name_asc, compressed=None,
+            bucket="test-bucket",
+            prefix="",
+            limit=50,
+            cursor=None,
+            sort_order=ObjectSortOrder.name_asc,
+            compressed=None,
             credentials_key="cred1",
         )
         # bypass_cache should still work
         result = svc.list_objects(
-            bucket="test-bucket", prefix="", limit=50, cursor=None,
-            sort_order=ObjectSortOrder.name_asc, compressed=None,
+            bucket="test-bucket",
+            prefix="",
+            limit=50,
+            cursor=None,
+            sort_order=ObjectSortOrder.name_asc,
+            compressed=None,
             bypass_cache=True,
         )
         assert len(result.objects) == 3
@@ -354,8 +368,12 @@ class TestObjectMutationService:
 
         # Prime listing cache
         listing_svc.list_objects(
-            bucket="test-bucket", prefix="", limit=50, cursor=None,
-            sort_order=ObjectSortOrder.name_asc, compressed=None,
+            bucket="test-bucket",
+            prefix="",
+            limit=50,
+            cursor=None,
+            sort_order=ObjectSortOrder.name_asc,
+            compressed=None,
             credentials_key="cred1",
         )
 
@@ -364,8 +382,12 @@ class TestObjectMutationService:
 
         # Re-listing should not include deleted object
         result = listing_svc.list_objects(
-            bucket="test-bucket", prefix="", limit=50, cursor=None,
-            sort_order=ObjectSortOrder.name_asc, compressed=None,
+            bucket="test-bucket",
+            prefix="",
+            limit=50,
+            cursor=None,
+            sort_order=ObjectSortOrder.name_asc,
+            compressed=None,
         )
         keys = [o.key for o in result.objects]
         assert "docs/readme.txt" not in keys
