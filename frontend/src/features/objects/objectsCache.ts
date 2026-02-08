@@ -145,9 +145,7 @@ export async function fetchAllObjects(params: FetchAllObjectsParams): Promise<Di
       isLimited = true;
       cursor = undefined;
       if (DEBUG_CACHE)
-        console.log(
-          `[objectsCache] Reached client cap (${MAX_CLIENT_OBJECTS}), stopping fetch`,
-        );
+        console.log(`[objectsCache] Reached client cap (${MAX_CLIENT_OBJECTS}), stopping fetch`);
     } else {
       cursor = response.cursor ?? undefined;
     }
@@ -194,7 +192,9 @@ export function sortObjects(
 
   switch (sortKey) {
     case "name":
-      objects.sort((a, b) => (a._keyLower < b._keyLower ? -dir : a._keyLower > b._keyLower ? dir : 0));
+      objects.sort((a, b) =>
+        a._keyLower < b._keyLower ? -dir : a._keyLower > b._keyLower ? dir : 0,
+      );
       break;
     case "size":
       objects.sort((a, b) => (a.original_bytes - b.original_bytes) * dir);
