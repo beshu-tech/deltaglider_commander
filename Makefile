@@ -10,7 +10,7 @@
 #   make run          Run development servers
 #   make clean        Clean build artifacts
 
-.PHONY: help install test lint format ci ci-backend ci-frontend run clean backend-test frontend-test build-static docker typecheck security pre-commit dev-setup benchmark
+.PHONY: help install test lint format ci ci-backend ci-frontend run clean backend-test frontend-test build-static docker typecheck security pre-commit dev-setup benchmark release check-version
 
 # Default target
 help:
@@ -27,6 +27,9 @@ help:
 	@echo "make ci-backend   - Backend CI: lint, typecheck, test"
 	@echo "make ci-frontend  - Frontend CI: lint, typecheck, test, build"
 	@echo "make ci           - Run full CI suite (backend + frontend)"
+	@echo ""
+	@echo "make release v=X.Y.Z - Bump versions, commit, tag, and push"
+	@echo "make check-version   - Verify version consistency across files"
 	@echo ""
 	@echo "make run          - Run development servers"
 	@echo "make docker       - Build and run with Docker"
@@ -205,5 +208,35 @@ docs:
 # Database migrations (if needed in future)
 migrate:
 	@echo "🗄️ No database migrations needed (using S3)"
+
+# Verify version consistency across package.json and pyproject.toml
+check-version:
+	@PY_VER=$$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])"); \
+	JS_VER=$$(node -p "require('./frontend/package.json').version"); \
+	if [ "$$PY_VER" != "$$JS_VER" ]; then \
+		echo "❌ Version mismatch: pyproject.toml=$$PY_VER, package.json=$$JS_VER"; \
+		exit 1; \
+	fi; \
+	echo "✅ Versions consistent: $$PY_VER"
+
+# Release: bump versions, commit, tag, and push
+# Usage: make release v=1.3.2
+release:
+	@if [ -z "$(v)" ]; then echo "❌ Usage: make release v=X.Y.Z"; exit 1; fi
+	@echo "🚀 Releasing v$(v)..."
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "❌ Working tree is dirty. Commit or stash changes first."; \
+		exit 1; \
+	fi
+	@sed -i '' 's/"version": ".*"/"version": "$(v)"/' frontend/package.json
+	@sed -i '' 's/^version = ".*"/version = "$(v)"/' pyproject.toml
+	@$(MAKE) --no-print-directory check-version
+	@$(MAKE) --no-print-directory ci
+	@git add frontend/package.json pyproject.toml
+	@git commit -m "release: v$(v)"
+	@git tag -a "v$(v)" -m "release: v$(v)"
+	@echo ""
+	@echo "✅ Tagged v$(v). Push with:"
+	@echo "   git push origin main && git push origin v$(v)"
 
 .DEFAULT_GOAL := help
