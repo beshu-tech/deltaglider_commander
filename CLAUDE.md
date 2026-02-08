@@ -8,6 +8,18 @@ DeltaGlider Commander (dgcommander) is a Flask-based backend service with a Reac
 
 ## Development Commands
 
+### ⚠️ CRITICAL: Releasing a New Version
+
+**NEVER create a git tag manually.** Always use:
+
+```bash
+make release v=X.Y.Z
+```
+
+This bumps the version in BOTH `pyproject.toml` and `frontend/package.json`, runs full CI, commits, and tags — all in one step. The frontend GUI displays the version from `package.json` via Vite's `__APP_VERSION__` define, so skipping this will ship a Docker image with a stale version in the UI.
+
+CI will **block Docker Hub publish** if the tag version doesn't match the package files.
+
 ### ⚠️ IMPORTANT: Pre-Commit Checks
 
 **ALWAYS run the appropriate CI command(s) before committing:**
